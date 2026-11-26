@@ -37,7 +37,6 @@ a pak otevřít `http://localhost:8000`.
 - `data/sky.js`: katalog hvězd a souhvězdí, načítá se hned.
 - `data/geo.json`: data mapy světa (4 MB), stahují se až při prvním otevření mapy.
 - `tex/`: textury a vlajky.
-- `nastroje/slozit.py`: složí vše do jedné stránky `dist/vesmir.html` pro náhled v Claudovi.
 
 ## Ovládání
 
