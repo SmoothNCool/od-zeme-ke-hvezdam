@@ -1,0 +1,6 @@
+// Cloudflare Pages, projekt „vesmir“ (vesmir.pages.dev). Web je čistě statický, nasazuje se celá složka.
+{
+  "name": "vesmir",
+  "compatibility_date": "2026-11-23",
+  "pages_build_output_dir": "."
+}
