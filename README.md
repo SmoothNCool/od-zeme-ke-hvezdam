@@ -21,13 +21,23 @@ Cloudflare Pages, projekt `vesmir`, napojený přímo na tohle repo. Každý pus
 
 ## Spuštění
 
-Je to jedna stránka bez sestavování. Kvůli texturám ji ale prohlížeč neotevře přímo ze souboru, potřebuje lokální server:
+Nic se nesestavuje. Prohlížeč ale stránku neotevře přímo ze souboru, potřebuje místní server:
 
 ```
 python -m http.server 8000
 ```
 
 a pak otevřít `http://localhost:8000`.
+
+## Struktura
+
+- `index.html`: kostra stránky, načítá vše ostatní.
+- `css/app.css`: vzhled.
+- `js/`: kód rozdělený podle témat (základ, hvězdy, Země, soustava, galaxie, mapa, průřez a obloha, aplikace, režimy, ovládání, smyčka). Soubory sdílejí jeden prostor jmen a načítají se v pořadí podle čísla.
+- `data/sky.js`: katalog hvězd a souhvězdí, načítá se hned.
+- `data/geo.json`: data mapy světa (4 MB), stahují se až při prvním otevření mapy.
+- `tex/`: textury a vlajky.
+- `nastroje/slozit.py`: složí vše do jedné stránky `dist/vesmir.html` pro náhled v Claudovi.
 
 ## Ovládání
 

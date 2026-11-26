@@ -1,0 +1,120 @@
+/* Rozvržení: 3D plátno přes celou obrazovku, nahoře přepínač zastávek, dole karta s povídáním a ovládání času. */
+:root{
+  color-scheme:dark;
+  --space:#05070f; --panel:rgba(13,19,38,.86); --chip:#1c2748; --line:#2b3760;
+  --ink:#eef1fb; --muted:#9ba7cb; --sun:#ffc94d; --sun-ink:#231900; --home:#ff5a4f;
+  --display:'Baloo 2','Trebuchet MS',system-ui,sans-serif;
+  --body:'Nunito',system-ui,'Segoe UI',sans-serif;
+}
+html,body{height:100%}
+[hidden]{display:none!important}
+body{margin:0;background:var(--space);color:var(--ink);font-family:var(--body);font-size:16px;overflow:hidden}
+#c{position:fixed;inset:0;width:100%;height:100%;display:block;touch-action:none}
+button{font:inherit;color:inherit;cursor:pointer}
+button:focus-visible,input:focus-visible{outline:3px solid var(--sun);outline-offset:2px}
+.pill{min-height:44px;padding:0 16px;border-radius:999px;border:1px solid var(--line);background:var(--chip);font-family:var(--display);font-size:17px}
+.pill[aria-pressed="true"]{background:var(--sun);border-color:var(--sun);color:var(--sun-ink)}
+
+#top{position:fixed;top:env(safe-area-inset-top,0px);left:0;right:0}
+#levels,#sub{display:flex;gap:8px;justify-content:safe center;
+  overflow-x:auto;padding-block:10px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+#levels button{flex:none;min-height:50px;padding:0 15px;border-radius:999px;border:1px solid var(--line);background:var(--panel);
+  font-family:var(--display);font-size:17px;white-space:nowrap;display:flex;align-items:center;gap:7px}
+#levels button[aria-pressed="true"]{background:var(--sun);border-color:var(--sun);color:var(--sun-ink)}
+#levels .ico{font-size:23px}
+#levels .short{display:none}
+#sub{padding-top:0}
+
+#dock{position:fixed;left:0;right:0;bottom:env(safe-area-inset-bottom,0px);display:flex;flex-wrap:wrap;gap:12px;align-items:flex-end;
+  justify-content:space-between;pointer-events:none;padding-block:12px;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+#dock>*{pointer-events:auto;background:var(--panel);border:1px solid var(--line);border-radius:18px}
+#card{flex:1 1 300px;max-width:460px;max-height:70vh;overflow-y:auto;padding:14px 18px;display:flex;flex-direction:column;gap:7px}
+#head{display:flex;align-items:center;justify-content:space-between;gap:10px}
+#card h1{margin:0;font-family:var(--display);font-size:26px;line-height:1.1;text-wrap:balance}
+#card h1{flex:1}
+#flag{flex:none;width:40px;height:40px;background:url(../tex/flags.png) no-repeat;background-size:640px auto}
+#card.min>:not(#head){display:none}
+#card.min.show #txt,#card.min.show #note{display:block}
+#whenL{display:flex;flex-wrap:wrap;gap:6px;align-items:center;font-size:13px;color:var(--muted)}
+#when{font:inherit;color:var(--ink);background:var(--chip);border:1px solid var(--line);border-radius:10px;padding:5px 8px}
+#facts{display:grid;grid-template-columns:1fr 1fr;gap:5px 14px;margin:2px 0}
+#facts:empty{display:none}
+#facts dt{color:var(--muted);font-size:12px}
+#facts dd{margin:0;font-weight:700;font-size:14px}
+#credit{font-size:11.5px;color:var(--muted)}
+#credit a{color:inherit}
+#more{font-family:var(--display);font-weight:700}
+#more[aria-expanded="true"]{background:var(--sun);border-color:var(--sun);color:var(--sun-ink)}
+body.bare #top,body.bare #dock{display:none}
+#showUi{position:fixed;right:max(16px,env(safe-area-inset-right,0px));bottom:calc(12px + env(safe-area-inset-bottom,0px));opacity:.8}
+#read,#more,#hideUi{flex:none;width:46px;height:46px;border-radius:50%;border:1px solid var(--line);background:var(--chip);font-size:20px}
+#card p{margin:0;line-height:1.45}
+#note,#clock{color:var(--muted);font-size:14px}
+#clock:empty{display:none}
+#rate{min-width:8.5em;font-weight:500}
+#dn{align-self:flex-start;font-family:var(--display);font-size:18px;padding:2px 14px;border-radius:999px;background:var(--chip)}
+#dn.day{background:var(--sun);color:var(--sun-ink)}
+#moonView{display:flex;align-items:center;gap:12px;font-family:var(--display);font-size:17px}
+#moonView small{display:block;font:500 13px var(--body);color:var(--muted)}
+#acts{display:flex;flex-wrap:wrap;gap:8px}
+#back{align-self:flex-start;background:var(--sun);border-color:var(--sun);color:var(--sun-ink)}
+#ctl{display:flex;align-items:center;gap:14px;padding:10px 16px;flex-wrap:wrap}
+#play{min-width:56px;min-height:56px;border-radius:50%;border:0;background:var(--sun);color:var(--sun-ink);font-size:22px}
+#snd[aria-pressed="false"]{opacity:.45}
+#full,#center,#snd{width:46px;height:46px;border-radius:50%;border:1px solid var(--line);background:var(--chip);font-size:20px}
+#ctl label{display:flex;align-items:center;gap:8px;font-weight:700}
+#speed{width:150px;accent-color:var(--sun)}
+#names{width:22px;height:22px;accent-color:var(--sun)}
+
+.lbl{position:fixed;left:0;top:0;font-family:var(--display);font-size:16px;line-height:1;padding:5px 10px;border-radius:999px;
+  background:rgba(13,19,38,.7);border:1px solid var(--line);white-space:nowrap;pointer-events:none;will-change:transform}
+button.lbl{pointer-events:auto;padding:9px 13px}
+.lbl.home{background:var(--home);border-color:var(--home);color:#fff}
+.lbl.dwarf{border-style:dashed;color:var(--muted)}
+.lbl.sky,.lbl.star,.lbl.geo,.lbl.sea,.lbl.mnt,.lbl.ctry,.lbl.cap,.lbl.reg{background:none;border:0;padding:4px 6px;text-shadow:0 0 6px #000,0 0 3px #000,0 0 2px #000}
+.lbl.mnt{color:#ffe3b0;font-size:14px}
+.lbl.ctry{color:#fff;font-size:15px}
+.lbl.reg{color:#eef2ff;font-size:11.5px;font-family:var(--body);font-weight:700;letter-spacing:.07em;text-transform:uppercase}
+.lbl.cap{color:#dfe8ff;font-size:12.5px;font-family:var(--body);font-weight:700}
+.lbl.geo{color:#fff;font-size:17px}
+.lbl.sea{color:#cfe6ff;font-size:14px;font-style:italic}
+.lbl.sky{color:#cfdcff;font-size:15px;text-shadow:0 0 6px #000,0 0 3px #000}
+.lbl.star{color:#fff;font-size:13px;text-shadow:0 0 6px #000,0 0 3px #000}
+#zoom{position:fixed;right:max(16px,env(safe-area-inset-right,0px));top:50%;transform:translateY(-50%);display:flex;flex-direction:column;gap:8px}
+#zoom button{width:46px;height:46px;border-radius:50%;border:1px solid var(--line);background:var(--panel);font:700 24px var(--display);line-height:1}
+body.bare #zoom{display:none}
+#sunHint{position:fixed;left:0;top:0;width:54px;height:54px;border-radius:50%;pointer-events:none;display:grid;place-items:center;
+  background:radial-gradient(circle,#fff6c9 0 30%,var(--sun) 55%,rgba(255,201,77,0) 72%);color:var(--sun-ink);font:700 11px var(--body)}
+#fade{position:fixed;inset:0;background:#000;opacity:0;pointer-events:none;display:grid;place-items:center;font-size:84px}
+#fail{position:fixed;inset:0;display:grid;place-items:center;padding:24px;text-align:center;font-family:var(--display);font-size:22px}
+/* mobil na výšku i na šířku: scéna má přednost, povídání je sbalené pod tlačítkem i */
+@media (max-width:700px),(max-height:560px){
+  #levels,#sub{gap:6px;padding-block:6px}
+  #levels button{min-height:40px;padding:0 10px;font-size:15px;gap:5px}
+  #levels .long,#ctl .cap,#ctl #namesL{display:none}
+  #levels .short{display:inline}
+  #levels .ico{font-size:18px}
+  .pill{min-height:38px;padding:0 12px;font-size:15px;white-space:nowrap}
+  #dock{gap:6px;padding-block:6px}
+  #card{max-width:none;min-width:0;flex-basis:100%;padding:8px 12px;gap:5px;border-radius:14px}
+  #acts{min-width:0}
+  .lbl{font-size:13px}
+  button.lbl{padding:7px 10px}
+  #card h1{font-size:18px}
+  #card p{font-size:14px;line-height:1.35}
+  #read,#more,#hideUi{width:38px;height:38px;font-size:16px}
+  #dn{font-size:15px}
+  #acts{flex-wrap:nowrap;overflow-x:auto}
+  #moonView canvas{width:40px!important;height:40px!important}
+  #ctl{flex:1;gap:8px;padding:6px 10px;border-radius:14px;justify-content:space-between}
+  #play{min-width:42px;min-height:42px;font-size:17px}
+  #full,#center,#snd{width:38px;height:38px;font-size:16px}
+  #speed{width:84px}
+  #rate{min-width:0;font-size:12px;white-space:nowrap}
+  #ctl label{font-size:14px;gap:6px}
+}
+/* mobil na šířku: karta a ovládání vedle sebe */
+@media (max-height:560px) and (min-width:701px){#card{flex-basis:280px;max-width:360px}#ctl{flex:none}}
+/* úzký telefon: menu i ovládání se musí vejít do jednoho řádku */
+@media (max-width:480px){#levels .ico,#full{display:none}#speed{width:56px}}

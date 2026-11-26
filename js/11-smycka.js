@@ -1,0 +1,122 @@
+// Hlavní smyčka a start. Soubory v js/ sdílejí jeden prostor jmen a načítají se v pořadí podle čísla.
+let last = performance.now();
+function frame(now) {
+  requestAnimationFrame(frame);
+  const dt = Math.min(.1, (now - last) / 1000); last = now;
+  const rate = ecl ? 17280 : RATES[$('#speed').value];
+  if (playing && !tr) { simMs += dt * 1000 * rate; simT += dt * Math.min(4, rate / RATES[L.def || 3]); } // simT pohání jen ozdobné otáčení
+  days = (simMs - Y0) / 864e5; // dny od začátku roku 2026 v UTC
+  // otočení za tento snímek podle skutečné periody; nad pár otáček za vteřinu by z tělesa byla šmouha, proto strop
+  const dDays = playing && !tr ? dt * rate / 86400 : 0, turn = (T, cap = 2) => THREE.MathUtils.clamp(dDays / T, -cap * dt, cap * dt) * TAU;
+  const j2k = (simMs - J2000) / 864e5, ya = (days - 171.35) / 365.2422 * TAU; // ya = 0 při letním slunovratu
+
+  // Země a Měsíc
+  const lean = -ya - Math.PI; yaw.rotation.y = lean; // v létě je severní pól přikloněný ke Slunci (+X)
+  earth.rotation.y = (days % 1 - .5) * TAU - lean; // ve 12:00 UTC míří ke Slunci nultý poledník
+  const phi = moonPhi(simMs);
+  moonPivot.rotation.y = phi; issPivot.rotation.y += turn(1 / 15.5, 1); // stanice obletí Zemi 15,5krát za den
+  moon.getWorldPosition(moonW);
+  if (ecl === 'moon') {
+    const s = moonW.x < 0 ? 1 - THREE.MathUtils.smoothstep(Math.hypot(moonW.y, moonW.z), .7, 1.25) : 0;
+    moon.material.color.setRGB(1 - .5 * s, 1 - .85 * s, 1 - .9 * s);
+  }
+  if (ecl && (ecl === 'sun' ? phi > .3 && phi < Math.PI : phi > Math.PI + .45)) endEclipse();
+  if (L.id === 'mesic') drawPhase(phi);
+
+  // roční období: úhel 0 = letní slunovrat (172. den roku)
+  yHolder.position.set(Math.cos(ya) * Y_R, 0, -Math.sin(ya) * Y_R);
+  ySun.copy(yHolder.position).normalize().negate();
+  yEarth.rotation.y += turn(1);
+
+  // sluneční soustava
+  sz += ((sizes ? 1 : 0) - sz) * Math.min(1, dt * 3);
+  for (const p of planets) {
+    const q = orbitPos(p, kepler((((p.a0 - p.peri + j2k / p.T * TAU) / TAU % 1) + 1) % 1 * TAU, p.e)); // střední anomálie = střední délka − délka přísluní
+    p.ang = Math.atan2(-q.z, q.x); // ekliptikální délka, podle ní se planeta hledá na obloze
+    p.holder.position.copy(q).lerp(p.row, sz);
+    p.holder.scale.setScalar(1 + (p.k - 1) * sz);
+    p.mesh.rotation.y += turn(p.rot);
+    for (const m of p.moons) m.pivot.rotation.y += turn(m.T, 1.5);
+  }
+  sunMesh.rotation.y = simT * .05; sunMesh.position.x = SUN_X * sz; sunMesh.scale.setScalar(1 + (SUN_BIG - 1) * sz);
+  gOrb.visible = sz < .05; belt.rotation.y = days / 1600 * TAU;
+  const E = kepler((days / COMET.T * TAU + 5.4) % TAU, COMET.e);
+  comet.holder.position.set(COMET.a * (Math.cos(E) - COMET.e), 0, -COMET.b * Math.sin(E));
+  const cd = comet.holder.position.length(), tl = Math.min(9, 45 / cd);
+  tail.forEach((s, i) => s.position.copy(comet.holder.position).multiplyScalar((i + 1) * tl / 12 / cd));
+  if (light) { light.r += dt * 2.2; lightRing.scale.setScalar(light.r); if (light.r > 47) { light = null; lightRing.visible = false; card(L); acts(); } }
+  gG.rotation.y = simT * .02; gU.rotation.y = simT * .01;
+  coreGlow.scale.setScalar(1 + .08 * Math.sin(now / 450));
+  if (L.id === 'obloha') {
+    // oblohu otočíme tak, aby zenit mířil nahoru (+Y), sever k −Z a východ k +X
+    const zen = zenithAt(simMs), n = eqToScene(0, 90).addScaledVector(zen, -eqToScene(0, 90).dot(zen)).normalize(), ea = n.clone().cross(zen);
+    sky.quaternion.setFromRotationMatrix(skyM.set(ea.x, ea.y, ea.z, 0, zen.x, zen.y, zen.z, 0, -n.x, -n.y, -n.z, 0, 0, 0, 0, 1));
+    const lamS = sunLamAt(simMs), earthP = eclDir(planets[2].ang).multiplyScalar(AU[2]);
+    sunSky.position.copy(eclDir(lamS)).multiplyScalar(2300); moonSky.position.copy(eclDir(lamS + phi)).multiplyScalar(2300);
+    for (const [i, sp] of skyPlanets) sp.position.copy(eclDir(planets[i].ang).multiplyScalar(AU[i]).sub(earthP).normalize().multiplyScalar(2300));
+    sunAlt = Math.asin(eclDir(lamS).dot(zen));
+    controls.minPolarAngle = Math.PI / 2 + rad(Math.max(0, camera.fov / 2 - 7)); // kamera se dívá ze středu ven, takže výš = větší polární úhel
+  } else sky.rotation.set(0, L.group === gE ? -(Math.PI / 2 + ya) : L.id === 'rok' ? Math.PI / 2 : 0, 0); // v pohledu na Zemi je Slunce pořád vpravo, takže se za rok otočí hvězdy
+  if (L.id !== 'obloha') controls.minPolarAngle = 0;
+  camD = camera.position.length();
+  if (L.id === 'mapa') {
+    controls.minDistance = mapMode === 'priroda' ? 1.1 : 1.035; // blíž už data ani fotka nic dalšího neukážou
+    const h = camD - 1; // výška nad povrchem; čím níž, tím jemněji se otáčí i zoomuje
+    controls.rotateSpeed = THREE.MathUtils.clamp(h / 2.1, .008, 1); controls.zoomSpeed = THREE.MathUtils.clamp(h * 1.6, .1, 1);
+    const near = THREE.MathUtils.clamp(h * .3, .003, .05); if (Math.abs(camera.near - near) > 1e-4) { camera.near = near; camera.updateProjectionMatrix(); }
+    if (vec) { // podrobnosti přibývají s přiblížením
+      const nature = mapMode === 'priroda';
+      vec.adm1.visible = camD < 1.75; vec.river.visible = camD < 2.6;
+      vec.towns[0].visible = !nature && camD < 2.6; vec.towns[1].visible = !nature && camD < 1.6; vec.towns[2].visible = !nature && camD < 1.22; vec.towns[3].visible = !nature && camD < 1.1;
+    }
+  }
+  // ve dne obloha zmodrá a hvězdy zmizí, i když tam pořád jsou
+  const dayK = L.id === 'obloha' ? THREE.MathUtils.smoothstep(sunAlt, rad(-10), rad(3)) : 0;
+  renderer.setClearColor(dayK ? new THREE.Color(0x05070f).lerp(new THREE.Color(0x6fa8e6), dayK) : 0x000000);
+  const inSky = L.id === 'obloha'; // na obloze jsou hvězdy i čáry výraznější než jako pozadí jinde
+  starMats.forEach(mt => { mt.opacity = 1 - dayK; mt.size = mt.userData.base * (inSky ? 1.5 : .8); }); lineMat.opacity = (inSky ? .75 : .25) * (1 - dayK);
+  cloudShift.value = (days * .03 % 1 + 1) % 1;
+
+  if (tr) stepTransition(dt);
+  else {
+    if (focus) {
+      focus.holder.getWorldPosition(v); camera.position.add(wp.copy(v).sub(controls.target)); controls.target.copy(v);
+      if (zoomTo) {
+        const off = camera.position.clone().sub(v), len = off.length(), nl = len + (zoomTo - len) * Math.min(1, dt * 3);
+        camera.position.copy(v).add(off.setLength(nl)); if (Math.abs(nl - zoomTo) < .02 * zoomTo) zoomTo = 0;
+      }
+    } else if (flyTo) {
+      const k = Math.min(1, dt * 3); camera.position.lerp(flyTo.pos, k); controls.target.lerp(flyTo.target, k);
+      if (camera.position.distanceTo(flyTo.pos) < .05 + .01 * flyTo.pos.length()) flyTo = null;
+    }
+    if (recenter) { // nezruší ho ani další kolečko, jinak by střed otáčení zůstal viset mimo Slunce
+      const dv = controls.target.clone().multiplyScalar(-Math.min(1, dt * 3)); controls.target.add(dv); camera.position.add(dv);
+      if (focus || controls.target.length() < .05) recenter = false;
+    }
+    controls.update();
+    // oddálení až na doraz pokračuje do většího světa, přiblížení na doraz do menšího
+    if (!flyTo && !zoomTo && !L.noChain) {
+      const d = camera.position.distanceTo(controls.target), i = LV.indexOf(L);
+      if (focus && d > 45) { unfocus(); card(baseCard()); recenter = !sizes; } // při oddálení se planeta pustí a střed se vrátí ke Slunci
+      else if (d >= L.max * .998 && !sizes && i < LV.length - 1) go(Math.max(NS, i + 1)); // pohledy na Zemi do řetězu nepatří, ven se letí rovnou do soustavy
+      else if (d <= L.min * 1.002 && !focus && i >= NS) go(i === NS ? 0 : i - 1);
+    }
+  }
+  renderer.render(scene, camera);
+  drawLabels();
+
+  if (L.group === gE) { const d = home.getWorldPosition(v).dot(SUN_DIR) > 0; chip(d ? 'U nás je den' : 'U nás je noc', d ? 'day' : ''); }
+  else if (L.id === 'rok') {
+    chip('U nás je ' + SEASONS[Math.floor(((ya / TAU) % 1 + 1) % 1 * 4)] + ', ' + fmtM.format(simMs), 'day');
+  } else if (L.id === 'obloha') chip(sunAlt > 0 ? 'U nás je den' : sunAlt > rad(-8) ? 'U nás je soumrak' : 'U nás je noc', sunAlt > 0 ? 'day' : '');
+  else if (light) {
+    const reached = planets.filter(p => p.R <= light.r).pop();
+    chip('Světlo letí ' + fmtMin(lightMin(light.r)) + (reached ? ', doletělo ' + reached.dat : ''), 'day');
+  } else chip('');
+  const ck = L.def ? 'Čas u nás: ' + (rate >= 86400 || ecl ? fmtD : fmtDT).format(simMs) : '', rt = RATE_NAMES[$('#speed').value];
+  if (ck !== clockText) $('#clock').textContent = clockText = ck;
+  if (rt !== rateText) $('#rate').textContent = rateText = rt;
+}
+setLevel(Math.max(0, LV.findIndex(l => '#' + l.id === location.hash)));
+window.__t = { get level() { return L.id; }, setMapMode: m => setMapMode(m), countryCard, countryAt, get camD() { return camD; }, get mapShown() { return mapShown.map(m => m.text); }, get mapPool() { return mapPool.length; }, get buildMs() { return buildMs; }, get fov() { return camera.fov; }, get dist() { return camera.position.distanceTo(controls.target); }, get focus() { return focus && focus.name; }, go: x => go(typeof x === 'string' ? LV.findIndex(l => l.id === x) : x), eclipse, toggleSizes, startLight, toggleGame, setFocus, planets, comet }; // háčky pro automatický test
+requestAnimationFrame(frame);

@@ -4,3 +4,6 @@
 !.dev.vars.example
 .env*
 !.env.example
+
+# složená stránka pro náhled v Claudovi (nastroje/slozit.py)
+dist/
