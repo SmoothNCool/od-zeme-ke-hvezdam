@@ -38,6 +38,7 @@ a pak otevřít `http://localhost:8000`.
 - `data/geo.json`: data mapy světa (4 MB), stahují se až při prvním otevření mapy.
 - `tex/`: textury a vlajky.
 - `testy/test.mjs`: automatický test.
+- `nastroje/`: skripty, kterými vznikla data mapy.
 
 ## Testy
 

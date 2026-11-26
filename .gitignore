@@ -8,3 +8,7 @@
 # snímky z testu a pracovní poznámky
 testy/snimky/
 HANDOFF.md
+
+# stažené podklady pro sestavení mapy (kromě cache českých názvů)
+nastroje/geodata/*
+!nastroje/geodata/labels_cs.json
