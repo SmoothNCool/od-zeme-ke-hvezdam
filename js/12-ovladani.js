@@ -21,11 +21,12 @@ const zoomStep = dy => renderer.domElement.dispatchEvent(new WheelEvent('wheel',
   ['pointerup', 'pointerleave', 'pointercancel'].forEach(ev => $(id).addEventListener(ev, stop));
 });
 addEventListener('keydown', e => {
+  if (e.target.matches && e.target.matches('input,select,textarea')) return; // psaní do pole nejsou klávesové zkratky
   if (e.key.toLowerCase() === 'h') setBare(!document.body.classList.contains('bare'));
   const zoom = { '+': -100, '=': -100, '-': 100 }[e.key]; // záložní zoom z klávesnice
   if (zoom) zoomStep(zoom);
   const mv = { a: [-1, 0], d: [1, 0], w: [0, 1], s: [0, -1] }[e.key.toLowerCase()]; // WASD posouvá stejně jako šipky
-  if (mv && !focus && !tr && L.id !== 'obloha') {
+  if (mv && !focus && !tr && L.id !== 'obloha' && L.id !== 'mapa') { // mapa se točí kolem středu Země, posun by ji rozhodil
     const stp = camera.position.distanceTo(controls.target) * .06;
     const dv = V().setFromMatrixColumn(camera.matrix, 0).multiplyScalar(mv[0] * stp).add(V().setFromMatrixColumn(camera.matrix, 1).multiplyScalar(mv[1] * stp));
     camera.position.add(dv); controls.target.add(dv);
@@ -38,7 +39,7 @@ $('#now').onclick = () => { simMs = Date.now(); $('#speed').value = L.def; $('#w
 const localIso = ms => new Date(ms - new Date(ms).getTimezoneOffset() * 6e4).toISOString().slice(0, 16); // tvar, který čeká pole datetime-local
 $('#when').onfocus = () => { if (!$('#when').value) $('#when').value = localIso(simMs); };
 $('#when').onchange = () => { const t = new Date($('#when').value).getTime(); if (!isNaN(t)) { simMs = t; playing = false; syncPlay(); } }; // čas se zastaví, ať zvolený okamžik neuteče
-$('#center').onclick = () => focus ? goBack() : (flyTo = overview());
+$('#center').onclick = () => { mapFlyTo = null; focus ? goBack() : (flyTo = overview()); };
 if (document.fullscreenEnabled) { $('#full').hidden = false; $('#full').onclick = () => document.fullscreenElement ? document.exitFullscreen() : document.documentElement.requestFullscreen().catch(() => {}); }
 
 /* ---------- popisky přichycené k tělesům ---------- */
@@ -93,7 +94,7 @@ function constInfo(c) {
   const raH = ((c.ra / 15) % 24 + 24) % 24, month = MONTH_IN[((Math.round(raH / 2 - 2.08) % 12) + 12) % 12]; // měsíc, kdy je souhvězdí večer nejvýš
   const when = c.dec < -45 ? 'z Česka není vidět nikdy' : c.dec > 50 ? 'u nás celý rok' : c.dec < -25 ? 'jen nízko nad obzorem, večer ' + month : 'večer nejlíp ' + month;
   const known = INFO[FAMOUS[c.id]];
-  return { name: c.cz, txt: known ? known.txt : 'Jedno z 88 souhvězdí, na která je rozdělená celá obloha. Lidé si z hvězd odjakživa skládali obrázky, aby se na obloze vyznali.', note: '', facts: [['Latinsky', c.la], ['Kdy je vidět', when]] };
+  return { name: c.cz, txt: known ? known.txt : 'Jedno z 88 souhvězdí, na která je rozdělená celá obloha. Lidé si z hvězd odjakživa skládali obrázky, aby se na obloze vyznali.', note: '', facts: [['Latinsky', c.la], ['Kdy je vidět', when]], wiki: { s: 'souhvězdí ' + c.cz, name: c.cz, word: 'souhvězdí', km: Infinity } };
 }
 constMarks.forEach(c => label(c.cz, c.mark, 0, () => L.id === 'obloha' ? up(c.mark) : !!L.def && c.id in FAMOUS, () => showInfo(constInfo(c)), 'sky'));
 starMarks.forEach(st => label(st.name, st.mark, 0, () => L.id === 'obloha' ? up(st.mark) : st.name === 'Polárka' && !!L.def, st.name === 'Polárka' ? tip('Polárka') : null, 'star'));
@@ -156,7 +157,10 @@ renderer.domElement.addEventListener('pointerup', e => {
   ray.setFromCamera({ x: e.clientX / W * 2 - 1, y: 1 - e.clientY / H * 2 }, camera);
   if (L.id === 'mapa') { // ťuknutí na stát
     const hit = ray.intersectObject(globe)[0], i = hit ? countryAt(hit.uv.x * 360 - 180, hit.uv.y * 180 - 90) : -1;
-    if (i >= 0) showInfo(countryCard(i));
+    const q = hit && quakesOn && quakes && !quiz && quakeAt(latLon(hit.uv.y * 180 - 90, hit.uv.x * 360 - 180));
+    if (quiz) { if (quiz.mode === 'najdi' && i >= 0) quizAnswer(i); } // v kvízu je ťuknutí odpověď
+    else if (q) showQuake(q);
+    else if (i >= 0) showCountry(i);
   } else if (L.id === 'soustava') {
     const hit = ray.intersectObjects(picks)[0]; if (hit) game ? answer(hit.object.userData.p) : setFocus(hit.object.userData.p);
     else if (focus) goBack(); // ťuknutí do prázdna pustí planetu

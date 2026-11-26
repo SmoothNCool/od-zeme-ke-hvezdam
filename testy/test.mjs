@@ -17,7 +17,7 @@ const server = http.createServer((q, r) => {
   r.writeHead(200, { 'content-type': TYPES[path.extname(file)] || 'application/octet-stream' }); fs.createReadStream(file).pipe(r);
 });
 await new Promise(r => server.listen(0, '127.0.0.1', r));
-const URL0 = 'http://127.0.0.1:' + server.address().port + '/';
+const URL0 = process.env.ADRESA || 'http://127.0.0.1:' + server.address().port + '/'; // ADRESA=https://… otestuje nasazený web
 
 // ---------- Chrome a spojení přes DevTools protokol ----------
 const profile = fs.mkdtempSync(path.join(os.tmpdir(), 'vesmir-test-'));
@@ -126,12 +126,82 @@ try {
   check('režim Příroda', await ev("document.querySelector('#acts [aria-pressed=true]').textContent") === 'Příroda'); await shot('08-priroda');
   await ev("__t.setMapMode('staty')");
 
+  section('Encyklopedie států');
+  const cz = await ev("GEO.c.findIndex(c => c[0] === 'Česko')");
+  await ev(`__t.showCountry(${cz}, true)`); await sleep(1800);
+  const facts = await ev("Object.fromEntries([...document.querySelectorAll('#facts > div')].map(d => [d.children[0].textContent, d.children[1].textContent]))");
+  check('karta Česka má měnu, jazyk, nejvyšší horu a členství', facts['Měna'] === 'koruna česká' && facts['Úřední jazyk'] === 'čeština' && /Sněžka/.test(facts['Nejvyšší hora']) && /EU/.test(facts['Členství']), JSON.stringify(facts).slice(0, 200));
+  check('pořadí na světě a hustota zalidnění', /\d+\. na světě/.test(facts['Obyvatel']) && /lidí na km²/.test(facts['Hustota zalidnění']), facts['Obyvatel']);
+  const chips = await ev("[...document.querySelectorAll('#chipsB button')].map(b => b.textContent)");
+  check('sousedé Česka z hranic na mapě', chips.join(' ') === 'Německo Polsko Rakousko Slovensko', chips.join(', '));
+  check('vybraný stát má na mapě obrys', await ev('__t.selected')); await shot('10-cesko');
+  const wiki = await until("!document.querySelector('#wiki').hidden", 8000); // závisí na připojení k Wikipedii, proto jen pro informaci
+  console.log('  info  článek z Wikipedie ' + (wiki ? 'se načetl: ' + (await ev("document.querySelector('#wikiT').textContent")).slice(0, 70) : 'se nenačetl (bez připojení je to v pořádku)'));
+  await ev("[...document.querySelectorAll('#chipsB button')].find(b => b.textContent === 'Rakousko').click()"); await sleep(300);
+  check('ťuknutí na souseda otevře jeho kartu', await title() === 'Rakousko');
+  await ev("document.querySelector('#back').click()");
+  check('Zpět zruší výběr', await title() === 'Mapa světa' && !(await ev('__t.selected')));
+  await tapLabel('Evropa'); check('karta světadílu', await title() === 'Evropa' && await ev("document.querySelectorAll('#chipsB button').length") > 5, await title());
+  await ev("document.querySelector('#back').click()");
+
+  section('Tematické mapy');
+  await ev("(() => { const t = document.querySelector('#theme'); t.value = 'zivot'; t.dispatchEvent(new Event('change')); })()"); await sleep(600);
+  check('legenda má pět tříd a řádek bez údaje', await ev("!document.querySelector('#legend').hidden && document.querySelectorAll('#legend span').length") === 6, await ev("document.querySelector('#legend').textContent")); await shot('11-tema');
+  await ev("(() => { const t = document.querySelector('#theme'); t.value = 'eu'; t.dispatchEvent(new Event('change')); })()");
+  check('téma ano/ne má dvě kategorie', await ev("document.querySelectorAll('#legend span').length") === 3);
+  await ev("(() => { const t = document.querySelector('#theme'); t.value = ''; t.dispatchEvent(new Event('change')); })()");
+  check('politická mapa legendu schová', await ev("document.querySelector('#legend').hidden"));
+
+  section('Rekordy a zemětřesení');
+  await ev('__t.showRecords()'); check('seznam rekordů', await title() === 'Rekordy Země' && await ev("document.querySelectorAll('#chipsB button').length") === 15);
+  await ev("[...document.querySelectorAll('#chipsB button')].find(b => b.textContent === 'Bajkal').click()"); await sleep(2500);
+  check('rekord otevře kartu místa a označí ho na mapě', await title() === 'Bajkal' && await ev('__t.selected')); await shot('16-rekord');
+  await ev("document.querySelector('#back').click()");
+  await ev('__t.toggleQuakes()'); const gotQ = await until('__t.quakes > 0', 10000); await sleep(800); // živá data z USGS, bez připojení se jen ohlásí
+  console.log('  info  zemětřesení z USGS ' + (gotQ ? 'se načetla: ' + (await ev('__t.quakes')) + ' za 30 dní' : 'se nenačetla (bez připojení je to v pořádku)'));
+  if (gotQ) { check('karta zemětřesení a desek', await title() === 'Zemětřesení a desky'); await shot('17-zemetreseni'); await ev('__t.toggleQuakes()'); check('vypnutí vrátí kartu mapy', await title() === 'Mapa světa'); }
+  await ev("__t.setMapMode('staty')");
+
+  section('Kvíz');
+  await ev("[...document.querySelectorAll('#acts button')].find(b => b.textContent === 'Kvíz').click()");
+  check('nabídka kvízu', await title() === 'Zeměpisný kvíz' && await ev("document.querySelectorAll('#acts button').length") === 5, await ev("document.querySelectorAll('#acts button').length"));
+  await ev("__t.quizStart('vlajka')"); await sleep(500);
+  check('kolo má deset otázek a čtyři možnosti', await ev('__t.quiz.list.length') === 10 && await ev('__t.quiz.opts.length') === 4 && await title() === 'Otázka 1 z 10');
+  check('při kvízu nejsou na mapě jmenovky', (await ev('__t.mapShown')).length === 0); await shot('12-kviz');
+  for (let k = 0; k < 10; k++) { await ev('__t.quizAnswer(__t.quiz.list[__t.quiz.n])'); if (k === 0) check('správná odpověď', await title() === 'Správně'); await ev("document.querySelector('#quizNext').click()"); }
+  check('výsledek kola', await title() === 'Hotovo: 10 z 10', await title());
+  await ev("__t.quizStart('najdi')"); await ev('__t.quizAnswer(__t.quiz.list[1])');
+  check('špatná odpověď ukáže správnou', await title() === 'Vedle' && /Správná odpověď/.test(await ev("document.querySelector('#txt').textContent")), await ev("document.querySelector('#txt').textContent"));
+  await ev("[...document.querySelectorAll('#acts button')].find(b => b.textContent === 'Ukončit kvíz').click()");
+  check('ukončení kvízu vrátí mapu', await title() === 'Mapa světa' && await ev('__t.quiz') === null);
+
+  section('Hledání');
+  check('najde město, stát i planetu bez háčků a čárek', await ev("__t.findHits('brn').some(m => m.text === 'Brno') && __t.findHits('cesk')[0].text === 'Česko' && __t.findHits('satur')[0].text === 'Saturn'"), (await ev("__t.findHits('brn').map(m => m.text)")).join(', '));
+  await ev("document.querySelector('#findB').click()");
+  await ev("(() => { const q = document.querySelector('#q'); q.value = 'mount ever'; q.dispatchEvent(new Event('input')); })()"); await sleep(300);
+  check('pole hledání vypíše výsledky', await ev("document.querySelectorAll('#hits button').length") > 0, await ev("[...document.querySelectorAll('#hits button')].map(b => b.textContent).join(' | ')")); await shot('13-hledani');
+  await ev("document.querySelector('#hits button').click()"); await sleep(2500);
+  check('výběr hory přepne na přírodní mapu a doletí k ní', await ev('__t.info') === 'Mount Everest' && await ev("document.querySelector('#acts [aria-pressed=true]').textContent") === 'Příroda' && await ev('__t.selected'), await ev('__t.info')); await shot('14-everest');
+  await ev("__t.pickHit(__t.findHits('saturn')[0])");
+  check('výběr planety přeletí do soustavy a k planetě', await until("__t.level === 'soustava' && __t.focus === 'Saturn'", 9000));
+  await sleep(1500); await ev("__t.pickHit(__t.findHits('brno')[0])");
+  check('výběr města přeletí na mapu a otevře jeho kartu', await until("__t.level === 'mapa' && __t.info === 'Brno'", 9000)); await sleep(2500); await shot('15-brno');
+  await ev("__t.setMapMode('staty')");
+
   section('Telefon na výšku');
   await send('Emulation.setDeviceMetricsOverride', { width: 390, height: 844, deviceScaleFactor: 2, mobile: true });
   await send('Page.reload'); check('aplikace naběhla', await until("typeof __t === 'object'", 15000)); await sleep(800);
   check('karta je sbalená do jednoho řádku', await ev("document.querySelector('#card').classList.contains('min') && getComputedStyle(document.querySelector('#txt')).display === 'none'"));
   check('stránka nepřetéká do šířky', await ev('document.documentElement.scrollWidth <= innerWidth'), await ev('document.documentElement.scrollWidth + " / " + innerWidth'));
   check('pohled soustava', await go('soustava') === 'soustava'); await shot('09-telefon');
+
+  check('pohled mapa na telefonu', await go('mapa') === 'mapa' && await until('__t.buildMs > 0', 30000));
+  await ev("__t.quizStart('vlajka')"); await sleep(600);
+  check('kvíz na telefonu: otázka i možnosti jsou vidět ve sbalené kartě', await ev("getComputedStyle(document.querySelector('#txt')).display !== 'none' && document.querySelector('#acts').getBoundingClientRect().height > 20 && document.documentElement.scrollWidth <= innerWidth")); await shot('18-telefon-kviz');
+  await ev("document.querySelector('#findB').click()"); await ev("(() => { const q = document.querySelector('#q'); q.value = 'praha'; q.dispatchEvent(new Event('input')); })()"); await sleep(300);
+  check('hledání na telefonu se vejde na šířku', await ev("document.querySelector('#find').getBoundingClientRect().right <= innerWidth && document.querySelectorAll('#hits button').length > 0")); await shot('19-telefon-hledani');
+  await ev("document.querySelector('#hits button').click()"); await sleep(2500); await shot('20-telefon-praha');
+  check('hlavní město má vlastní kartu a karta nechá na telefonu vidět mapu', await title() === 'Praha' && await ev("document.querySelector('#card').getBoundingClientRect().height < innerHeight * .56"), await title());
 
   section('Konzole');
   check('žádné chyby ani varování v konzoli', errors.length === 0, errors.slice(0, 5).join(' | '));

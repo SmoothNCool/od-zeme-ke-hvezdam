@@ -170,7 +170,7 @@ for f in lakes['features']:
         t = dp([tuple(q[:2]) for q in poly[0]], TOL)
         if len(t) >= 4: out_lak.append(enc(t))
 
-CZ_CITIES = [['Brno', 49.2, 16.61], ['Ostrava', 49.84, 18.29], ['Plzeň', 49.75, 13.38], ['Liberec', 50.77, 15.06], ['Olomouc', 49.59, 17.25], ['České Budějovice', 48.97, 14.47], ['Hradec Králové', 50.21, 15.83], ['Písek', 49.31, 14.15]]
+CZ_CITIES = [['Brno', 49.2, 16.61], ['Ostrava', 49.84, 18.29], ['Plzeň', 49.75, 13.38], ['Liberec', 50.77, 15.06], ['Olomouc', 49.59, 17.25], ['České Budějovice', 48.97, 14.47], ['Hradec Králové', 50.21, 15.83]]
 caps_pos = [r[7] for r in info if r[7]]
 out_cit, seen_c = [[n, la, lo, 0] for n, la, lo in CZ_CITIES], set(n for n, _, _ in CZ_CITIES)
 for b in sorted(cities, key=lambda b: -float(b['pop']['value'])):

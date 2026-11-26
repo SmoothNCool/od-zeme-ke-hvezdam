@@ -89,13 +89,14 @@ function frame(now) {
       const k = Math.min(1, dt * 3); camera.position.lerp(flyTo.pos, k); controls.target.lerp(flyTo.target, k);
       if (camera.position.distanceTo(flyTo.pos) < .05 + .01 * flyTo.pos.length()) flyTo = null;
     }
+    if (mapFlyTo) stepMapFly(dt);
     if (recenter) { // nezruší ho ani další kolečko, jinak by střed otáčení zůstal viset mimo Slunce
       const dv = controls.target.clone().multiplyScalar(-Math.min(1, dt * 3)); controls.target.add(dv); camera.position.add(dv);
       if (focus || controls.target.length() < .05) recenter = false;
     }
     controls.update();
     // oddálení až na doraz pokračuje do většího světa, přiblížení na doraz do menšího
-    if (!flyTo && !zoomTo && !L.noChain) {
+    if (!flyTo && !zoomTo && !L.noChain && !quiz) { // oddálení na doraz nesmí ukončit rozehraný kvíz
       const d = camera.position.distanceTo(controls.target), i = LV.indexOf(L);
       if (focus && d > 45) { unfocus(); card(baseCard()); recenter = !sizes; } // při oddálení se planeta pustí a střed se vrátí ke Slunci
       else if (d >= L.max * .998 && !sizes && i < LV.length - 1) go(Math.max(NS, i + 1)); // pohledy na Zemi do řetězu nepatří, ven se letí rovnou do soustavy
@@ -118,5 +119,5 @@ function frame(now) {
   if (rt !== rateText) $('#rate').textContent = rateText = rt;
 }
 setLevel(Math.max(0, LV.findIndex(l => '#' + l.id === location.hash)));
-window.__t = { get level() { return L.id; }, setMapMode: m => setMapMode(m), countryCard, countryAt, get camD() { return camD; }, get mapShown() { return mapShown.map(m => m.text); }, get mapPool() { return mapPool.length; }, get buildMs() { return buildMs; }, get fov() { return camera.fov; }, get dist() { return camera.position.distanceTo(controls.target); }, get focus() { return focus && focus.name; }, go: x => go(typeof x === 'string' ? LV.findIndex(l => l.id === x) : x), eclipse, toggleSizes, startLight, toggleGame, setFocus, planets, comet }; // háčky pro automatický test
+window.__t = { get level() { return L.id; }, get quiz() { return quiz; }, toggleQuakes, showRecords, get quakes() { return quakes ? quakes.list.length : 0; }, quizStart, quizAnswer, quizNext, findHits, pickHit, showCountry, get theme() { return mapTheme; }, get info() { return info && info.name; }, get selected() { return !!(selLine || selPin && selPin.visible); }, setMapMode: m => setMapMode(m), countryCard, countryAt, get camD() { return camD; }, get mapShown() { return mapShown.map(m => m.text); }, get mapPool() { return mapPool.length; }, get buildMs() { return buildMs; }, get fov() { return camera.fov; }, get dist() { return camera.position.distanceTo(controls.target); }, get focus() { return focus && focus.name; }, go: x => go(typeof x === 'string' ? LV.findIndex(l => l.id === x) : x), eclipse, toggleSizes, startLight, toggleGame, setFocus, planets, comet }; // háčky pro automatický test
 requestAnimationFrame(frame);

@@ -1,11 +1,16 @@
 # Od Země ke hvězdám
 
-Interaktivní 3D model vesmíru pro děti. Vznikl pro pětiletého kluka, který se hodně ptá, jak funguje den a noc, Měsíc a planety.
+Interaktivní 3D atlas Země a vesmíru. Začal jako model pro pětiletého kluka, který se hodně ptá, jak funguje den a noc, Měsíc a planety. Dnes je to encyklopedie pro děti i dospělé: podrobná mapa světa, údaje o státech, články z Wikipedie, kvízy a živá data.
 
 ## Co umí
 
 - **Země a Měsíc**: den a noc podle skutečného času, fáze Měsíce, zatmění Slunce a Měsíce, roční období, vesmírná stanice.
-- **Mapa světa**: zeměkoule s politickou a přírodní mapou, 255 území z dat 1:10 milionů, hranice tisíců krajů a regionů, přes 25 000 měst, řeky, jezera, moře, zálivy, ostrovy, pohoří a vrcholy s výškou. Jmenovek je přes 30 000 a přibývají s přiblížením. Po ťuknutí na stát název, hlavní město, světadíl, počet obyvatel a vlajka.
+- **Mapa světa**: zeměkoule s politickou a přírodní mapou, 255 území z dat 1:10 milionů, hranice tisíců krajů a regionů, přes 25 000 měst, řeky, jezera, moře, zálivy, ostrovy, pohoří a vrcholy s výškou. Jmenovek je přes 30 000 a přibývají s přiblížením.
+- **Encyklopedie**: karta státu s vlajkou, hlavním městem, počtem obyvatel a rozlohou včetně pořadí na světě, hustotou zalidnění, měnou, jazyky, nejvyšší horou, nadějí dožití, sousedy a srovnáním s Českem. Ke státům, městům, horám, řekám, planetám i souhvězdím se načítá úvod článku a obrázek z české Wikipedie.
+- **Hledání**: lupa nebo klávesa `/` hledá ve 30 000 jménech (státy, města, hory, řeky, planety, měsíce, souhvězdí) a doletí na místo.
+- **Tematické mapy**: státy obarvené podle počtu obyvatel, hustoty zalidnění, naděje dožití, indexu lidského rozvoje, strany, po které se jezdí, přístupu k moři a členství v EU a NATO.
+- **Zeměpisný kvíz**: najdi stát na mapě, poznej stát podle tvaru, poznej vlajku, hlavní města. Celý svět nebo jeden světadíl, deset otázek na kolo.
+- **Živá Země**: zemětřesení za posledních 30 dní z USGS a hranice tektonických desek. Rekordy Země, od Mount Everestu po Marianský příkop.
 - **Uvnitř Země**: průřez zeměkoulí s kůrou, pláštěm a jádrem.
 - **Obloha**: hvězdná obloha nad Českem ve zvoleném čase, všech 88 souhvězdí s českými jmény, Slunce, Měsíc a planety.
 - **Sluneční soustava**: planety na skutečných místech, jejich měsíce, kometa, pás asteroidů, skutečné velikosti vedle sebe, rychlost světla, hra „Najdi planetu“.
@@ -33,12 +38,13 @@ a pak otevřít `http://localhost:8000`.
 
 - `index.html`: kostra stránky, načítá vše ostatní.
 - `css/app.css`: vzhled.
-- `js/`: kód rozdělený podle témat (základ, hvězdy, Země, soustava, galaxie, mapa, průřez a obloha, aplikace, režimy, ovládání, smyčka). Soubory sdílejí jeden prostor jmen a načítají se v pořadí podle čísla.
+- `js/`: kód rozdělený podle témat (základ, hvězdy, Země, soustava, galaxie, mapa, průřez a obloha, aplikace, režimy, encyklopedie, kvíz, ovládání, smyčka). Soubory sdílejí jeden prostor jmen a načítají se v pořadí podle čísla.
 - `data/sky.js`: katalog hvězd a souhvězdí, načítá se hned.
-- `data/geo.json`: data mapy světa (4 MB), stahují se až při prvním otevření mapy.
+- `data/geo.json`: data mapy světa (4 MB), stahují se až při prvním otevření mapy nebo hledání. Spolu s nimi `data/staty.json` (údaje o státech).
+- `data/desky.json`: hranice tektonických desek, stahují se se zemětřesením.
 - `tex/`: textury a vlajky.
 - `testy/test.mjs`: automatický test.
-- `nastroje/`: skripty, kterými vznikla data mapy.
+- `nastroje/`: skripty, kterými vznikla data mapy, států (`staty_encyklopedie.py`) a desek (`desky.py`).
 
 ## Testy
 
@@ -52,11 +58,11 @@ Spustí aplikaci v headless Chromu, projde všechny pohledy a režimy na počít
 
 - Tažení otáčí, kolečko nebo dva prsty přibližují, pravé tlačítko myši nebo dva prsty posouvají.
 - Přiblížení a oddálení na doraz přelétá mezi světy (Země, soustava, galaxie, vesmír).
-- Klávesy `+` a `−` zoomují, `H` schová ovládání.
+- Klávesy `+` a `−` zoomují, `H` schová ovládání, `/` otevře hledání.
 
 ## Zjednodušení
 
-Vzdálenosti a velikosti nejsou v měřítku (kromě režimu Skutečné velikosti). Planety obíhají po kružnicích podle střední polohy, takže poloha odpovídá skutečnosti jen přibližně. Povrchy Pluta a měsíců planet jsou kreslené, ne fotografické.
+Údaje o státech pocházejí z otevřených databází a mohou být několik let staré, u naděje dožití a indexu lidského rozvoje je rok uveden. Vzdálenosti a velikosti ve vesmíru nejsou v měřítku (kromě režimu Skutečné velikosti). Planety obíhají po kružnicích podle střední polohy, takže poloha odpovídá skutečnosti jen přibližně. Povrchy Pluta a měsíců planet jsou kreslené, ne fotografické.
 
 ## Zdroje
 
@@ -65,4 +71,7 @@ Vzdálenosti a velikosti nejsou v měřítku (kromě režimu Skutečné velikost
 - Hvězdy a čáry souhvězdí: [d3-celestial](https://github.com/ofrohn/d3-celestial), licence BSD-3-Clause.
 - Hranice států, řeky a jezera: [Natural Earth](https://www.naturalearthdata.com/) přes world-atlas, volné dílo. Údaje o státech: [Wikidata](https://www.wikidata.org/), CC0. Vlajky: [Twemoji](https://github.com/twitter/twemoji), CC BY 4.0.
 - Menší města: [GeoNames](https://www.geonames.org/), CC BY 4.0.
+- Měny, jazyky, předvolby a domény států: [mledoze/countries](https://github.com/mledoze/countries), ODbL. Naděje dožití, index lidského rozvoje, nejvyšší hory a české názvy: Wikidata.
+- Úvody článků a obrázky: [česká Wikipedie](https://cs.wikipedia.org/), CC BY-SA, načítají se za běhu a odkazují na celý článek.
+- Zemětřesení: [USGS](https://earthquake.usgs.gov/), volné dílo, načítají se za běhu. Hranice desek: Peter Bird (2003), převod [Hugo Ahlenius](https://github.com/fraxen/tectonicplates), ODC-BY.
 - 3D knihovna: [three.js](https://threejs.org/) r128, licence MIT.

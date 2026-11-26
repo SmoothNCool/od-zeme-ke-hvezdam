@@ -2,32 +2,32 @@
 /* ---------- zastávky; anchor = místo ve scéně, odkud jsme přiletěli z menšího světa ---------- */
 const LV = [
   { id: 'zeme', ico: '🌍', name: 'Den a noc', group: gE, cam: [1.3, 1.1, 4.4], min: 1.6, max: 14, def: 2, anchor: gE,
-    txt: 'Země se točí dokola jako káča. Kde na ni svítí Slunce, je den. Na druhé straně je tma a noc. Sleduj červenou tečku, tam bydlíme my.',
-    note: 'Bílá čára je osa, kolem které se Země točí. Jedno otočení je jeden den. Kolem krouží vesmírná stanice, kde bydlí kosmonauti. Zemi obletí šestnáctkrát za den.' },
+    txt: 'Země se otočí kolem své osy jednou za 24 hodin. Na straně přivrácené ke Slunci je den, na odvrácené noc. Hranice světla a stínu přejde přes Česko dvakrát denně, při východu a při západu Slunce. Červená tečka ukazuje Česko.',
+    note: 'Bílá čára je zemská osa. Je nakloněná o 23,4°, proto se během roku mění délka dne. Kolem Země obíhá Mezinárodní vesmírná stanice, jeden oblet jí trvá asi 92 minut.' },
   { id: 'mesic', ico: '🌙', name: 'Země a Měsíc', tab: 'Měsíc', group: gE, cam: [0, 7, 15], min: 1.6, max: 30, def: 2, anchor: gE,
-    txt: 'Měsíc obíhá kolem Země. Jedno kolo mu trvá skoro měsíc. Sám nesvítí, jen odráží světlo ze Slunce. Proto ho někdy vidíme celý a jindy jen kousek.',
-    note: 'Vypadá jako D? Dorůstá. Vypadá jako C? Couvá. Ve skutečnosti je Měsíc mnohem dál, mezi něj a Zemi by se vešlo třicet Zemí.' },
+    txt: 'Měsíc oběhne Zemi jednou za 27 dní. Sám nesvítí, jen odráží sluneční světlo. Podle toho, z jakého úhlu se díváme na jeho osvětlenou polovinu, vidíme nov, srpek, čtvrť nebo úplněk.',
+    note: 'Pomůcka: vypadá jako D, dorůstá. Vypadá jako C, couvá. V modelu je Měsíc blíž, než odpovídá měřítku. Ve skutečnosti by se mezi něj a Zemi vešlo třicet Zemí vedle sebe.' },
   { id: 'rok', ico: '🍂', name: 'Roční období', group: gY, cam: [0, 20, 42], min: 6, max: 90, def: 6, anchor: yHolder,
-    txt: 'Země letí kolem Slunce a jedno kolo jí trvá celý rok. Je trochu nakloněná. Když je naše půlka nakloněná ke Slunci, svítí na nás dlouho a je léto. Když je odkloněná, den je krátký a je zima.',
-    note: 'V zimě není Země od Slunce dál, může za to jen ten náklon. Za rok se Země otočí 365krát. Při rychlém čase ji model přibrzdí, jinak by z ní byla jen šmouha.' },
+    txt: 'Země oběhne Slunce za jeden rok. Její osa je nakloněná a míří pořád stejným směrem. Když je severní polokoule přikloněná ke Slunci, dopadá na ni světlo strměji a déle a máme léto. O půl roku později je odkloněná a je zima.',
+    note: 'Roční období nezpůsobuje vzdálenost od Slunce. Země je mu nejblíž začátkem ledna, kdy je u nás zima. Při rychlém čase model otáčení Země přibrzdí, jinak by z ní byla jen šmouha.' },
   { id: 'rez', ico: '🌍', name: 'Uvnitř Země', group: gC, cam: [-2.5, 1.5, -3], min: 1.4, max: 12, def: 0, anchor: gC,
-    txt: 'Kdybychom Zemi rozkrojili jako broskev, uvidíme vrstvy. Nahoře je tenká kůra, po které chodíme. Pod ní je horký plášť a úplně uprostřed jádro ze železa. Šipky v plášti ukazují, jak se horký kámen pomalu převaluje. Ťukni na vrstvu a dozvíš se víc.',
-    note: 'Tak hluboko se nikdo nikdy nedostal. Nejhlubší díra, kterou lidé vyvrtali, měří 12 km, to je jen škrábnutí do kůry. Kůra je v modelu nakreslená tlustší, jinak by nebyla vidět.' },
+    txt: 'Země má vrstvy. Na povrchu je tenká pevná kůra, pod ní horký plášť, který se velmi pomalu přelévá, a uprostřed jádro ze železa a niklu. Vnější jádro je tekuté, vnitřní pevné. Šipky ukazují proudění v plášti, které hýbe kontinenty. Ťukni na vrstvu a dozvíš se víc.',
+    note: 'Tak hluboko se nikdo nedostal. Nejhlubší vrt měří 12 km, to je jen škrábnutí do kůry. O nitru Země víme hlavně z toho, jak jím procházejí vlny zemětřesení. Kůra je v modelu nakreslená tlustší, jinak by nebyla vidět.' },
   { id: 'mapa', ico: '🌍', name: 'Mapa světa', group: gM, cam: latLon(47, 15).multiplyScalar(3.1).toArray(), min: 1.02, max: 9, def: 0, anchor: gM,
-    txt: 'Zeměkoule jako mapa. Přepni si, jestli chceš vidět státy, nebo přírodu. Čím víc se přiblížíš, tím víc jmen se objeví. Ťukni na stát a dozvíš se, jak se jmenuje, jaké má hlavní město a jakou vlajku.',
-    note: 'Velké bílé tečky jsou hlavní města, menší jsou další města. Tenké čáry uvnitř států jsou hranice krajů a regionů. Ťukni na jakoukoli jmenovku a dozvíš se víc. Fotka pod přírodní mapou se při velkém přiblížení rozmaže.' },
+    txt: 'Podrobná mapa světa na zeměkouli. Ťukni na stát, město, horu nebo moře a otevře se karta s údaji a článkem z Wikipedie. Státy jdou obarvit podle počtu obyvatel, naděje dožití a dalších údajů. Zeměpis si vyzkoušíš v kvízu.',
+    note: 'Čím víc se přiblížíš, tím víc jmen se objeví. Velké bílé tečky jsou hlavní města, tenké čáry uvnitř států hranice krajů a regionů. Lupa vpravo hledá ve 30 000 jménech. Fotka pod přírodní mapou se při velkém přiblížení rozmaže.' },
   { id: 'obloha', ico: '🌍', name: 'Obloha', group: gO, cam: [0, -.031, -.095], min: .1, max: .1, def: 2, anchor: gO, noChain: true,
-    txt: 'Takhle vypadá obloha u nás v Česku. Hvězdy jsou na ní pořád, i ve dne, jen je přesvítí Slunce. Během noci se obloha otáčí kolem Polárky. A během roku se mění, v zimě vidíme jiná souhvězdí než v létě.',
+    txt: 'Obloha nad Českem v čase, který si nastavíš. Hvězdy jsou na ní i ve dne, jen je přesvítí Slunce. Během noci se obloha otáčí kolem Polárky, protože se otáčí Země. A během roku se mění, protože noční strana Země míří při oběhu kolem Slunce pokaždé jinam.',
     note: 'Tažením se rozhlížíš, kolečkem přibližuješ. Zkus čas 1 s = 1 den a sleduj, jak se noční obloha za rok promění. Ťukni na souhvězdí a dozvíš se, kdy je vidět.' },
   { id: 'soustava', ico: '☀️', name: 'Sluneční soustava', group: gS, cam: [0, 40, 66], min: 3, max: 240, def: 4, anchor: planets[2].holder,
-    txt: 'Uprostřed je Slunce. Kolem něj obíhá osm planet, kometa a pás kamenů. Pluto mezi planety nepatří, je to trpasličí planeta, proto má čárkovanou dráhu. Ťukni na planetu a poletíme k ní.',
-    note: 'Ve skutečnosti jsou planety mnohem dál od sebe a Slunce je o hodně větší. Otáčení planet a oběh měsíců odpovídají času, jen při rychlém čase je model přibrzdí, aby nebyly rozmazané. Dráhy mají skutečný sklon a tvar, proto nejsou úplně v jedné rovině.' },
+    txt: 'Kolem Slunce obíhá osm planet, trpasličí planety, komety a pás asteroidů. Pluto se od roku 2006 řadí mezi trpasličí planety, proto má čárkovanou dráhu. Ťukni na planetu nebo měsíc a přiletíme k nim.',
+    note: 'Vzdálenosti a velikosti nejsou v měřítku, jinak by planety nebyly vidět. Polohy planet odpovídají nastavenému datu, dráhy mají skutečný sklon a tvar. Při rychlém čase model otáčení planet přibrzdí, aby nebyly rozmazané.' },
   { id: 'galaxie', ico: '🌌', name: 'Mléčná dráha', group: gG, cam: [0, 48, 78], min: 15, max: 200, def: 0, anchor: ourSun,
-    txt: 'Naše Slunce je jen jedna z hvězd. Takový obrovský vír hvězd se jmenuje galaxie. Ta naše je Mléčná dráha a má stovky miliard hvězd.',
-    note: 'Zvenku ji ještě nikdo nevyfotil. Takhle si ji vědci představují.' },
+    txt: 'Slunce je jedna ze stovek miliard hvězd Mléčné dráhy. Je to spirální galaxie s příčkou. Slunce obíhá kolem jejího středu a jeden oběh mu trvá 230 milionů let.',
+    note: 'Zvenku ji nikdo nevyfotil, žijeme uvnitř. Model ukazuje, jak si ji astronomové složili z měření.' },
   { id: 'vesmir', ico: '✨', name: 'Vesmír', group: gU, cam: [0, 50, 330], min: 40, max: 700, def: 0, anchor: ourGalaxy,
-    txt: 'Každý tenhle obláček je celá galaxie plná hvězd. Vesmír má stovky miliard galaxií. A nikdo neví, kde končí.',
-    note: 'Naše galaxie je jedna z nich.' },
+    txt: 'Každý obláček je celá galaxie s miliardami hvězd. V pozorovatelném vesmíru jich jsou stovky miliard. Vesmír se rozpíná, vzdálené galaxie se od nás vzdalují.',
+    note: 'Naše galaxie je jedna z nich. Rozmístění galaxií je v modelu jen ilustrační.' },
 ];
 // fakta do informačního panelu; „autem“ = nepřetržitě stovkou, k planetám v době, kdy jsou Zemi nejblíž; „sondou“ = jak dlouho letěla skutečná sonda
 const FACTS = {
@@ -45,11 +45,11 @@ const FACTS = {
   'Venuše': [['Průměr', '12 104 km'], ['Daleko od Slunce', '108 milionů km'], ['Jedno otočení', '243 dní, pozpátku'], ['Rok', '225 dní'], ['Teplota', '465 °C'], ['Měsíců', '0'], ['Autem', '43 let'], ['Sondou', 'asi 4 měsíce']],
   'Země': [['Průměr', '12 742 km'], ['Daleko od Slunce', '150 milionů km'], ['Jedno otočení', '24 hodin'], ['Rok', '365 dní'], ['Průměrná teplota', '15 °C'], ['Měsíců', '1']],
   Mars: [['Průměr', '6 779 km'], ['Daleko od Slunce', '228 milionů km'], ['Jedno otočení', '24 hodin 37 minut'], ['Rok', '687 dní'], ['Průměrná teplota', '−63 °C'], ['Měsíců', '2'], ['Autem', '63 let'], ['Sondou', 'asi 7 měsíců']],
-  Jupiter: [['Průměr', '139 820 km (11 Zemí vedle sebe)'], ['Daleko od Slunce', '778 milionů km'], ['Jedno otočení', 'necelých 10 hodin'], ['Rok', '12 našich let'], ['Teplota v mracích', '−110 °C'], ['Měsíců', 'skoro 100'], ['Autem', '670 let'], ['Sondou (Juno)', '5 let']],
-  Saturn: [['Průměr', '116 460 km (9 Zemí vedle sebe)'], ['Daleko od Slunce', '1,4 miliardy km'], ['Jedno otočení', 'necelých 11 hodin'], ['Rok', '29 našich let'], ['Teplota v mracích', '−140 °C'], ['Měsíců', 'přes 270'], ['Autem', '1 400 let'], ['Sondou (Cassini)', '7 let']],
+  Jupiter: [['Průměr', '139 820 km (11 Zemí vedle sebe)'], ['Daleko od Slunce', '778 milionů km'], ['Jedno otočení', 'necelých 10 hodin'], ['Rok', '12 našich let'], ['Teplota v mracích', '−110 °C'], ['Měsíců', 'přes 110'], ['Autem', '670 let'], ['Sondou (Juno)', '5 let']],
+  Saturn: [['Průměr', '116 460 km (9 Zemí vedle sebe)'], ['Daleko od Slunce', '1,4 miliardy km'], ['Jedno otočení', 'necelých 11 hodin'], ['Rok', '29 našich let'], ['Teplota v mracích', '−140 °C'], ['Měsíců', 'skoro 300'], ['Autem', '1 400 let'], ['Sondou (Cassini)', '7 let']],
   Uran: [['Průměr', '50 724 km (4 Země vedle sebe)'], ['Daleko od Slunce', '2,9 miliardy km'], ['Jedno otočení', '17 hodin, pozpátku'], ['Rok', '84 našich let'], ['Teplota v mracích', '−195 °C'], ['Měsíců', 'skoro 30'], ['Autem', '3 000 let'], ['Sondou (Voyager 2)', '8 a půl roku']],
   Neptun: [['Průměr', '49 244 km (skoro 4 Země vedle sebe)'], ['Daleko od Slunce', '4,5 miliardy km'], ['Jedno otočení', '16 hodin'], ['Rok', '165 našich let'], ['Teplota v mracích', '−200 °C'], ['Měsíců', '16'], ['Autem', '4 900 let'], ['Sondou (Voyager 2)', '12 let']],
-  Pluto: [['Co to je', 'trpasličí planeta'], ['Planetou bylo', 'do roku 2006'], ['Průměr', '2 377 km'], ['Daleko od Slunce', '5,9 miliardy km'], ['Jedno otočení', '6 dní, pozpátku'], ['Rok', '248 našich let'], ['Teplota', '−230 °C'], ['Měsíců', '5'], ['Autem', '6 500 let'], ['Sondou (New Horizons)', '9 a půl roku']],
+  Pluto: [['Co to je', 'trpasličí planeta'], ['Planetou bylo', 'do roku 2006'], ['Průměr', '2 377 km'], ['Daleko od Slunce', '5,9 miliardy km'], ['Jedno otočení', '6 dní, pozpátku'], ['Rok', '248 našich let'], ['Teplota', '−230 °C'], ['Měsíců', '5'], ['Autem', '4 900 let'], ['Sondou (New Horizons)', '9 a půl roku']],
   Kometa: [['Jádro', 'jen pár kilometrů'], ['Ohon', 'i miliony kilometrů'], ['Z čeho je', 'led, prach a kamení'], ['Nejznámější', 'Halleyova, vrací se za 76 let']],
 };
 [SUN, comet, ...planets].forEach(o => o.facts = FACTS[o.name]);
@@ -61,9 +61,9 @@ const INFO = {
   Plast: { name: 'Zemský plášť', txt: 'Nejtlustší vrstva. Je to horký kámen, který se pomaličku hýbe jako hodně hustý med. Kvůli tomu se posouvají světadíly a soptí sopky.', note: '', facts: [['Tloušťka', '2 900 km'], ['Teplota', '1 000 až 3 700 °C']] },
   Jadro2: { name: 'Vnější jádro', txt: 'Roztavené železo a nikl. Jak se přelévá, dělá ze Země obrovský magnet. Díky tomu funguje kompas.', note: '', facts: [['Tloušťka', '2 200 km'], ['Teplota', '4 000 až 5 000 °C'], ['Skupenství', 'tekuté']] },
   Jadro1: { name: 'Vnitřní jádro', txt: 'Koule ze železa uprostřed Země. Je horká jako povrch Slunce, ale tlačí na ni tolik kamení, že zůstává pevná.', note: '', facts: [['Poloměr', '1 220 km'], ['Teplota', 'asi 5 400 °C'], ['Skupenství', 'pevné']] },
-  ISS: { name: 'Vesmírná stanice ISS', txt: 'Dům, který létá kolem Země. Bydlí v něm kosmonauti, spí přivázaní ve spacáku a jídlo jim odlétá od pusy, protože tam nic nic neváží.', note: 'V modelu letí dál od Země, než doopravdy je, jinak by nebyla vidět.',
+  ISS: { name: 'Vesmírná stanice ISS', txt: 'Laboratoř na oběžné dráze a největší stavba, jakou lidé ve vesmíru postavili. Posádka v ní žije ve stavu beztíže, spí ve spacácích přivázaných ke stěně a jídlo se jí vznáší.', note: 'V modelu letí dál od Země, než doopravdy je, jinak by nebyla vidět.',
     facts: [['Výška nad zemí', '400 km'], ['Rychlost', '28 000 km/h'], ['Jeden oblet Země', '92 minut'], ['Délka', '109 m, jako fotbalové hřiště'], ['Posádka', 'obvykle 7 lidí'], ['Lidé tam žijí', 'bez přestávky od roku 2000']] },
-  Mesic: { name: 'Měsíc', txt: 'Náš nejbližší soused ve vesmíru. Je to velká kamenná koule plná kráterů. Vzduch ani voda tam nejsou.', note: 'K Zemi je otočený pořád stejnou stranou.', facts: FACTS.mesic },
+  Mesic: { name: 'Měsíc', txt: 'Náš nejbližší soused ve vesmíru. Je to velká kamenná koule plná kráterů. Vzduch tam není a voda jen jako led ukrytý v kráterech u pólů.', note: 'K Zemi je otočený pořád stejnou stranou.', facts: FACTS.mesic },
   Doma: { name: 'Tady bydlíme', txt: 'Červená tečka je Česko. Když je na osvětlené straně Země, máme den. Když se Země otočí a tečka zajede do stínu, máme noc.', note: '',
     facts: [['Stát', 'Česko'], ['Světadíl', 'Evropa'], ['Od rovníku', '50° na sever']] },
   Pas: { name: 'Pás asteroidů', txt: 'Spousta kamenů a balvanů, které obíhají kolem Slunce mezi Marsem a Jupiterem. Jsou to zbytky ze stavby planet.', note: 'V modelu jsou kameny hodně zvětšené. Ve skutečnosti jsou od sebe tak daleko, že mezi nimi sondy proletí bez úhony.',
@@ -107,16 +107,18 @@ function preset() {
 function card(o) { $('#ttl').textContent = o.name; $('#txt').textContent = o.txt; $('#note').textContent = o.note; readText = o.say || o.txt + ' ' + o.note;
   $('#facts').replaceChildren(...(o.facts || []).map(([k, val]) => { const d = document.createElement('div'), dt = document.createElement('dt'), dd = document.createElement('dd'); dt.textContent = k; dd.textContent = val; d.append(dt, dd); return d; }));
   $('#card').classList.toggle('show', !!o.say);
-  $('#flag').hidden = !(o.flag >= 0); if (o.flag >= 0) $('#flag').style.backgroundPosition = `${-(o.flag % 16) * 40}px ${-Math.floor(o.flag / 16) * 40}px`; } // otázka ve hře musí být vidět i ve sbalené kartě
+  $('#flag').hidden = !(o.flag >= 0); if (o.flag >= 0) $('#flag').style.backgroundPosition = `${-(o.flag % 16) * 40}px ${-Math.floor(o.flag / 16) * 40}px`; // otázka ve hře musí být vidět i ve sbalené kartě
+  cardExtras(o); }
 function pill(text, on, pressed) { const b = document.createElement('button'); b.className = 'pill'; b.textContent = text; b.onclick = on; if (pressed != null) b.setAttribute('aria-pressed', pressed); return b; }
 function acts() {
   const a = $('#acts'); a.replaceChildren();
-  if (L.id === 'mapa') a.append(pill('Státy', () => setMapMode('staty'), mapMode === 'staty'), pill('Příroda', () => setMapMode('priroda'), mapMode === 'priroda'));
+  if (L.id === 'mapa') mapActs(a); else $('#legend').hidden = true;
   if (L.id === 'mesic') a.append(pill('Zatmění Slunce', () => eclipse('sun'), ecl === 'sun'), pill('Zatmění Měsíce', () => eclipse('moon'), ecl === 'moon'));
   if (L.id === 'soustava') a.append(pill('Skutečné velikosti', toggleSizes, sizes), pill('Světlo ze Slunce', startLight, !!light), pill(game ? 'Konec hry' : 'Hra: najdi planetu', toggleGame, !!game));
 }
 function endModes() {
   ecl = null; earth.material.uniforms.ecl.value = 0; moon.material.color.set(0xffffff);
+  quiz = null; mapSelect(null); mapFlyTo = null;
   sizes = false; game = null; light = null; lightRing.visible = false; focus = null; zoomTo = 0; flyTo = null; recenter = false; info = null; controls.enablePan = true;
 }
 function setLevel(i, keepCam) {
@@ -162,7 +164,7 @@ function stepTransition(dt) {
     const k = 1 - Math.pow(1 - e, 3);
     tgt = tr.a.clone().lerp(ZERO, k);
     camera.position.copy(tgt).add(tr.dir.clone().multiplyScalar(tr.d0 * Math.pow(tr.d1 / tr.d0, k))); fade = (1 - e) ** 2;
-    if (e >= 1) { tr = null; controls.enabled = true; }
+    if (e >= 1) { tr = null; controls.enabled = true; if (after) { const fn = after; after = null; fn(); } } // úkol odložený na přílet, třeba otevřít nalezené heslo
   }
   controls.target.copy(tgt); camera.lookAt(tgt); $('#fade').style.opacity = fade;
 }
@@ -175,9 +177,9 @@ function setFocus(p) {
 function unfocus() { controls.enablePan = true; focus = null; zoomTo = 0; controls.minDistance = L.min; $('#back').hidden = true; }
 function showInfo(o) { info = o; card(o); $('#back').hidden = false; setMin(false); } // kdo ťukne na jmenovku, chce číst, proto se karta rozbalí
 const goBack = () => {
-  if (info) { info = null; card(focus || baseCard()); $('#back').hidden = !focus; return; } // z informace zpět k planetě, u které stojíme
+  if (info) { info = null; mapSelect(null); card(focus || baseCard()); $('#back').hidden = !focus; return; } // z informace zpět k planetě, u které stojíme
   if (focus && focus.parent) return setFocus(focus.parent); // od měsíce zpět k jeho planetě
   unfocus(); flyTo = overview(); card(baseCard());
 };
 $('#back').onclick = goBack;
-controls.addEventListener('start', () => { zoomTo = 0; flyTo = null; });
+controls.addEventListener('start', () => { zoomTo = 0; flyTo = null; mapFlyTo = null; });

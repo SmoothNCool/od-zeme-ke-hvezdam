@@ -16,7 +16,9 @@ const unwrap = flat => { // čára nebo prstenec přes 180. poledník se narovn�
 };
 const dec = a => { const out = []; let x = 0, y = 0; for (let i = 0; i < a.length; i += 2) { x += a[i]; y += a[i + 1]; out.push(x / 1000, y / 1000); } return out; }; // data jsou rozdíly v tisícinách stupně
 let ARCS, RIVERS, LAKES, geoShapes; // naplní se v initMapData, až dorazí data mapy
-const loadGeo = () => window.GEO ? Promise.resolve() : fetch('data/geo.json').then(r => { if (!r.ok) throw new Error(r.status); return r.json(); }).then(d => { window.GEO = d; });
+const getJson = url => fetch(url, { signal: AbortSignal.timeout(30000) }).then(r => { if (!r.ok) throw new Error(r.status); return r.json(); });
+let geoWait = null; // data mapy a údaje o státech se stahují jednou, až je někdo potřebuje (mapa nebo hledání)
+const loadGeo = () => geoWait || (geoWait = Promise.all([getJson('data/geo.json'), getJson('data/staty.json')]).then(([g, s]) => { window.GEO = g; window.STATY = s; initMapData(); }).catch(err => { geoWait = null; throw err; }));
 function ringOf(idx) { // prstenec = úseky za sebou; záporný index znamená úsek pozpátku (~i)
   const out = [];
   for (const i of idx) {
@@ -26,14 +28,27 @@ function ringOf(idx) { // prstenec = úseky za sebou; záporný index znamená �
   }
   return out;
 }
+const baseColor = i => GEO.c[i][0] === 'Antarktida' ? '#eef2f7' : GEO_COLORS[GEO.c[i][6]];
 const fatMats = []; // materiály tlustých čar potřebují znát velikost okna
 const OCEAN = 0x17365f, mapMat = new THREE.MeshBasicMaterial({ color: OCEAN });
 const globe = new THREE.Mesh(new THREE.SphereGeometry(1, 128, 96), mapMat); gM.add(globe, atmosphere(1, V(.4, .5, .75).normalize()));
 let mapMode = 'staty', camD = 9, vec = null, photo8k = null;
+const mapP = (lon, lat, r) => latLon(lat, lon).multiplyScalar(r);
+function seg(out, flat, r) { // lomená čára; dlouhé úseky se dělí, jinak by vedly tětivou pod povrchem koule
+  for (let k = 2; k < flat.length; k += 2) {
+    const x0 = flat[k - 2], y0 = flat[k - 1], dx = flat[k] - x0, dy = flat[k + 1] - y0, n = Math.max(1, Math.ceil(Math.max(Math.abs(dx), Math.abs(dy)) / 2));
+    for (let i = 0; i < n; i++) { const a = mapP(x0 + dx * i / n, y0 + dy * i / n, r), b = mapP(x0 + dx * (i + 1) / n, y0 + dy * (i + 1) / n, r); out.push(a.x, a.y, a.z, b.x, b.y, b.z); }
+  }
+}
+const fat = (flat, width) => { // čára s tloušťkou v pixelech
+  const g = new THREE.LineSegmentsGeometry(); g.setPositions(flat);
+  const m = new THREE.LineMaterial({ color: 0xffffff, linewidth: width, transparent: true }); m.resolution.set(W, H); fatMats.push(m);
+  return new THREE.LineSegments2(g, m);
+};
 // Mapa je vektorová: plochy států jsou trojúhelníky přímo na kouli, hranice a řeky čáry, města body. Proto zůstává ostrá při jakémkoli přiblížení.
 function buildVector() {
   const pos = [], col = [], c3 = new THREE.Color(); let R = 1.0008; // vrstvy leží těsně nad sebou, jinak by se zblízka vůči sobě posouvaly
-  const P = (lon, lat, r) => latLon(lat, lon).multiplyScalar(r);
+  const P = mapP;
   const far = (a, b) => Math.max(Math.abs(a[0] - b[0]), Math.abs(a[1] - b[1])) > 3, mid = (a, b) => [(a[0] + b[0]) / 2, (a[1] + b[1]) / 2];
   // velký trojúhelník by vedl tětivou pod povrchem koule, proto se dělí; o dělení hrany rozhoduje jen její délka, takže sousední trojúhelníky na sebe navazují bez škvír
   function tri(a, b, c, depth) {
@@ -53,21 +68,11 @@ function buildVector() {
     const faces = THREE.ShapeUtils.triangulateShape(rings[0], rings.slice(1)), all = rings[0].concat(...rings.slice(1));
     for (const f of faces) tri([all[f[0]].x, all[f[0]].y], [all[f[1]].x, all[f[1]].y], [all[f[2]].x, all[f[2]].y], 0);
   }
-  function seg(out, flat, r) { // lomená čára, dlouhé úseky se dělí ze stejného důvodu jako trojúhelníky
-    for (let k = 2; k < flat.length; k += 2) {
-      const x0 = flat[k - 2], y0 = flat[k - 1], dx = flat[k] - x0, dy = flat[k + 1] - y0, n = Math.max(1, Math.ceil(Math.max(Math.abs(dx), Math.abs(dy)) / 2));
-      for (let i = 0; i < n; i++) { const a = P(x0 + dx * i / n, y0 + dy * i / n, r), b = P(x0 + dx * (i + 1) / n, y0 + dy * (i + 1) / n, r); out.push(a.x, a.y, a.z, b.x, b.y, b.z); }
-    }
-  }
-  const fat = (flat, width) => { // čára s tloušťkou v pixelech
-    const g = new THREE.LineSegmentsGeometry(); g.setPositions(flat);
-    const m = new THREE.LineMaterial({ color: 0xffffff, linewidth: width, transparent: true }); m.resolution.set(W, H); fatMats.push(m);
-    return new THREE.LineSegments2(g, m);
-  };
-  const border = [], coast = [], river = [], bigRiver = [], adm = [], caps = [], towns = [[], [], [], []];
+  const border = [], coast = [], river = [], bigRiver = [], adm = [], caps = [], towns = [[], [], [], []], ranges = [];
   GEO.c.forEach((c, i) => {
-    c3.set(c[0] === 'Antarktida' ? '#eef2f7' : GEO_COLORS[c[6]]);
+    c3.set(baseColor(i)); const start = col.length;
     for (const poly of geoShapes[i]) fill(poly);
+    ranges.push([start, col.length]); // kde v poli barev leží tenhle stát, pro tematické mapy
     if (c[9]) { const w = P(c[9][0], c[9][1], 1.0014); caps.push(w.x, w.y, w.z); }
   });
   ARCS.forEach((a, i) => seg(GEO.shared[i] === '1' ? border : coast, unwrap(a), 1.0011)); // každý úsek jednou, takže společná hranice je jedna čára
@@ -78,7 +83,7 @@ function buildVector() {
   const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3)); g.setAttribute('color', new THREE.Float32BufferAttribute(col, 3));
   const dot = canvasTex((cx, sz) => { cx.fillStyle = '#16233f'; cx.beginPath(); cx.arc(sz / 2, sz / 2, sz * .46, 0, TAU); cx.fill(); cx.fillStyle = '#fff'; cx.beginPath(); cx.arc(sz / 2, sz / 2, sz * .32, 0, TAU); cx.fill(); }, 32);
   const v = {
-    land: new THREE.Mesh(g, new THREE.MeshBasicMaterial({ vertexColors: true, side: THREE.DoubleSide })),
+    ranges, land: new THREE.Mesh(g, new THREE.MeshBasicMaterial({ vertexColors: true, side: THREE.DoubleSide })),
     border: fat(border, 1.9), coast: fat(coast, 1.1), river: fat(river, 1.1), bigRiver: fat(bigRiver, 2.2), adm1: fat(adm, 1),
     caps: points(caps, new THREE.PointsMaterial({ size: 10, sizeAttenuation: false, map: dot, alphaTest: .5 })),
     towns: towns.map((t, i) => points(t, new THREE.PointsMaterial({ size: [7, 5.5, 4.5, 4][i], sizeAttenuation: false, map: dot, alphaTest: .5 }))),
@@ -87,14 +92,35 @@ function buildVector() {
   return v;
 }
 let building = false, buildMs = 0;
+// výběr na mapě: obrys vybraného státu nebo špendlík na vybraném místě
+let selLine = null, selPin = null;
+function mapSelect(sel) { // {c: index státu} | {lat, lon} | null
+  if (selLine) { gM.remove(selLine); selLine.geometry.dispose(); selLine.material.dispose(); fatMats.splice(fatMats.indexOf(selLine.material), 1); selLine = null; }
+  if (selPin) selPin.visible = false;
+  if (!sel) return;
+  if (sel.c >= 0) { const out = []; for (const poly of geoShapes[sel.c]) for (const ring of poly) seg(out, ring, 1.0016); selLine = fat(out, 3.2); selLine.material.color.set(sel.color || 0xffc94d); gM.add(selLine); }
+  else {
+    if (!selPin) { selPin = points([0, 0, 0], new THREE.PointsMaterial({ size: 30, sizeAttenuation: false, transparent: true, depthTest: false, map: canvasTex((cx, sz) => { cx.strokeStyle = '#ffc94d'; cx.lineWidth = sz * .09; cx.beginPath(); cx.arc(sz / 2, sz / 2, sz * .38, 0, TAU); cx.stroke(); }, 64) })); gM.add(selPin); }
+    selPin.position.copy(mapP(sel.lon, sel.lat, 1.002)); selPin.visible = true;
+  }
+}
+let mapFlyTo = null; // přelet po mapě jde po povrchu koule, ne přímou čarou skrz Zemi
+const mapFly = (lat, lon, d) => { flyTo = null; mapFlyTo = { dir: latLon(lat, lon), d: THREE.MathUtils.clamp(d, 1.05, 8) }; };
+function stepMapFly(dt) {
+  const k = Math.min(1, dt * 3.5), d0 = camera.position.length(), dir = camera.position.clone().divideScalar(d0);
+  if (dir.dot(mapFlyTo.dir) < -.98) dir.x += .2; // přesně protilehlý bod: je potřeba vybrat stranu
+  dir.lerp(mapFlyTo.dir, k).normalize(); const d = d0 + (mapFlyTo.d - d0) * k;
+  camera.position.copy(dir).multiplyScalar(d);
+  if (dir.dot(mapFlyTo.dir) > .999995 && Math.abs(d - mapFlyTo.d) < .004 * mapFlyTo.d) mapFlyTo = null;
+}
 function setMapMode(mode) {
   mapMode = mode; const nature = mode === 'priroda';
   if (!vec) { // první otevření: data mapy se teprve stáhnou a pak se z nich postaví geometrie
     if (!building) {
       building = true; $('#note').textContent = 'Stahuji a kreslím mapu, chvilku strpení…';
       loadGeo().then(() => {
-        const t0 = performance.now(); initMapData(); vec = buildVector(); buildMs = Math.round(performance.now() - t0); building = false;
-        if (L.id === 'mapa' && !info) card(baseCard());
+        const t0 = performance.now(); vec = buildVector(); buildMs = Math.round(performance.now() - t0); building = false; paint();
+        if (L.id === 'mapa' && !info && !quiz) card(baseCard());
         setMapMode(mapMode);
       }).catch(err => { building = false; console.error(err); $('#note').textContent = 'Mapu se nepodařilo stáhnout. Zkontroluj připojení a otevři ji znovu.'; });
     }
@@ -123,43 +149,44 @@ function countryAt(lon, lat) { // který stát leží pod bodem: paprskový test
   return -1;
 }
 const fmtPop = n => n >= 1e9 ? (n / 1e9).toFixed(1).replace('.', ',') + ' miliardy' : n >= 1e6 ? (n / 1e6).toFixed(1).replace('.', ',') + ' milionu' : Math.round(n / 1e3) + ' tisíc';
-function countryCard(i) {
-  const [name, cap, cont, pop, area, flag] = GEO.c[i], facts = [];
-  if (cap) facts.push(['Hlavní město', cap]); if (cont) facts.push(['Světadíl', cont]);
-  if (pop) facts.push(['Obyvatel', 'asi ' + fmtPop(pop)]); if (area) facts.push(['Rozloha', area.toLocaleString('cs-CZ') + ' km²']);
-  return { name, txt: cap ? name + ', hlavní město ' + cap + '.' : name + '.', note: '', facts, flag };
-}
 // Jmenovky mapy. Je jich přes 15 000, proto nejsou ve společném seznamu jmenovek: mají vlastní zásobník, prvek stránky vzniká až při prvním zobrazení
 // a každý snímek se bere jen to, co je dost blízko a v záběru. maxD = do jaké vzdálenosti kamery od středu Země je jmenovka vidět.
 const mapPool = [];
-const mapLabel = (text, lat, lon, maxD, cls, mode, click) => mapPool.push({ text, dir: latLon(lat, lon), maxD, cls, mode, click, el: null, w: 0, stamp: -1 });
+const mapLabel = (text, lat, lon, maxD, cls, mode, click, kind, sub) => mapPool.push({ text, lat, lon, dir: latLon(lat, lon), maxD, cls, mode, click, kind, sub, el: null, w: 0, stamp: -1 });
 const byRank = (rank, steps) => { for (const [r, d] of steps) if (rank <= r) return d; return steps[steps.length - 1][1]; };
-const what = (name, facts) => () => showInfo({ name, txt: name + '.', note: '', facts: facts.filter(f => f[1]) });
+// místo na mapě (město, hora, moře…): karta s fakty, článek z Wikipedie se hledá podle jména a ověřuje polohou (km = jak daleko smí článek ležet)
+const place = (name, kind, facts, lat, lon, km, sub) => () => { mapSelect({ lat, lon }); showInfo({ name, txt: name + (sub ? ', ' + kind + ', ' + sub + '.' : ', ' + kind + '.'), note: '', facts: facts.filter(f => f[1]), wiki: { s: name + ' ' + (sub || kind), name, lat, lon, km, word: kind.slice(0, 4) } }); };
+const CONTS = [['Evropa', 52, 22], ['Asie', 48, 95], ['Afrika', 5, 20], ['Severní Amerika', 47, -102], ['Jižní Amerika', -12, -58], ['Austrálie', -25, 134], ['Antarktida', -82, 20]];
+let neighbors = []; // sousedé každého státu: ti, se kterými sdílí úsek hranice
 function initMapData() { // spustí se jednou, až se stáhnou data mapy: rozbalí tvary a zaregistruje jmenovky
   ARCS = GEO.arcs.map(dec); RIVERS = GEO.rivers.map(([name, rank, line]) => [name, rank, dec(line)]); LAKES = GEO.lakes.map(dec);
   geoShapes = GEO.c.map(c => c[7].map(poly => poly.map(r => unwrap(ringOf(r)))));
   console.assert(GEO.c[countryAt(14.4, 50)][0] === 'Česko' && GEO.c[countryAt(100, 60)][0] === 'Rusko' && countryAt(-150, 0) === -1, 'countryAt');
-  [['Evropa', 52, 22], ['Asie', 48, 95], ['Afrika', 5, 20], ['Severní Amerika', 47, -102], ['Jižní Amerika', -12, -58], ['Austrálie', -25, 134], ['Antarktida', -82, 20]].forEach(([t, la, lo]) => mapLabel(t, la, lo, 99, 'geo'));
-  [['Tichý oceán', -5, -150], ['Atlantský oceán', 28, -42], ['Indický oceán', -22, 80], ['Severní ledový oceán', 86, -30], ['Jižní oceán', -63, -120]].forEach(([t, la, lo]) => mapLabel(t, la, lo, 99, 'sea'));
+  const owner = new Map(); neighbors = GEO.c.map(() => new Set());
+  GEO.c.forEach((c, i) => { for (const poly of c[7]) for (const ring of poly) for (const k of ring) { const arc = k < 0 ? ~k : k, j = owner.get(arc); if (j === undefined) owner.set(arc, i); else if (j !== i) { neighbors[i].add(j); neighbors[j].add(i); } } });
+  const cz = GEO.c.findIndex(c => c[0] === 'Česko'), around = [...neighbors[cz]].map(j => GEO.c[j][0]).sort().join(' ');
+  console.assert(around === 'Německo Polsko Rakousko Slovensko', 'sousedé Česka', around);
+  CONTS.forEach(([t, la, lo]) => mapLabel(t, la, lo, 99, 'geo', '', () => showInfo(continentCard(t)), 'světadíl'));
+  [['Tichý oceán', -5, -150], ['Atlantský oceán', 28, -42], ['Indický oceán', -22, 80], ['Severní ledový oceán', 86, -30], ['Jižní oceán', -63, -120]].forEach(([t, la, lo]) => mapLabel(t, la, lo, 99, 'sea', '', () => showInfo({ name: t, txt: t + ', jeden z pěti oceánů Země.', note: '', facts: [], wiki: { t } }), 'oceán'));
   const byArea = GEO.c.map((c, i) => i).sort((a, b) => GEO.c[b][4] - GEO.c[a][4]); // při kolizi jmenovek vyhrává větší stát
-  const showAt = a => a > 2e6 ? 3.6 : a > 4e5 ? 2.7 : a > 8e4 ? 2 : a > 1e4 ? 1.6 : 1.36; // velké státy jsou vidět zdálky, malé až zblízka
-  for (const i of byArea) { const c = GEO.c[i]; if (c[8]) mapLabel(c[0], c[8][1], c[8][0], showAt(c[4]), 'ctry', 'staty', () => showInfo(countryCard(i))); }
-  for (const i of byArea) { const c = GEO.c[i]; if (c[9]) mapLabel(c[1].split(' / ')[0], c[9][1], c[9][0], Math.max(1.3, showAt(c[4]) - .55), 'cap', 'staty', () => showInfo(countryCard(i))); } // hlavní město o něco později než jeho stát
-  for (const [name, lat, lon, rank, kind, country] of GEO.regions) mapLabel(name, lat, lon, byRank(rank, [[2, 1.8], [4, 1.38], [6, 1.2], [99, 1.1]]), 'reg', 'staty', what(name, [['Co to je', kind], ['Stát', country]]));
+  for (const i of byArea) { const c = GEO.c[i]; if (c[8]) mapLabel(c[0], c[8][1], c[8][0], showAt(c[4]), 'ctry', 'staty', () => showCountry(i), 'stát', c[2]); }
+  for (const i of byArea) { const c = GEO.c[i]; if (c[9]) mapLabel(c[1].split(' / ')[0], c[9][1], c[9][0], Math.max(1.3, showAt(c[4]) - .55), 'cap', 'staty', place(c[1].split(' / ')[0], 'hlavní město', [['Stát', c[0]]], c[9][1], c[9][0], 60, c[0]), 'hlavní město', c[0]); } // hlavní město o něco později než jeho stát
+  for (const [name, lat, lon, rank, kind, country] of GEO.regions) mapLabel(name, lat, lon, byRank(rank, [[2, 1.8], [4, 1.38], [6, 1.2], [99, 1.1]]), 'reg', 'staty', place(name, kind, [['Co to je', kind], ['Stát', country]], lat, lon, 500, country), kind, country);
   for (const [name, lat, lon, pop, country] of GEO.towns)
-    mapLabel(name, lat, lon, pop > 5e6 ? 2.4 : pop > 1e6 ? 1.9 : pop > 3e5 ? 1.5 : pop > 1e5 ? 1.3 : pop > 3e4 ? 1.16 : 1.075, 'cap', 'staty', what(name, [['Obyvatel', pop ? 'asi ' + fmtPop(pop) : ''], ['Stát', country]]));
-  for (const [name, lat, lon, rank, kind] of GEO.phys) mapLabel(name, lat, lon, byRank(rank, [[1, 3.2], [2, 2.6], [3, 2.1], [4, 1.7], [99, 1.4]]), 'mnt', 'priroda', what(name, [['Co to je', kind]]));
-  for (const [name, lat, lon, rank, kind] of GEO.isles) mapLabel(name, lat, lon, byRank(rank, [[1, 2.9], [2, 2.3], [3, 1.8], [4, 1.5], [99, 1.25]]), 'sky', '', what(name, [['Co to je', kind]]));
-  for (const [name, lat, lon, rank, kind] of GEO.seas) mapLabel(name, lat, lon, byRank(rank, [[1, 3.2], [2, 2.5], [4, 1.9], [99, 1.45]]), 'sea', '', what(name, [['Co to je', kind]]));
-  for (const [name, lat, lon, elev, rank] of GEO.peaks) mapLabel(name + ', ' + elev.toLocaleString('cs-CZ') + ' m', lat, lon, byRank(rank, [[1, 2.2], [3, 1.7], [99, 1.35]]), 'mnt', 'priroda', what(name, [['Co to je', 'hora'], ['Výška', elev.toLocaleString('cs-CZ') + ' m nad mořem']]));
-  for (const [name, lat, lon, rank] of GEO.lakeNames) mapLabel(name, lat, lon, byRank(rank, [[1, 2.2], [3, 1.6], [99, 1.3]]), 'sea', '', what(name, [['Co to je', 'jezero']]));
-  for (const [name, rank, line] of RIVERS) if (name) { const k = (line.length >> 2) * 2; mapLabel(name, line[k + 1], line[k], rank < 3 ? 3 : rank < 5 ? 2.3 : 1.8, 'sea', '', what(name, [['Co to je', 'řeka']])); }
+    mapLabel(name, lat, lon, pop > 5e6 ? 2.4 : pop > 1e6 ? 1.9 : pop > 3e5 ? 1.5 : pop > 1e5 ? 1.3 : pop > 3e4 ? 1.16 : 1.075, 'cap', 'staty', place(name, 'město', [['Obyvatel', pop ? 'asi ' + fmtPop(pop) : ''], ['Stát', country]], lat, lon, 60, country), 'město', country);
+  for (const [name, lat, lon, rank, kind] of GEO.phys) mapLabel(name, lat, lon, byRank(rank, [[1, 3.2], [2, 2.6], [3, 2.1], [4, 1.7], [99, 1.4]]), 'mnt', 'priroda', place(name, kind, [['Co to je', kind]], lat, lon, 2500), kind);
+  for (const [name, lat, lon, rank, kind] of GEO.isles) mapLabel(name, lat, lon, byRank(rank, [[1, 2.9], [2, 2.3], [3, 1.8], [4, 1.5], [99, 1.25]]), 'sky', '', place(name, kind, [['Co to je', kind]], lat, lon, 800), kind);
+  for (const [name, lat, lon, rank, kind] of GEO.seas) mapLabel(name, lat, lon, byRank(rank, [[1, 3.2], [2, 2.5], [4, 1.9], [99, 1.45]]), 'sea', '', place(name, kind, [['Co to je', kind]], lat, lon, 4000), kind);
+  for (const [name, lat, lon, elev, rank] of GEO.peaks) mapLabel(name + ', ' + elev.toLocaleString('cs-CZ') + ' m', lat, lon, byRank(rank, [[1, 2.2], [3, 1.7], [99, 1.35]]), 'mnt', 'priroda', place(name, 'hora', [['Co to je', 'hora'], ['Výška', elev.toLocaleString('cs-CZ') + ' m nad mořem']], lat, lon, 150), 'hora');
+  for (const [name, lat, lon, rank] of GEO.lakeNames) mapLabel(name, lat, lon, byRank(rank, [[1, 2.2], [3, 1.6], [99, 1.3]]), 'sea', '', place(name, 'jezero', [['Co to je', 'jezero']], lat, lon, 600), 'jezero');
+  for (const [name, rank, line] of RIVERS) if (name) { const k = (line.length >> 2) * 2; mapLabel(name, line[k + 1], line[k], rank < 3 ? 3 : rank < 5 ? 2.3 : 1.8, 'sea', '', place(name, 'řeka', [['Co to je', 'řeka']], line[k + 1], line[k], 5000), 'řeka'); }
   mapPool.sort((a, b) => b.maxD - a.maxD); // co je vidět zdálky, má při kolizi přednost
 }
+const showAt = a => a > 2e6 ? 3.6 : a > 4e5 ? 2.7 : a > 8e4 ? 2 : a > 1e4 ? 1.6 : 1.36; // velké státy jsou vidět zdálky, malé až zblízka
 let mapShown = [], mapStamp = 0;
 function drawMapLabels(placed, on) {
   const stamp = ++mapStamp, next = [];
-  if (on && L.id === 'mapa') {
+  if (on && L.id === 'mapa' && !quiz) { // v kvízu by jmenovky prozradily odpověď
     const cd = camera.position.length(), camDir = t1.copy(camera.position).divideScalar(cd);
     // kam až na kouli dohlédne kužel záběru (kamera míří na střed Země), nejdál k obzoru
     const cone = Math.atan(Math.tan(rad(camera.fov / 2)) * Math.hypot(1, camera.aspect)), reach = cd * Math.sin(cone) >= 1 ? Math.acos(1 / cd) : Math.min(Math.acos(1 / cd), Math.asin(cd * Math.sin(cone)) - cone);

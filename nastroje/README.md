@@ -11,6 +11,13 @@ python mapa_2_vrstvy.py          # regiony, města, pohoří, moře, vrcholy, č
 
 Výsledek se pak zkopíruje: `geodata/geo.full.json` do `data/geo.json` a `geodata/flags.png` do `tex/flags.png`.
 
+Další data, nezávislá na předchozích:
+
+```
+python staty_encyklopedie.py     # měny, jazyky, vrcholy, naděje dožití… -> ../data/staty.json (pořadí podle států v ../data/geo.json)
+python desky.py                  # hranice tektonických desek -> ../data/desky.json
+```
+
 Co je dobré vědět:
 
 - První skript potřebuje `pillow` (skládá vlajky do jedné mřížky) a soubor `geodata/wikidata2.json` s údaji o státech. Ten vznikl dotazem na Wikidata, jehož znění je ve skriptu u funkce `sparql`. Pokud soubor chybí, je potřeba dotaz pustit znovu přes `curl`.

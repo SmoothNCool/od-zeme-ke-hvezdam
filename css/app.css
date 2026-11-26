@@ -36,8 +36,35 @@ button:focus-visible,input:focus-visible{outline:3px solid var(--sun);outline-of
 #flag{flex:none;width:40px;height:40px;background:url(../tex/flags.png) no-repeat;background-size:640px auto}
 #card.min>:not(#head){display:none}
 #card.min.show #txt,#card.min.show #note{display:block}
+#card.min.show #acts{display:flex}
 #whenL{display:flex;flex-wrap:wrap;gap:6px;align-items:center;font-size:13px;color:var(--muted)}
 #when{font:inherit;color:var(--ink);background:var(--chip);border:1px solid var(--line);border-radius:10px;padding:5px 8px}
+#pic{margin:0}
+#pic img{display:block;width:100%;max-height:190px;object-fit:cover;border-radius:12px}
+#wiki{font-size:14.5px}
+#wiki a{color:var(--sun);white-space:nowrap}
+#chips small{display:block;color:var(--muted);font-size:12px;margin-bottom:5px}
+#chipsB{display:flex;flex-wrap:wrap;gap:6px}
+#chipsB .pill{min-height:34px;padding:0 12px;font-size:14.5px}
+#legend{display:flex;flex-wrap:wrap;gap:4px 14px;font-size:13px;align-items:center}
+#legend strong{flex-basis:100%;font-family:var(--display);font-size:15px}
+#legend span{display:flex;align-items:center;gap:6px}
+#legend i{width:14px;height:14px;border-radius:4px;flex:none}
+select.pill{font-family:var(--display);color:var(--ink);max-width:100%}
+.pill:disabled{opacity:.75;cursor:default}
+.pill.right{background:#2f9e55;border-color:#2f9e55;color:#fff;opacity:1}
+.pill.wrong{background:#c0483d;border-color:#c0483d;color:#fff;opacity:1}
+#flag.big{transform:scale(1.9);transform-origin:left center;margin-right:38px}
+#find{position:fixed;left:50%;top:calc(118px + env(safe-area-inset-top,0px));transform:translateX(-50%);width:min(92vw,440px);z-index:5;
+  background:var(--panel);border:1px solid var(--line);border-radius:18px;padding:10px;display:flex;flex-direction:column;gap:6px;backdrop-filter:blur(8px)}
+#q{font:inherit;font-size:17px;color:var(--ink);background:var(--chip);border:1px solid var(--line);border-radius:12px;padding:10px 12px;width:100%;box-sizing:border-box}
+#findNote{margin:0;font-size:13px;color:var(--muted)}
+#findNote:empty{display:none}
+#hits{display:flex;flex-direction:column;gap:2px;max-height:50vh;overflow-y:auto}
+#hits button{display:flex;justify-content:space-between;align-items:baseline;gap:12px;text-align:left;background:none;border:0;border-radius:10px;padding:9px 10px;font-weight:700}
+#hits button:hover,#hits button:focus-visible{background:var(--chip)}
+#hits small{color:var(--muted);font-weight:500;font-size:13px;text-align:right}
+body.bare #find{display:none}
 #facts{display:grid;grid-template-columns:1fr 1fr;gap:5px 14px;margin:2px 0}
 #facts:empty{display:none}
 #facts dt{color:var(--muted);font-size:12px}
@@ -97,13 +124,16 @@ body.bare #zoom{display:none}
   #levels .ico{font-size:18px}
   .pill{min-height:38px;padding:0 12px;font-size:15px;white-space:nowrap}
   #dock{gap:6px;padding-block:6px}
-  #card{max-width:none;min-width:0;flex-basis:100%;padding:8px 12px;gap:5px;border-radius:14px}
+  #card{max-width:none;min-width:0;flex-basis:100%;padding:8px 12px;gap:5px;border-radius:14px;max-height:52vh}
+  #pic img{max-height:120px}
   #acts{min-width:0}
   .lbl{font-size:13px}
   button.lbl{padding:7px 10px}
   #card h1{font-size:18px}
   #card p{font-size:14px;line-height:1.35}
   #read,#more,#hideUi{width:38px;height:38px;font-size:16px}
+  #find{top:calc(96px + env(safe-area-inset-top,0px))}
+  #flag.big{transform:scale(1.5);margin-right:22px}
   #dn{font-size:15px}
   #acts{flex-wrap:nowrap;overflow-x:auto}
   #moonView canvas{width:40px!important;height:40px!important}
