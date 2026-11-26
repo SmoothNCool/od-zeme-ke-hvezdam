@@ -37,6 +37,15 @@ a pak otevřít `http://localhost:8000`.
 - `data/sky.js`: katalog hvězd a souhvězdí, načítá se hned.
 - `data/geo.json`: data mapy světa (4 MB), stahují se až při prvním otevření mapy.
 - `tex/`: textury a vlajky.
+- `testy/test.mjs`: automatický test.
+
+## Testy
+
+```
+node testy/test.mjs
+```
+
+Spustí aplikaci v headless Chromu, projde všechny pohledy a režimy na počítači i v rozměru telefonu a hlídá chyby v konzoli. Nepotřebuje žádné balíčky, jen Node 22+ a Chrome (cesta jde změnit proměnnou `CHROME`). S přepínačem `--snimky` uloží obrázky do `testy/snimky/`.
 
 ## Ovládání
 

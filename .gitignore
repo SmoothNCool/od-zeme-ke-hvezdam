@@ -4,3 +4,7 @@
 !.dev.vars.example
 .env*
 !.env.example
+
+# snímky z testu a pracovní poznámky
+testy/snimky/
+HANDOFF.md
