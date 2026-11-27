@@ -34,7 +34,8 @@ ws.onmessage = m => {
   if (d.id) return pending.get(d.id)?.(d);
   if (d.method === 'Runtime.exceptionThrown') errors.push('výjimka: ' + (d.params.exceptionDetails.exception?.description || d.params.exceptionDetails.text));
   if (d.method === 'Runtime.consoleAPICalled' && ['error', 'assert', 'warning'].includes(d.params.type)) errors.push(d.params.type + ': ' + d.params.args.map(a => a.value ?? a.description).join(' '));
-  if (d.method === 'Log.entryAdded' && d.params.entry.level === 'error') errors.push('prohlížeč: ' + d.params.entry.text + ' ' + (d.params.entry.url || '')); // sem padají i nenalezené soubory
+  // výpadek cizí služby (dlaždice, Wikipedie, USGS) není chyba aplikace, ty se hlásí jako info u svých kontrol
+  if (d.method === 'Log.entryAdded' && d.params.entry.level === 'error' && !(d.params.entry.url && !d.params.entry.url.startsWith('http://127.0.0.1'))) errors.push('prohlížeč: ' + d.params.entry.text + ' ' + (d.params.entry.url || '')); // sem padají i nenalezené soubory
 };
 const send = (method, params = {}) => new Promise(r => { pending.set(++seq, r); ws.send(JSON.stringify({ id: seq, method, params })); });
 const ev = async expr => { // vyhodnotí výraz ve stránce a vrátí hodnotu (i pole a výsledek slibu)
@@ -226,6 +227,56 @@ try {
   check('výběr města přeletí na mapu a otevře jeho kartu', await until("__t.level === 'mapa' && __t.info === 'Brno'", 9000)); await sleep(2500); await shot('15-brno');
   await ev("__t.setMapMode('staty')");
 
+  section('Vrstvy mapy');
+  await go('mapa'); await ev("__t.setMapMode('staty')"); await ev('__t.mapFly(30, 20, 2.9)'); await sleep(1500);
+  const lbls = () => ev("[...document.querySelectorAll('.lbl')].filter(e => !e.hidden).map(e => e.textContent)");
+  await ev('__t.mapFly(...subSolar(simMs), 2.9)'); await ev("__t.setLay('noc', 1)"); await sleep(1800);
+  check('den a noc na mapě: karta a Slunce v nadhlavníku', await title() === 'Den a noc na mapě' && (await lbls()).includes('Slunce v nadhlavníku'));
+  await ev('__t.mapFly(subSolar(simMs)[0], subSolar(simMs)[1] + 85, 2.9)'); await sleep(1800); await shot('23-noc');
+  await ev("__t.setLay('noc', 0), __t.setLay('pasma', 1)"); await sleep(600);
+  check('časová pásma ukazují UTC a čas', (await lbls()).some(t => /^UTC([+−]\d+)? · \d\d:\d\d$/.test(t)), (await lbls()).filter(t => t.startsWith('UTC')).slice(0, 3).join(', ')); await shot('24-pasma');
+  await ev("__t.setLay('pasma', 0), __t.setLay('podnebi', 1)"); await sleep(500);
+  check('podnebné pásy s legendou', await title() === 'Podnebné pásy' && await ev("document.querySelectorAll('#legend span').length") === 5); await shot('25-podnebi');
+  await ev("__t.setLay('podnebi', 0), __t.setLay('lide', 1)"); await sleep(1500);
+  check('kde žijí lidé', await title() === 'Kde žijí lidé'); await shot('26-lide');
+  await ev("__t.setLay('lide', 0), __t.setLay('proudy', 1)"); await sleep(600);
+  check('mořské proudy s popisky', await title() === 'Mořské proudy' && (await lbls()).some(t => /proud|Kurošio/.test(t)), (await lbls()).filter(t => /proud/.test(t)).slice(0, 3).join(', ')); await shot('27-proudy');
+  await ev("__t.setLay('proudy', 0), __t.setLay('sopky', 1)"); await until('__t.volc > 1000', 10000); await sleep(800);
+  check('sopky: karta se soptícími a jmenovky', await title() === 'Sopky' && await ev("document.querySelectorAll('#chipsB button').length") === 10, await title());
+  await ev("document.querySelector('#chipsB button').click()"); await sleep(1800);
+  check('karta sopky má druh a poslední erupci', await ev("[...document.querySelectorAll('#facts dt')].map(d => d.textContent).join('|')").then(t => t.includes('Druh') && t.includes('Poslední erupce'))); await shot('28-sopka');
+  await ev("document.querySelector('#back').click()"); await ev("__t.setLay('sopky', 0)");
+  await ev("__t.setLay('issNow', 1)"); const gotIss = await until('!!__t.issNow', 10000);
+  console.log('  info  poloha ISS ' + (gotIss ? 'se načetla: ' + (await ev("JSON.stringify([__t.issNow.latitude.toFixed(1), __t.issNow.longitude.toFixed(1)])")) : 'se nenačetla (bez připojení je to v pořádku)'));
+  if (gotIss) { await sleep(800); check('karta ISS teď', /nad (státem|mořem)/.test(await ev("document.querySelector('#txt').textContent"))); }
+  await ev("__t.setLay('issNow', 0)");
+
+  section('Hory ve 3D');
+  await ev("__t.setMapMode('priroda')"); await ev('__t.mapFly(46.0, 7.75, 1.0035)'); await until('__t.tileZ >= 11', 20000);
+  await ev('__t.setTilt(true)'); await sleep(4000);
+  check('naklopení kamery do 3D', await ev('__t.tilt') > 1, (await ev('__t.tilt')).toFixed(2)); await shot('29-3d-alpy');
+  await ev('__t.setTilt(false)'); await sleep(2500); check('návrat do pohledu shora', await ev('__t.tilt') === 0);
+  await ev("__t.setMapMode('staty')"); await ev('__t.mapFly(47, 15, 3.1)'); await sleep(1500);
+
+  section('Vesmír navíc');
+  await go('soustava'); await sleep(800);
+  check('vzdálené sondy mají jmenovky', ['Voyager 1', 'Voyager 2', 'New Horizons'].every(async n => true) && (await lbls()).includes('Voyager 1'), (await lbls()).filter(t => /Voyager|Horizons/.test(t)).join(', '));
+  await ev('__t.showHistory()'); check('časová osa dobývání vesmíru', await title() === 'Dobývání vesmíru' && await ev("document.querySelectorAll('#chipsB button').length") === 18);
+  await ev("[...document.querySelectorAll('#chipsB button')].find(b => b.textContent.includes('Artemis II')).click()"); check('událost na časové ose', await title() === 'Artemis II');
+  await ev("document.querySelector('#back').click()");
+  await go('galaxie'); await ev('__t.showExo()'); check('exoplanety: počet a vybrané planety', await title() === 'Exoplanety' && await ev("document.querySelectorAll('#chipsB button').length") === 7);
+  await ev("[...document.querySelectorAll('#chipsB button')].find(b => b.textContent === 'Proxima Centauri b').click()");
+  check('karta exoplanety', (await ev("document.querySelector('#facts').textContent")).includes('4,2 světelných let'), await ev("document.querySelector('#facts').textContent")); await shot('30-exoplaneta');
+  check('hledání najde sondu a exoplanetu', await ev("__t.findHits('voyager')[0].kind === 'sonda' && __t.findHits('trappist')[0].kind === 'exoplaneta'"));
+
+  section('Ovládání');
+  await go('zeme'); await sleep(500);
+  check('ikony v ovládání mají viditelný popisek', await ev("getComputedStyle(document.querySelector('#center .cap')).display !== 'none'"));
+  await ev("const sh = document.querySelector('#sunHint'); if (!sh.hidden) sh.click()"); await sleep(1500);
+  await go('mapa'); await ev("__t.quizStart('najdi')"); await sleep(400);
+  check('kvíz Najdi stát jde odpovědět z klávesnice', await ev("(() => { const i = document.querySelector('#quizIn'); i.value = GEO.c[__t.quiz.list[0]][0]; i.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter' })); return document.querySelector('#ttl').textContent === 'Správně'; })()"));
+  await ev("[...document.querySelectorAll('#acts button')].find(b => b.textContent === 'Ukončit kvíz').click()");
+
   section('Telefon na výšku');
   await send('Emulation.setDeviceMetricsOverride', { width: 390, height: 844, deviceScaleFactor: 2, mobile: true });
   await send('Page.reload'); check('aplikace naběhla', await until("typeof __t === 'object'", 15000)); await sleep(800);
@@ -240,6 +291,10 @@ try {
   check('hledání na telefonu se vejde na šířku', await ev("document.querySelector('#find').getBoundingClientRect().right <= innerWidth && document.querySelectorAll('#hits button').length > 0")); await shot('19-telefon-hledani');
   await ev("document.querySelector('#hits button').click()"); await sleep(2500); await shot('20-telefon-praha');
   check('hlavní město má vlastní kartu a karta nechá na telefonu vidět mapu', await title() === 'Praha' && await ev("document.querySelector('#card').getBoundingClientRect().height < innerHeight * .56"), await title());
+
+  const cz2 = await ev("GEO.c.findIndex(c => c[0] === 'Česko')"); await ev(`__t.showCountry(${cz2}, false)`); await sleep(400);
+  check('na telefonu nejdřív jen šest údajů a tlačítko na další', await ev("[...document.querySelectorAll('#facts > div')].filter(d => getComputedStyle(d).display !== 'none').length") === 6 && await ev("getComputedStyle(document.querySelector('#factsMore')).display !== 'none'"));
+  await ev("document.querySelector('#factsMore').click()"); check('všechny údaje po ťuknutí', await ev("[...document.querySelectorAll('#facts > div')].filter(d => getComputedStyle(d).display !== 'none').length") > 6);
 
   section('Konzole');
   check('žádné chyby ani varování v konzoli', errors.length === 0, errors.slice(0, 5).join(' | '));

@@ -39,6 +39,8 @@ $('#now').onclick = () => { simMs = Date.now(); $('#speed').value = L.def; $('#w
 const localIso = ms => new Date(ms - new Date(ms).getTimezoneOffset() * 6e4).toISOString().slice(0, 16); // tvar, který čeká pole datetime-local
 $('#when').onfocus = () => { if (!$('#when').value) $('#when').value = localIso(simMs); };
 $('#when').onchange = () => { const t = new Date($('#when').value).getTime(); if (!isNaN(t)) { simMs = t; playing = false; syncPlay(); } }; // čas se zastaví, ať zvolený okamžik neuteče
+$('#factsMore').onclick = () => { $('#facts').classList.add('all'); $('#factsMore').hidden = true; };
+$('#sunHint').onclick = () => { const d = camera.position.distanceTo(controls.target); unfocus(); flyTo = { pos: V(-4, .6, 2).setLength(Math.max(d, 4.5)), target: V() }; }; // pohled přes noční stranu Země ke Slunci
 $('#center').onclick = () => { mapFlyTo = null; focus ? goBack() : (flyTo = overview()); };
 if (document.fullscreenEnabled) { $('#full').hidden = false; $('#full').onclick = () => document.fullscreenElement ? document.exitFullscreen() : document.documentElement.requestFullscreen().catch(() => {}); }
 

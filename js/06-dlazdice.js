@@ -9,15 +9,17 @@ const tileLoader = new THREE.TextureLoader(); tileLoader.setCrossOrigin('anonymo
 const tiles = new Map(), dems = new Map(); // klíč "z/x/y" -> { mesh, used } a { tex, used }
 let tileFrame = 0, tilesFailed = 0;
 const latOfY = (y, n) => Math.atan(Math.sinh(Math.PI * (1 - 2 * y / n))) * 180 / Math.PI; // Web Mercator: řádek dlaždice -> zeměpisná šířka
+// výška z kódování terrarium: (R*256 + G + B/256) − 32768 m; kódované výšky se nesmí míchat v textuře, proto plynulé prolnutí až po dekódování ze čtyř sousedních bodů
+const DEM_GLSL = 'uniform sampler2D dem;uniform vec2 demOff;uniform float demK;float hp(vec2 p){vec3 c=texture2D(dem,p).rgb*255.0;return c.r*256.0+c.g+c.b/256.0-32768.0;}' +
+  'float h(vec2 p){vec2 q=p*256.0-0.5,f=fract(q),b=(floor(q)+0.5)/256.0;float t=1.0/256.0;return mix(mix(hp(b),hp(b+vec2(t,0.0)),f.x),mix(hp(b+vec2(0.0,t)),hp(b+vec2(t,t)),f.x),f.y);}';
+const lift = { value: 0 }; // převýšení terénu, 0 = rovná mapa; roste při naklopení do 3D
 const tileMat = new THREE.ShaderMaterial({ // šablona; každá dlaždice dostane vlastní kopii s vlastními texturami
-  side: THREE.DoubleSide, uniforms: { img: { value: null }, dem: { value: null }, demOff: { value: new THREE.Vector2() }, demK: { value: .25 }, mpp: { value: 100 }, relief: { value: 1 } },
-  vertexShader: 'varying vec2 vUv;void main(){vUv=uv;gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.0);}',
-  // výška z kódování terrarium: (R*256 + G + B/256) − 32768 m; normála ze sousedních bodů, světlo od severozápadu jako na klasických mapách
-  fragmentShader: 'uniform sampler2D img,dem;uniform vec2 demOff;uniform float demK,mpp,relief;varying vec2 vUv;' +
-    'float hp(vec2 p){vec3 c=texture2D(dem,p).rgb*255.0;return c.r*256.0+c.g+c.b/256.0-32768.0;}' +
-    // kódované výšky se nesmí míchat v textuře, proto plynulé prolnutí až po dekódování ze čtyř sousedních bodů
-    'float h(vec2 p){vec2 q=p*256.0-0.5,f=fract(q),b=(floor(q)+0.5)/256.0;float t=1.0/256.0;return mix(mix(hp(b),hp(b+vec2(t,0.0)),f.x),mix(hp(b+vec2(0.0,t)),hp(b+vec2(t,t)),f.x),f.y);}' +
-    'void main(){vec3 col=texture2D(img,vUv).rgb;vec2 p=demOff+vUv*demK;float t=1.0/256.0;' +
+  side: THREE.DoubleSide, uniforms: { img: { value: null }, dem: { value: null }, demOff: { value: new THREE.Vector2() }, demK: { value: .25 }, mpp: { value: 100 }, relief: { value: 1 }, lift: lift },
+  // terén se zvedá podél svislice; moře zůstává rovné
+  vertexShader: DEM_GLSL + 'uniform float lift;varying vec2 vUv;void main(){vUv=uv;vec3 p=position+normalize(position)*max(h(demOff+uv*demK),0.0)*lift/6371000.0;gl_Position=projectionMatrix*modelViewMatrix*vec4(p,1.0);}',
+  // normála ze sousedních bodů, světlo od severozápadu jako na klasických mapách
+  fragmentShader: DEM_GLSL + 'uniform sampler2D img;uniform float mpp,relief;varying vec2 vUv;' +
+        'void main(){vec3 col=texture2D(img,vUv).rgb;vec2 p=demOff+vUv*demK;float t=1.0/256.0;' +
     'float dx=(h(p+vec2(t,0.0))-h(p-vec2(t,0.0)))/(2.0*mpp),dy=(h(p+vec2(0.0,t))-h(p-vec2(0.0,t)))/(2.0*mpp);' +
     'vec3 n=normalize(vec3(-dx*1.6,-dy*1.6,1.0));float l=dot(n,normalize(vec3(-0.6,0.6,0.75)));float base=0.75/length(vec3(-0.6,0.6,0.75));' +
     'gl_FragColor=vec4(col*mix(1.0,clamp(0.35+0.65*l/base,0.35,1.45),relief),1.0);}',
@@ -32,7 +34,7 @@ function demTex(z, x, y) { // výšková dlaždice, sdílená sousedními snímk
   d.used = tileFrame; return d;
 }
 function makeTile(z, x, y) {
-  const n = 2 ** z, SEG = z < 6 ? 16 : 8, pos = [], uv = [], idx = [];
+  const n = 2 ** z, SEG = z < 6 ? 16 : 24, pos = [], uv = [], idx = [];
   const lon0 = x / n * 360 - 180, lon1 = (x + 1) / n * 360 - 180;
   for (let j = 0; j <= SEG; j++) for (let i = 0; i <= SEG; i++) { // mřížka rovnoměrná v Mercatoru, aby textura seděla
     const p = mapP(lon0 + (lon1 - lon0) * i / SEG, latOfY(y + j / SEG, n), 1.0002 + z * 3e-6); pos.push(p.x, p.y, p.z); uv.push(i / SEG, 1 - j / SEG); // jemnější úroveň o kousek výš, jinak by se s hrubší přetahovala
@@ -41,7 +43,7 @@ function makeTile(z, x, y) {
   const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3)); g.setAttribute('uv', new THREE.Float32BufferAttribute(uv, 2)); g.setIndex(idx);
   const dz = Math.max(0, z - DEM_UP), k = 2 ** (z - dz), d = demTex(dz, x >> (z - dz), y >> (z - dz)), m = tileMat.clone();
   const lat = latOfY(y + .5, n);
-  Object.assign(m.uniforms, { dem: { value: d.tex }, demOff: { value: new THREE.Vector2((x % k) / k, 1 - ((y % k) + 1) / k) }, demK: { value: 1 / k }, mpp: { value: 40075016 * Math.cos(lat * Math.PI / 180) / 2 ** dz / 256 }, relief: { value: 1 } });
+  Object.assign(m.uniforms, { lift, dem: { value: d.tex }, demOff: { value: new THREE.Vector2((x % k) / k, 1 - ((y % k) + 1) / k) }, demK: { value: 1 / k }, mpp: { value: 40075016 * Math.cos(lat * Math.PI / 180) / 2 ** dz / 256 }, relief: { value: 1 } });
   const mesh = new THREE.Mesh(g, m); mesh.visible = false;
   m.uniforms.img = { value: tileLoader.load(IMG_URL(z, x, y), t => { t.anisotropy = renderer.capabilities.getMaxAnisotropy(); mesh.visible = true; }, undefined, () => { tilesFailed++; }) };
   tileG.add(mesh); return { mesh, used: 0, z };
@@ -70,3 +72,17 @@ function updateTiles() { // volá se každý snímek z hlavní smyčky
   }
   for (const [key, d] of dems) if (tileFrame - d.used > 600 && dems.size > 60) { d.tex.dispose(); dems.delete(key); }
 }
+
+/* ---------- 3D pohled: kamera se nakloní k obzoru a terén se zvedne ---------- */
+// OrbitControls umí obíhat jen kolem středu Země, proto se náklon přidává až po jejich výpočtu a na začátku dalšího snímku se vrací (camOrbit)
+let tiltOn = false, tilt3d = 0, tilted = false; const camOrbit = V();
+function untilt() { if (tilted) { camera.position.copy(camOrbit); camera.up.set(0, 1, 0); tilted = false; } }
+function applyTilt(dt) {
+  const h = camera.position.length() - 1, want = tiltOn && L.id === 'mapa' && mapMode === 'priroda' && h < .08 ? rad(62) : 0;
+  tilt3d += (want - tilt3d) * Math.min(1, dt * 2.5); lift.value = THREE.MathUtils.clamp(tilt3d / rad(62), 0, 1) * 1.6; // hory o 60 % vyšší, jinak by z výšky působily ploše
+  if (tilt3d < .01) { tilt3d = 0; return; }
+  camOrbit.copy(camera.position); const dir = camOrbit.clone().normalize(), north = V(0, 1, 0).addScaledVector(dir, -dir.y).normalize();
+  camera.position.copy(dir).addScaledVector(dir, h * Math.cos(tilt3d)).addScaledVector(north, -h * Math.sin(tilt3d)); // kamera jižně od bodu pod sebou, dívá se k severu
+  camera.up.copy(dir); camera.lookAt(dir); tilted = true;
+}
+const camLatLon = () => { const d = (tilted ? camOrbit : camera.position).clone().normalize(); return [Math.asin(d.y) * 180 / Math.PI, Math.atan2(-d.z, d.x) * 180 / Math.PI]; };

@@ -3,6 +3,7 @@ let last = performance.now();
 function frame(now) {
   requestAnimationFrame(frame);
   const dt = Math.min(.1, (now - last) / 1000); last = now;
+  untilt(); // náklon 3D pohledu z minulého snímku pryč, ovládání počítá s kamerou mířící na střed Země
   const rate = ecl ? 17280 : RATES[$('#speed').value];
   if (playing && !tr) { simMs += dt * 1000 * rate; simT += dt * Math.min(4, rate / RATES[L.def || 3]); } // simT pohání jen ozdobné otáčení
   days = (simMs - Y0) / 864e5; // dny od začátku roku 2026 v UTC
@@ -48,7 +49,7 @@ function frame(now) {
   if (light) { light.r += dt * 2.2; lightRing.scale.setScalar(light.r); if (light.r > 47) { light = null; lightRing.visible = false; card(L); acts(); } }
   gG.rotation.y = simT * .02; gU.rotation.y = simT * .01;
   if (L.id === 'rez') layoutCut();
-  if (L.id !== 'mapa') { tileG.visible = false; $('#tileCredit').hidden = true; }
+  if (L.id !== 'mapa') { tileG.visible = false; $('#tileCredit').hidden = true; tilt3d = 0; lift.value = 0; }
   coreGlow.scale.setScalar(1 + .08 * Math.sin(now / 450));
   if (L.id === 'obloha') {
     // oblohu otočíme tak, aby zenit mířil nahoru (+Y), sever k −Z a východ k +X
@@ -64,7 +65,7 @@ function frame(now) {
   camD = camera.position.length();
   if (L.id === 'mapa') {
     controls.minDistance = mapMode === 'priroda' ? 1.0025 : 1.035; // příroda má dlaždice až do detailu, vektorová data blíž nic dalšího neukážou
-    updateTiles(); $('#tileCredit').hidden = !tileG.visible;
+    updateTiles(); $('#tileCredit').hidden = !tileG.visible; stepMapLayers(now);
     const h = camD - 1; // výška nad povrchem; čím níž, tím jemněji se otáčí i zoomuje
     controls.rotateSpeed = THREE.MathUtils.clamp(h / 2.1, .0008, 1); controls.zoomSpeed = THREE.MathUtils.clamp(h * 1.6, .003, 1);
     const near = THREE.MathUtils.clamp(h * .3, .0004, .05); if (Math.abs(camera.near - near) > 1e-4) { camera.near = near; camera.updateProjectionMatrix(); }
@@ -107,6 +108,7 @@ function frame(now) {
       else if (d <= L.min * 1.002 && !focus && i >= NS) go(i === NS ? 0 : i - 1);
     }
   }
+  if (L.id === 'mapa' && !tr) applyTilt(dt);
   renderer.render(scene, camera);
   drawLabels();
 
@@ -123,5 +125,5 @@ function frame(now) {
   if (rt !== rateText) $('#rate').textContent = rateText = rt;
 }
 setLevel(Math.max(0, LV.findIndex(l => '#' + l.id === location.hash)));
-window.__t = { get level() { return L.id; }, get quiz() { return quiz; }, get mapMode() { return mapMode; }, get tiles() { return [...tiles.values()].filter(t => t.mesh.visible).length; }, get tilesFailed() { return tilesFailed; }, get tileZ() { let z = 0; for (const t of tiles.values()) if (t.mesh.visible) z = Math.max(z, t.z); return z; }, lay, setLay, get linesOn() { return lineMat.visible; }, toggleQuakes, showRecords, get quakes() { return quakes ? quakes.list.length : 0; }, quizStart, quizAnswer, quizNext, findHits, pickHit, showCountry, mapFly, get theme() { return mapTheme; }, get info() { return info && info.name; }, get selected() { return !!(selLine || selPin && selPin.visible); }, setMapMode: m => pickMode(m), countryCard, countryAt, get camD() { return camD; }, get mapShown() { return mapShown.map(m => m.text); }, get mapPool() { return mapPool.length; }, get buildMs() { return buildMs; }, get fov() { return camera.fov; }, get dist() { return camera.position.distanceTo(controls.target); }, get focus() { return focus && focus.name; }, go: x => go(typeof x === 'string' ? LV.findIndex(l => l.id === x) : x), eclipse, toggleSizes, startLight, toggleGame, setFocus, planets, comet }; // háčky pro automatický test
+window.__t = { get level() { return L.id; }, get quiz() { return quiz; }, showHistory, showExo, get tilt() { return tilt3d; }, setTilt: on => { tiltOn = on; }, get volc() { return volc ? volc.length : 0; }, get issNow() { return issNow; }, get mapMode() { return mapMode; }, get tiles() { return [...tiles.values()].filter(t => t.mesh.visible).length; }, get tilesFailed() { return tilesFailed; }, get tileZ() { let z = 0; for (const t of tiles.values()) if (t.mesh.visible) z = Math.max(z, t.z); return z; }, lay, setLay, get linesOn() { return lineMat.visible; }, toggleQuakes, showRecords, get quakes() { return quakes ? quakes.list.length : 0; }, quizStart, quizAnswer, quizNext, findHits, pickHit, showCountry, mapFly, get theme() { return mapTheme; }, get info() { return info && info.name; }, get selected() { return !!(selLine || selPin && selPin.visible); }, setMapMode: m => pickMode(m), countryCard, countryAt, get camD() { return camD; }, get mapShown() { return mapShown.map(m => m.text); }, get mapPool() { return mapPool.length; }, get buildMs() { return buildMs; }, get fov() { return camera.fov; }, get dist() { return camera.position.distanceTo(controls.target); }, get focus() { return focus && focus.name; }, go: x => go(typeof x === 'string' ? LV.findIndex(l => l.id === x) : x), eclipse, toggleSizes, startLight, toggleGame, setFocus, planets, comet }; // háčky pro automatický test
 requestAnimationFrame(frame);

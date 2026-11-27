@@ -64,6 +64,7 @@ function mapActs(a) {
   if (!quiz) {
     a.append(pill('Státy', () => pickMode('staty'), mapMode === 'staty'), pill('Příroda', () => pickMode('priroda'), mapMode === 'priroda'));
     if (mapMode === 'staty') a.append(themeSelect());
+    else a.append(pill('3D pohled', () => { tiltOn = !tiltOn; if (tiltOn && camera.position.length() > 1.07) mapFly(...camLatLon(), 1.03); acts(); }, tiltOn));
     a.append(pill('Kvíz', quizMenu), pill('Rekordy', showRecords), pill('Zemětřesení', toggleQuakes, quakesOn));
   } else if (quiz.menu) {
     const s = document.createElement('select'); s.className = 'pill'; s.id = 'quizArea'; s.setAttribute('aria-label', 'Oblast kvízu');
@@ -77,6 +78,12 @@ function mapActs(a) {
       if (quiz.wait) { b.disabled = true; if (right) b.classList.add('right'); else if (j === quiz.picked) b.classList.add('wrong'); }
       return b;
     }));
+    if (quiz.mode === 'najdi' && !quiz.wait) { // odpověď jde napsat, kvíz se dá hrát i bez myši
+      const inp = document.createElement('input'); inp.id = 'quizIn'; inp.setAttribute('list', 'quizNames'); inp.placeholder = 'Nebo napiš název státu a Enter'; inp.setAttribute('aria-label', 'Název státu');
+      if (!$('#quizNames')) { const dl = document.createElement('datalist'); dl.id = 'quizNames'; dl.append(...[...new Set(quizPool('najdi', 'Celý svět').map(j => GEO.c[j][0]))].sort((x, y) => x.localeCompare(y, 'cs')).map(t => new Option(t))); document.body.append(dl); }
+      inp.onkeydown = e => { e.stopPropagation(); if (e.key !== 'Enter') return; const j = GEO.c.findIndex(c => norm(c[0]) === norm(inp.value.trim())); if (j >= 0) quizAnswer(j); else inp.value = ''; };
+      a.append(inp);
+    }
     if (quiz.wait) a.append(Object.assign(pill(quiz.n + 1 < quiz.list.length ? 'Další otázka' : 'Výsledek', quizNext), { id: 'quizNext' }));
     a.append(pill('Ukončit kvíz', quizStop));
   }

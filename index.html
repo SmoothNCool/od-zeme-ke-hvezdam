@@ -9,7 +9,7 @@
 <canvas id="c"></canvas>
 <div id="labels"></div>
 <div id="top"><nav id="levels" aria-label="Zastávky"></nav><nav id="sub" aria-label="Pohledy na Zemi a Měsíc"></nav></div>
-<div id="sunHint" hidden>Slunce</div>
+<button id="sunHint" hidden title="Natočit pohled ke Slunci">Slunce</button>
 <div id="zoom"><button id="findB" aria-label="Hledat" title="Hledat (klávesa /)">🔍</button><button id="layB" aria-label="Vrstvy" title="Vrstvy: co je vidět" aria-expanded="false"><svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><rect x="8" y="8" width="13" height="13" rx="2.5" fill="none" stroke="currentColor" stroke-width="2"/><rect x="3" y="3" width="13" height="13" rx="2.5" fill="#1c2748" stroke="currentColor" stroke-width="2"/></svg></button><button id="setB" aria-label="Nastavení" title="Nastavení: datum, čas a výchozí místo" aria-expanded="false">⚙</button><button id="zin" aria-label="Přiblížit">+</button><button id="zout" aria-label="Oddálit">−</button></div>
 <div id="find" hidden><input id="q" type="search" placeholder="Hledat stát, město, horu, planetu…" autocomplete="off" aria-label="Hledat"><p id="findNote"></p><div id="hits"></div></div>
 <div id="lays" hidden><strong>Co je vidět</strong><label id="namesL"><input id="names" type="checkbox" checked> Popisky</label><div id="laysB"></div></div>
@@ -17,7 +17,7 @@
   <div id="homeBox"><span>Výchozí místo, pro které se počítá den a noc a obloha</span><small id="homeNow"></small><input id="homeQ" type="search" placeholder="Najdi své město…" autocomplete="off" aria-label="Najdi své město"><div id="homeHits"></div><button id="homeOff" class="pill" hidden>Zpět na střed Česka</button><small>Volba zůstává jen v tomhle prohlížeči. Hodiny ukazují český čas.</small></div>
   <button id="hideUi" class="pill">Schovat ovládání (klávesa H)</button>
   <details id="credits"><summary>Zdroje dat a obrázků</summary>
-  <p id="credit">Textury planet: <a href="https://www.solarsystemscope.com/textures/" target="_blank" rel="noopener">Solar System Scope</a>, CC BY 4.0. Data zatmění: NASA. Hvězdy a souhvězdí: d3-celestial. Hranice států: Natural Earth. Údaje a české názvy: Wikidata a mledoze/countries (ODbL). Zemětřesení: USGS. Hranice desek: Peter Bird (2003), H. Ahlenius, ODC-BY. Články a obrázky: <a href="https://cs.wikipedia.org/" target="_blank" rel="noopener">Wikipedie</a>, CC BY-SA. Menší města: GeoNames, CC BY 4.0. Vlajky: Twemoji, CC BY 4.0. Články z Wikipedie a zemětřesení z USGS si prohlížeč stahuje přímo z jejich serverů.</p>
+  <p id="credit">Textury planet: <a href="https://www.solarsystemscope.com/textures/" target="_blank" rel="noopener">Solar System Scope</a>, CC BY 4.0. Data zatmění: NASA. Hvězdy a souhvězdí: d3-celestial. Hranice států: Natural Earth. Údaje a české názvy: Wikidata a mledoze/countries (ODbL). Zemětřesení: USGS. Sopky: Smithsonian Institution, Global Volcanism Program. Poloha ISS: wheretheiss.at. Exoplanety: NASA Exoplanet Archive. Hranice desek: Peter Bird (2003), H. Ahlenius, ODC-BY. Články a obrázky: <a href="https://cs.wikipedia.org/" target="_blank" rel="noopener">Wikipedie</a>, CC BY-SA. Menší města: GeoNames, CC BY 4.0. Vlajky: Twemoji, CC BY 4.0. Články z Wikipedie a zemětřesení z USGS si prohlížeč stahuje přímo z jejich serverů.</p>
   </details></div>
 <div id="tileCredit" hidden>Snímky: <a href="https://cloudless.eox.at" target="_blank" rel="noopener">EOxCloudless</a>, EOX IT Services GmbH (obsahuje upravená data Copernicus Sentinel 2024), CC BY-NC-SA 4.0 · Výšky: <a href="https://github.com/tilezen/joerd/blob/master/docs/attribution.md" target="_blank" rel="noopener">Mapzen Terrain Tiles</a></div>
 <div id="fade" aria-hidden="true">🚀</div>
@@ -33,6 +33,7 @@
     <p id="wiki" hidden><span id="wikiT"></span> <a id="wikiA" target="_blank" rel="noopener">Celý článek na Wikipedii</a></p>
     <p id="note"></p>
     <dl id="facts"></dl>
+    <button id="factsMore" class="pill" hidden>Všechny údaje</button>
     <div id="chips" hidden><small id="chipsT"></small><div id="chipsB"></div></div>
     <div id="moonView" hidden><canvas id="phase" width="128" height="128" style="width:64px;height:64px"></canvas><span><small>Takhle ho vidíme z okna</small><span id="phaseName"></span></span></div>
     <div id="acts"></div>
@@ -41,9 +42,9 @@
     <button id="play" aria-label="Zastavit čas">⏸</button>
     <label id="speedL"><span class="cap">Čas</span> <input id="speed" type="range" min="0" max="8" step="1" value="3"> <span id="rate"></span></label>
     <button id="now" class="pill" title="Vrátit se do skutečného dneška">Teď</button>
-    <button id="snd" aria-label="Zvuky" title="Zvuky" aria-pressed="true">♪</button>
-    <button id="center" aria-label="Zpět na střed" title="Zpět na střed">⌖</button>
-    <button id="full" aria-label="Celá obrazovka" hidden>⤢</button>
+    <button id="snd" aria-label="Zvuky" aria-pressed="true">♪<span class="cap">Zvuk</span></button>
+    <button id="center" aria-label="Celý pohled">⌖<span class="cap">Celý pohled</span></button>
+    <button id="full" aria-label="Celá obrazovka" hidden>⤢<span class="cap">Celá obrazovka</span></button>
   </div>
 </div>
 <button id="showUi" class="pill" hidden title="Ukázat ovládání (klávesa H)">Ovládání</button>
@@ -69,4 +70,6 @@
 <script src="js/11-kviz.js"></script>
 <script src="js/12-ovladani.js"></script>
 <script src="js/12-vrstvy.js"></script>
+<script src="js/12-mapa-vrstvy.js"></script>
+<script src="js/12-vesmir.js"></script>
 <script src="js/13-smycka.js"></script>

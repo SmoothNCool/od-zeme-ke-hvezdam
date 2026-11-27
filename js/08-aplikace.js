@@ -13,7 +13,7 @@ const LV = [
   { id: 'rez', ico: '🌍', name: 'Vrstvy Země', group: gC, cam: [0, 0, 14], min: 1.5, max: 40, def: 0, anchor: gC,
     txt: 'Řez Zemí od středu až na okraj atmosféry. Uprostřed je jádro ze železa a niklu, vnitřní pevné a vnější tekuté. Nad ním je horký plášť, který se pomalu přelévá a hýbe kontinenty, a tenká kůra, po které chodíme. Nad povrchem je pět vrstev atmosféry. Ťukni na vrstvu a dozvíš se víc.',
     note: 'Výseč není v měřítku. Kůra a atmosféra by ve skutečném poměru nebyly vidět, proto jsou roztažené. Skutečné hloubky a výšky jsou na jmenovkách. Tažením se posouváš, kolečkem přibližuješ. Tak hluboko se nikdo nedostal, nejhlubší vrt měří 12 km. O nitru víme hlavně z toho, jak jím procházejí vlny zemětřesení.' },
-  { id: 'mapa', ico: '🌍', name: 'Mapa světa', group: gM, cam: latLon(47, 15).multiplyScalar(3.1).toArray(), min: 1.02, max: 9, def: 0, anchor: gM,
+  { id: 'mapa', ico: '🌍', name: 'Mapa světa', group: gM, cam: latLon(47, 15).multiplyScalar(3.1).toArray(), min: 1.02, max: 9, def: 1, anchor: gM,
     txt: 'Podrobná mapa světa na zeměkouli. Ťukni na stát, město, horu nebo moře a otevře se karta s údaji a článkem z Wikipedie. Státy jdou obarvit podle počtu obyvatel, naděje dožití a dalších údajů. Zeměpis si vyzkoušíš v kvízu.',
     note: 'Čím víc se přiblížíš, tím víc jmen se objeví. Velké bílé tečky jsou hlavní města, čárkované čáry uvnitř států hranice krajů a regionů, modré čáry řeky. Lupa vpravo hledá ve 30 000 jménech. Přírodní mapa jde přiblížit až na desítky metrů, satelitní snímky a stínovaný reliéf se stahují po kouscích.' },
   { id: 'obloha', ico: '🌍', name: 'Obloha', group: gO, cam: [0, -.031, -.095], min: .1, max: .1, def: 2, anchor: gO, noChain: true,
@@ -104,6 +104,7 @@ function preset() {
   return V(...L.cam).multiplyScalar(k);
 }
 function card(o) { $('#ttl').textContent = o.name; $('#txt').textContent = o.txt; $('#note').textContent = o.note; readText = o.say || o.txt + ' ' + o.note;
+  $('#facts').classList.remove('all'); $('#factsMore').hidden = (o.facts || []).length <= 6; // na telefonu nejdřív jen šest údajů
   $('#facts').replaceChildren(...(o.facts || []).map(([k, val]) => { const d = document.createElement('div'), dt = document.createElement('dt'), dd = document.createElement('dd'); dt.textContent = k; dd.textContent = val; d.append(dt, dd); return d; }));
   $('#card').classList.toggle('show', !!o.say);
   $('#flag').hidden = !(o.flag >= 0); if (o.flag >= 0) $('#flag').style.backgroundPosition = `${-(o.flag % 16) * 40}px ${-Math.floor(o.flag / 16) * 40}px`; // otázka ve hře musí být vidět i ve sbalené kartě
@@ -113,7 +114,8 @@ function acts() {
   const a = $('#acts'); a.replaceChildren(); a.classList.remove('quiz');
   if (L.id === 'mapa' && (!info || quiz)) mapActs(a); else $('#legend').hidden = true; // karta místa ukazuje jen obsah, ovládání mapy se vrátí po Zpět
   if (L.id === 'mesic') a.append(pill('Zatmění Slunce', () => eclipse('sun'), ecl === 'sun'), pill('Zatmění Měsíce', () => eclipse('moon'), ecl === 'moon'));
-  if (L.id === 'soustava') a.append(pill('Skutečné velikosti', toggleSizes, sizes), pill('Světlo ze Slunce', startLight, !!light), pill(game ? 'Konec hry' : 'Hra: najdi planetu', toggleGame, !!game));
+  if (L.id === 'soustava') a.append(pill('Skutečné velikosti', toggleSizes, sizes), pill('Světlo ze Slunce', startLight, !!light), pill(game ? 'Konec hry' : 'Hra: najdi planetu', toggleGame, !!game), pill('Dobývání vesmíru', showHistory));
+  if (L.id === 'galaxie') a.append(pill('Exoplanety', showExo));
 }
 function endModes() {
   ecl = null; earth.material.uniforms.ecl.value = 0; moon.material.color.set(0xffffff);
