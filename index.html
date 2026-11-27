@@ -14,12 +14,18 @@
 <div id="find" hidden><input id="q" type="search" placeholder="Hledat stát, město, horu, planetu…" autocomplete="off" aria-label="Hledat"><p id="findNote"></p><div id="hits"></div></div>
 <div id="lays" hidden><strong>Co je vidět</strong><label id="namesL"><input id="names" type="checkbox" checked> Popisky</label><div id="laysB"></div></div>
 <div id="sets" hidden><strong>Nastavení</strong><label id="whenL" hidden>Datum a čas <input id="when" type="datetime-local"></label>
-  <div id="homeBox"><span>Výchozí místo, pro které se počítá den a noc a obloha</span><small id="homeNow"></small><input id="homeQ" type="search" placeholder="Najdi své město…" autocomplete="off" aria-label="Najdi své město"><div id="homeHits"></div><button id="homeOff" class="pill" hidden>Zpět na střed Česka</button><small>Volba zůstává jen v tomhle prohlížeči. Hodiny ukazují český čas.</small></div></div>
+  <div id="homeBox"><span>Výchozí místo, pro které se počítá den a noc a obloha</span><small id="homeNow"></small><input id="homeQ" type="search" placeholder="Najdi své město…" autocomplete="off" aria-label="Najdi své město"><div id="homeHits"></div><button id="homeOff" class="pill" hidden>Zpět na střed Česka</button><small>Volba zůstává jen v tomhle prohlížeči. Hodiny ukazují český čas.</small></div>
+  <button id="hideUi" class="pill">Schovat ovládání (klávesa H)</button>
+  <details id="credits"><summary>Zdroje dat a obrázků</summary>
+  <p id="credit">Textury planet: <a href="https://www.solarsystemscope.com/textures/" target="_blank" rel="noopener">Solar System Scope</a>, CC BY 4.0. Data zatmění: NASA. Hvězdy a souhvězdí: d3-celestial. Hranice států: Natural Earth. Údaje a české názvy: Wikidata a mledoze/countries (ODbL). Zemětřesení: USGS. Hranice desek: Peter Bird (2003), H. Ahlenius, ODC-BY. Články a obrázky: <a href="https://cs.wikipedia.org/" target="_blank" rel="noopener">Wikipedie</a>, CC BY-SA. Menší města: GeoNames, CC BY 4.0. Vlajky: Twemoji, CC BY 4.0. Články z Wikipedie a zemětřesení z USGS si prohlížeč stahuje přímo z jejich serverů.</p>
+  </details></div>
 <div id="tileCredit" hidden>Snímky: <a href="https://cloudless.eox.at" target="_blank" rel="noopener">EOxCloudless</a>, EOX IT Services GmbH (obsahuje upravená data Copernicus Sentinel 2024), CC BY-NC-SA 4.0 · Výšky: <a href="https://github.com/tilezen/joerd/blob/master/docs/attribution.md" target="_blank" rel="noopener">Mapzen Terrain Tiles</a></div>
 <div id="fade" aria-hidden="true">🚀</div>
 <div id="dock">
   <section id="card">
-    <div id="head"><span id="flag" hidden></span><h1 id="ttl"></h1><button id="more" aria-label="Ukázat nebo schovat povídání" aria-expanded="true">i</button><button id="read" aria-label="Přečíst nahlas">🔊</button><button id="hideUi" aria-label="Schovat ovládání" title="Schovat ovládání (klávesa H)">✕</button></div>
+    <div id="head"><span id="flag" hidden></span><h1 id="ttl" aria-live="polite"></h1><button id="read" aria-label="Přečíst nahlas">🔊</button><button id="more" aria-label="Sbalit nebo rozbalit povídání" aria-expanded="true">▾</button></div>
+    <button id="back" class="pill" hidden>← Zpět</button>
+    <div id="legend" hidden></div>
     <span id="dn" hidden></span>
     <span id="clock"></span>
     <p id="txt"></p>
@@ -30,9 +36,6 @@
     <div id="chips" hidden><small id="chipsT"></small><div id="chipsB"></div></div>
     <div id="moonView" hidden><canvas id="phase" width="128" height="128" style="width:64px;height:64px"></canvas><span><small>Takhle ho vidíme z okna</small><span id="phaseName"></span></span></div>
     <div id="acts"></div>
-    <div id="legend" hidden></div>
-    <button id="back" class="pill" hidden>Zpět</button>
-    <p id="credit">Textury planet: <a href="https://www.solarsystemscope.com/textures/" target="_blank" rel="noopener">Solar System Scope</a>, CC BY 4.0. Data zatmění: NASA. Hvězdy a souhvězdí: d3-celestial. Hranice států: Natural Earth. Údaje a české názvy: Wikidata a mledoze/countries (ODbL). Zemětřesení: USGS. Hranice desek: Peter Bird (2003), H. Ahlenius, ODC-BY. Články a obrázky: <a href="https://cs.wikipedia.org/" target="_blank" rel="noopener">Wikipedie</a>, CC BY-SA. Menší města: GeoNames, CC BY 4.0. Vlajky: Twemoji, CC BY 4.0. Články z Wikipedie a zemětřesení z USGS si prohlížeč stahuje přímo z jejich serverů.</p>
   </section>
   <div id="ctl">
     <button id="play" aria-label="Zastavit čas">⏸</button>

@@ -12,8 +12,8 @@ LV.slice(0, NS).forEach((l, i) => l.hidden || $('#sub').append(Object.assign(pil
 function syncPlay() { $('#play').textContent = playing ? '⏸' : '▶'; $('#play').setAttribute('aria-label', playing ? 'Zastavit čas' : 'Pustit čas'); }
 $('#play').onclick = () => { playing = !playing; syncPlay(); };
 syncPlay();
-function setBare(b) { document.body.classList.toggle('bare', b); $('#showUi').hidden = !b; }
-$('#hideUi').onclick = () => setBare(true); $('#showUi').onclick = () => setBare(false);
+function setBare(b) { document.body.classList.toggle('bare', b); $('#showUi').hidden = !b; resize(); }
+$('#hideUi').onclick = () => { $('#sets').hidden = true; setBare(true); }; $('#showUi').onclick = () => setBare(false);
 const zoomStep = dy => renderer.domElement.dispatchEvent(new WheelEvent('wheel', { deltaY: dy, clientX: W / 2, clientY: H / 2, bubbles: true, cancelable: true }));
 [['#zin', -100], ['#zout', 100]].forEach(([id, dy]) => { // držením tlačítka se zoomuje plynule
   let timer; const stop = () => clearInterval(timer);
@@ -32,7 +32,7 @@ addEventListener('keydown', e => {
     camera.position.add(dv); controls.target.add(dv);
   }
 });
-function setMin(m) { $('#card').classList.toggle('min', m); $('#more').setAttribute('aria-expanded', !m); }
+function setMin(m) { $('#card').classList.toggle('min', m); $('#more').setAttribute('aria-expanded', !m); $('#more').textContent = m ? '▴' : '▾'; }
 setMin(matchMedia('(max-width:700px),(max-height:560px)').matches);
 $('#more').onclick = () => setMin(!$('#card').classList.contains('min'));
 $('#now').onclick = () => { simMs = Date.now(); $('#speed').value = L.def; $('#when').value = ''; };
@@ -119,7 +119,12 @@ function hidden(obj) {
   }
   return false;
 }
+// obdélníky ovládání; jmenovka, která by pod nimi ležela, se schová, aby se netrefila jiná věc a nebylo vidět useknuté jméno
+let uiRects = [];
+const underUi = (x0, y0, x1, y1) => uiRects.some(r => x1 > r.left && x0 < r.right && y1 > r.top && y0 < r.bottom);
+const dockObs = new ResizeObserver(() => { document.documentElement.style.setProperty('--dockH', $('#dock').offsetHeight + 'px'); resize(); }); dockObs.observe($('#dock')); // na telefonu stojí tlačítka nad kartou
 function drawLabels() {
+  uiRects = [...document.querySelectorAll('#levels button,#sub button,#zoom button,#dock>*,#lays,#sets,#find,#tileCredit')].map(e => e.getBoundingClientRect()).filter(r => r.width);
   const on = $('#names').checked && !tr, pxPerUnit = H / 2 / Math.tan(rad(camera.fov / 2));
   const placed = [];
   for (const l of labels) {
@@ -131,6 +136,7 @@ function drawLabels() {
     const x = wp.x; let y = wp.y - l.r * l.obj.scale.x * pxPerUnit / wp.z - 8;
     // jmenovky se nesmí překrývat: ta, která koliduje s už umístěnou, uhne o řádek výš
     for (let n = 0; n < 6 && placed.some(q => Math.abs(q[0] - x) < (q[2] + l.w) / 2 + 4 && Math.abs(q[1] - y) < 34); n++) y -= 34;
+    if (underUi(x - l.w / 2, y - 30, x + l.w / 2, y)) { l.el.hidden = true; continue; }
     placed.push([x, y, l.w]);
     l.el.style.transform = `translate(${x}px,${y}px) translate(-50%,-100%)`;
   }
@@ -176,5 +182,7 @@ renderer.domElement.addEventListener('dblclick', e => {
 });
 
 function resize() { W = innerWidth; H = innerHeight; renderer.setSize(W, H, false); camera.aspect = W / H;
-  camera.setViewOffset(W, H, 0, H * .1, W, H); fatMats.forEach(mt => mt.resolution.set(W, H)); } // scéna výš, ať ji dole nezakrývá karta
+  // scéna výš, ať ji dole nezakrývá karta; na širokém displeji i doprava od rozbalené karty
+  const side = W > 900 && !$('#card').classList.contains('min') && !document.body.classList.contains('bare') ? $('#card').getBoundingClientRect().right / 2 : 0;
+  camera.setViewOffset(W, H, -side, H * .1, W, H); fatMats.forEach(mt => mt.resolution.set(W, H)); }
 addEventListener('resize', resize); resize();

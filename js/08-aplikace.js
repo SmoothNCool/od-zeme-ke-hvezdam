@@ -110,8 +110,8 @@ function card(o) { $('#ttl').textContent = o.name; $('#txt').textContent = o.txt
   cardExtras(o); }
 function pill(text, on, pressed) { const b = document.createElement('button'); b.className = 'pill'; b.textContent = text; b.onclick = on; if (pressed != null) b.setAttribute('aria-pressed', pressed); return b; }
 function acts() {
-  const a = $('#acts'); a.replaceChildren();
-  if (L.id === 'mapa') mapActs(a); else $('#legend').hidden = true;
+  const a = $('#acts'); a.replaceChildren(); a.classList.remove('quiz');
+  if (L.id === 'mapa' && (!info || quiz)) mapActs(a); else $('#legend').hidden = true; // karta místa ukazuje jen obsah, ovládání mapy se vrátí po Zpět
   if (L.id === 'mesic') a.append(pill('Zatmění Slunce', () => eclipse('sun'), ecl === 'sun'), pill('Zatmění Měsíce', () => eclipse('moon'), ecl === 'moon'));
   if (L.id === 'soustava') a.append(pill('Skutečné velikosti', toggleSizes, sizes), pill('Světlo ze Slunce', startLight, !!light), pill(game ? 'Konec hry' : 'Hra: najdi planetu', toggleGame, !!game));
 }
@@ -175,9 +175,9 @@ function setFocus(p) {
   card(p); $('#back').hidden = false;
 }
 function unfocus() { controls.enablePan = true; focus = null; zoomTo = 0; controls.minDistance = L.min; $('#back').hidden = true; }
-function showInfo(o) { info = o; card(o); $('#back').hidden = false; setMin(false); } // kdo ťukne na jmenovku, chce číst, proto se karta rozbalí
+function showInfo(o) { info = o; card(o); acts(); $('#back').hidden = false; setMin(false); } // kdo ťukne na jmenovku, chce číst, proto se karta rozbalí
 const goBack = () => {
-  if (info) { info = null; mapSelect(null); card(focus || baseCard()); $('#back').hidden = !focus; return; } // z informace zpět k planetě, u které stojíme
+  if (info) { info = null; mapSelect(null); card(focus || baseCard()); acts(); $('#back').hidden = !focus; return; } // z informace zpět k planetě, u které stojíme
   if (focus && focus.parent) return setFocus(focus.parent); // od měsíce zpět k jeho planetě
   unfocus(); flyTo = overview(); card(baseCard());
 };

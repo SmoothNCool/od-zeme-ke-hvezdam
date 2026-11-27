@@ -24,9 +24,10 @@ CUT.forEach(([key, name, r1, c0, c1, air], i) => {
 for (let i = 0; i < 9; i++) { const c = glow(0xffffff, .55 + (i % 3) * .2, .5); c.position.copy(cutAt(5.05 + (i % 4) * .17, -.85 + i * .21)).setZ(.03); airClouds.add(c); } // oblačnost v troposféře
 const coreGlow = glow(0xffc860, 2.2); coreGlow.position.z = .05; cutG.add(coreGlow); // jádro je žhavé jako povrch Slunce, proto svítí
 let cutFlat = true;
+// střed výseče jde do středu volné plochy, posun od karty řeší kamera (setViewOffset v resize)
 function layoutCut() { // na šířku vodorovně a posunuté doprava od karty, na výšku svisle a zúžené
   cutFlat = camera.aspect >= 1;
-  if (cutFlat) { cutG.rotation.z = -Math.PI / 2; cutG.scale.set(1, 1, 1); cutG.position.set(-1.1, -.3, 0); }
+  if (cutFlat) { cutG.rotation.z = -Math.PI / 2; cutG.scale.set(1, 1, 1); cutG.position.set(-4.6, -.3, 0); }
   else { cutG.rotation.z = 0; cutG.scale.set(.55, 1, 1); cutG.position.set(0, -4.6, 0); }
 }
 // jmenovka vrstvy stojí vně výseče: na šířku nad a pod ní, na výšku vlevo a vpravo; vrací posun v procentech šířky a výšky jmenovky

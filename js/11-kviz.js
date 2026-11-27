@@ -60,6 +60,7 @@ function quizStop() { quiz = null; mapSelect(null); card(L); acts(); paint(); }
 
 /* ---------- tlačítka pod kartou mapy ---------- */
 function mapActs(a) {
+  a.classList.toggle('quiz', !!quiz && !quiz.menu && !quiz.done); // odpovědi se zalomí, na telefonu by jinak utekly do strany
   if (!quiz) {
     a.append(pill('Státy', () => pickMode('staty'), mapMode === 'staty'), pill('Příroda', () => pickMode('priroda'), mapMode === 'priroda'));
     if (mapMode === 'staty') a.append(themeSelect());

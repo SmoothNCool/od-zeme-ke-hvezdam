@@ -6,13 +6,13 @@ Interaktivní 3D atlas Země a vesmíru. Začal jako model pro pětiletého kluk
 
 - **Země a Měsíc**: den a noc podle skutečného času, fáze Měsíce, zatmění Slunce a Měsíce, vesmírná stanice. Roční období jsou vrstva přímo na Zemi: rovník, obratníky, polární kruhy a místo, kde je Slunce v nadhlavníku.
 - **Vrstvy**: tlačítko ☰ zapíná a vypíná, co je vidět. Na mapě jména států, města, regiony, řeky, hory a moře, na Zemi oblačnost a roční období, na obloze čáry a jména souhvězdí, v soustavě dráhy.
-- **Mapa světa**: zeměkoule s politickou a přírodní mapou, 255 území z dat 1:10 milionů, hranice tisíců krajů a regionů, přes 25 000 měst, řeky, jezera, moře, zálivy, ostrovy, pohoří a vrcholy s výškou. Jmenovek je přes 30 000 a přibývají s přiblížením.
+- **Mapa světa**: zeměkoule s politickou a přírodní mapou (přírodní zblízka ze satelitních snímků Sentinel-2 se stínovaným reliéfem, přiblížení až na desítky metrů), 255 území z dat 1:10 milionů, hranice tisíců krajů a regionů, přes 25 000 měst, řeky, jezera, moře, zálivy, ostrovy, pohoří a vrcholy s výškou. Jmenovek je přes 30 000 a přibývají s přiblížením.
 - **Encyklopedie**: karta státu s vlajkou, hlavním městem, počtem obyvatel a rozlohou včetně pořadí na světě, hustotou zalidnění, měnou, jazyky, nejvyšší horou, nadějí dožití, sousedy a srovnáním s Českem. Ke státům, městům, horám, řekám, planetám i souhvězdím se načítá úvod článku a obrázek z české Wikipedie.
 - **Hledání**: lupa nebo klávesa `/` hledá ve 30 000 jménech (státy, města, hory, řeky, planety, měsíce, souhvězdí) a doletí na místo.
 - **Tematické mapy**: státy obarvené podle počtu obyvatel, hustoty zalidnění, naděje dožití, indexu lidského rozvoje, strany, po které se jezdí, přístupu k moři a členství v EU a NATO.
 - **Zeměpisný kvíz**: najdi stát na mapě, poznej stát podle tvaru, poznej vlajku, hlavní města. Celý svět nebo jeden světadíl, deset otázek na kolo.
 - **Živá Země**: zemětřesení za posledních 30 dní z USGS a hranice tektonických desek. Rekordy Země, od Mount Everestu po Marianský příkop.
-- **Uvnitř Země**: průřez zeměkoulí s kůrou, pláštěm a jádrem a nad povrchem pět vrstev atmosféry s oblačností.
+- **Vrstvy Země**: řez od jádra přes plášť a kůru po pět vrstev atmosféry, s hloubkami a výškami a kartou ke každé vrstvě.
 - **Obloha**: hvězdná obloha nad Českem ve zvoleném čase, všech 88 souhvězdí s českými jmény, Slunce, Měsíc a planety.
 - **Sluneční soustava**: planety na skutečných místech, jejich měsíce, kometa, pás asteroidů, skutečné velikosti vedle sebe, rychlost světla, hra „Najdi planetu“.
 - **Mléčná dráha a vesmír**: kde v galaxii je Slunce a kolik galaxií je kolem.
@@ -60,6 +60,7 @@ Spustí aplikaci v headless Chromu, projde všechny pohledy a režimy na počít
 - Tažení otáčí, kolečko nebo dva prsty přibližují, pravé tlačítko myši nebo dva prsty posouvají.
 - Přiblížení a oddálení na doraz přelétá mezi světy (Země, soustava, galaxie, vesmír).
 - Klávesy `+` a `−` zoomují, `H` schová ovládání, `/` otevře hledání.
+- Ozubené kolečko: datum a čas, volitelné výchozí místo (uloží se jen v prohlížeči), schování ovládání a zdroje.
 
 ## Zjednodušení
 
@@ -74,5 +75,6 @@ Spustí aplikaci v headless Chromu, projde všechny pohledy a režimy na počít
 - Menší města: [GeoNames](https://www.geonames.org/), CC BY 4.0.
 - Měny, jazyky, předvolby a domény států: [mledoze/countries](https://github.com/mledoze/countries), ODbL. Naděje dožití, index lidského rozvoje, nejvyšší hory a české názvy: Wikidata.
 - Úvody článků a obrázky: [česká Wikipedie](https://cs.wikipedia.org/), CC BY-SA, načítají se za běhu a odkazují na celý článek.
+- Satelitní snímky: [EOxCloudless](https://cloudless.eox.at) od EOX IT Services GmbH (obsahuje upravená data Copernicus Sentinel 2024), CC BY-NC-SA 4.0. Výškový model pro stínování: [Mapzen Terrain Tiles](https://github.com/tilezen/joerd/blob/master/docs/attribution.md) z AWS Open Data. Obojí se stahuje za běhu.
 - Zemětřesení: [USGS](https://earthquake.usgs.gov/), volné dílo, načítají se za běhu. Hranice desek: Peter Bird (2003), převod [Hugo Ahlenius](https://github.com/fraxen/tectonicplates), ODC-BY.
 - 3D knihovna: [three.js](https://threejs.org/) r128, licence MIT.

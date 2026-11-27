@@ -147,7 +147,8 @@ try {
   check('data mapy se stáhla a mapa se postavila', await until('__t.mapPool > 30000 && __t.buildMs > 0', 30000), (await ev('__t.mapPool')) + ' jmenovek, stavba ' + (await ev('__t.buildMs')) + ' ms');
   check('bod v Čechách je Česko, bod na Sibiři Rusko, bod v Tichém oceánu nic', await ev("GEO.c[__t.countryAt(14.4, 50)][0] === 'Česko' && GEO.c[__t.countryAt(100, 60)][0] === 'Rusko' && __t.countryAt(-150, 0) === -1"));
   await sleep(1500); await shot('06-mapa');
-  await click(640, 290); await sleep(600);
+  const midX = await ev("Math.round((document.querySelector('#card').getBoundingClientRect().right + innerWidth) / 2)"); // střed scény je vpravo od karty
+  await click(midX, 290); await sleep(600);
   check('ťuknutí na mapu otevře kartu státu', await title() !== 'Mapa světa' && await ev("document.querySelectorAll('#facts > div').length >= 2"), await title());
   check('obrázek s vlajkami se načetl', await ev("new Promise(r => { const i = new Image(); i.onload = () => r(i.naturalWidth > 100); i.onerror = () => r(false); i.src = getComputedStyle(document.querySelector('#flag')).backgroundImage.slice(5, -2); })"));
   await ev("document.querySelector('#back').click()");
@@ -218,7 +219,7 @@ try {
   await ev("(() => { const q = document.querySelector('#q'); q.value = 'mount ever'; q.dispatchEvent(new Event('input')); })()"); await sleep(300);
   check('pole hledání vypíše výsledky', await ev("document.querySelectorAll('#hits button').length") > 0, await ev("[...document.querySelectorAll('#hits button')].map(b => b.textContent).join(' | ')")); await shot('13-hledani');
   await ev("document.querySelector('#hits button').click()"); await sleep(2500);
-  check('výběr hory přepne na přírodní mapu a doletí k ní', await ev('__t.info') === 'Mount Everest' && await ev("document.querySelector('#acts [aria-pressed=true]').textContent") === 'Příroda' && await ev('__t.selected'), await ev('__t.info')); await shot('14-everest');
+  check('výběr hory přepne na přírodní mapu a doletí k ní', await ev('__t.info') === 'Mount Everest' && await ev('__t.mapMode') === 'priroda' && await ev('__t.selected'), await ev('__t.info')); await shot('14-everest');
   await ev("__t.pickHit(__t.findHits('saturn')[0])");
   check('výběr planety přeletí do soustavy a k planetě', await until("__t.level === 'soustava' && __t.focus === 'Saturn'", 9000));
   await sleep(1500); await ev("__t.pickHit(__t.findHits('brno')[0])");

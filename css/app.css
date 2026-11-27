@@ -1,7 +1,7 @@
 /* Rozvržení: 3D plátno přes celou obrazovku, nahoře přepínač zastávek, dole karta s povídáním a ovládání času. */
 :root{
   color-scheme:dark;
-  --space:#05070f; --panel:rgba(13,19,38,.86); --chip:#1c2748; --line:#2b3760;
+  --space:#05070f; --panel:rgba(13,19,38,.95); --chip:#1c2748; --line:#2b3760;
   --ink:#eef1fb; --muted:#9ba7cb; --sun:#ffc94d; --sun-ink:#231900; --home:#ff5a4f;
   --display:'Baloo 2','Trebuchet MS',system-ui,sans-serif;
   --body:'Nunito',system-ui,'Segoe UI',sans-serif;
@@ -28,13 +28,14 @@ button:focus-visible,input:focus-visible{outline:3px solid var(--sun);outline-of
 #dock{position:fixed;left:0;right:0;bottom:env(safe-area-inset-bottom,0px);display:flex;flex-wrap:wrap;gap:12px;align-items:flex-end;
   justify-content:space-between;pointer-events:none;padding-block:12px;
   padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
-#dock>*{pointer-events:auto;background:var(--panel);border:1px solid var(--line);border-radius:18px}
+#dock>*{pointer-events:auto;background:var(--panel);border:1px solid var(--line);border-radius:18px;backdrop-filter:blur(10px)}
 #card{flex:1 1 300px;max-width:460px;max-height:70vh;overflow-y:auto;padding:14px 18px;display:flex;flex-direction:column;gap:7px}
 #head{display:flex;align-items:center;justify-content:space-between;gap:10px}
 #card h1{margin:0;font-family:var(--display);font-size:26px;line-height:1.1;text-wrap:balance}
 #card h1{flex:1}
 #flag{flex:none;width:40px;height:40px;background:url(../tex/flags.png) no-repeat;background-size:640px auto}
 #card.min>:not(#head){display:none}
+#card.min #legend:not([hidden]){display:flex}
 #card.min.show #txt,#card.min.show #note{display:block}
 #card.min.show #acts{display:flex}
 #when{font:inherit;color:var(--ink);background:var(--chip);border:1px solid var(--line);border-radius:10px;padding:5px 8px}
@@ -74,7 +75,7 @@ body.bare #find{display:none}
 #more[aria-expanded="true"]{background:var(--sun);border-color:var(--sun);color:var(--sun-ink)}
 body.bare #top,body.bare #dock{display:none}
 #showUi{position:fixed;right:max(16px,env(safe-area-inset-right,0px));bottom:calc(12px + env(safe-area-inset-bottom,0px));opacity:.8}
-#read,#more,#hideUi{flex:none;width:46px;height:46px;border-radius:50%;border:1px solid var(--line);background:var(--chip);font-size:20px}
+#read,#more{flex:none;width:46px;height:46px;border-radius:50%;border:1px solid var(--line);background:var(--chip);font-size:20px}
 #card p{margin:0;line-height:1.45}
 #note,#clock{color:var(--muted);font-size:14px}
 #clock:empty{display:none}
@@ -94,7 +95,12 @@ body.bare #top,body.bare #dock{display:none}
 #lays,#sets{position:fixed;right:calc(max(16px,env(safe-area-inset-right,0px)) + 56px);top:50%;transform:translateY(-50%);z-index:4;background:var(--panel);border:1px solid var(--line);border-radius:16px;
   padding:12px 14px;display:flex;flex-direction:column;gap:8px;backdrop-filter:blur(8px);max-height:70vh;overflow-y:auto}
 #lays strong,#sets strong{font-family:var(--display);font-size:16px}
-#sets{width:min(270px,70vw)}
+#sets{width:min(290px,78vw)}
+#hideUi{min-height:38px;font-size:14px}
+#credits summary{cursor:pointer;font-size:13.5px;color:var(--muted)}
+#credits p{margin:6px 0 0}
+#acts.quiz{flex-wrap:wrap!important;overflow:visible!important}
+#acts.quiz .pill{flex:1 1 40%}
 #sets #whenL,#homeBox{display:flex;flex-direction:column;align-items:stretch;gap:6px;font-size:13.5px;color:var(--ink)}
 #homeBox small{color:var(--muted);font-size:12px}
 #homeQ{font:inherit;color:var(--ink);background:var(--chip);border:1px solid var(--line);border-radius:10px;padding:7px 9px}
@@ -142,7 +148,7 @@ body.bare #zoom{display:none}
   #levels .long,#ctl .cap{display:none}
   #levels .short{display:inline}
   #levels .ico{font-size:18px}
-  .pill{min-height:38px;padding:0 12px;font-size:15px;white-space:nowrap}
+  .pill{min-height:44px;padding:0 12px;font-size:15px;white-space:nowrap}
   #dock{gap:6px;padding-block:6px}
   #card{max-width:none;min-width:0;flex-basis:100%;padding:8px 12px;gap:5px;border-radius:14px;max-height:52vh}
   #pic img{max-height:120px}
@@ -151,15 +157,20 @@ body.bare #zoom{display:none}
   button.lbl{padding:7px 10px}
   #card h1{font-size:18px}
   #card p{font-size:14px;line-height:1.35}
-  #read,#more,#hideUi{width:38px;height:38px;font-size:16px}
+  #read,#more{width:44px;height:44px;font-size:16px}
+  #sub{flex-wrap:wrap;justify-content:center;row-gap:6px}
+  #zoom{top:auto;transform:none;flex-direction:row;bottom:calc(var(--dockH,140px) + 8px + env(safe-area-inset-bottom,0px))}
+  #zoom button{width:44px;height:44px}
+  #lays,#sets{top:auto;transform:none;right:max(16px,env(safe-area-inset-right,0px));bottom:calc(var(--dockH,140px) + 62px + env(safe-area-inset-bottom,0px));max-height:45vh}
+  #chipsB .pill{min-height:40px}
   #find{top:calc(96px + env(safe-area-inset-top,0px))}
   #flag.big{transform:scale(1.5);margin-right:22px}
   #dn{font-size:15px}
   #acts{flex-wrap:nowrap;overflow-x:auto}
   #moonView canvas{width:40px!important;height:40px!important}
   #ctl{flex:1;gap:8px;padding:6px 10px;border-radius:14px;justify-content:space-between}
-  #play{min-width:42px;min-height:42px;font-size:17px}
-  #full,#center,#snd{width:38px;height:38px;font-size:16px}
+  #play{min-width:46px;min-height:46px;font-size:17px}
+  #full,#center,#snd{width:44px;height:44px;font-size:16px}
   #speed{width:84px}
   #rate{min-width:0;font-size:12px;white-space:nowrap}
   #ctl label{font-size:14px;gap:6px}

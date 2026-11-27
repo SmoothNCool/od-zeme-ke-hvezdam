@@ -179,7 +179,7 @@ function initMapData() { // spustí se jednou, až se stáhnou data mapy: rozbal
   for (const [name, lat, lon, rank, kind] of GEO.phys) mapLabel(name, lat, lon, byRank(rank, [[1, 3.2], [2, 2.6], [3, 2.1], [4, 1.7], [99, 1.4]]), 'mnt', 'hory', place(name, kind, [['Co to je', kind]], lat, lon, 2500), kind);
   for (const [name, lat, lon, rank, kind] of GEO.isles) mapLabel(name, lat, lon, byRank(rank, [[1, 2.9], [2, 2.3], [3, 1.8], [4, 1.5], [99, 1.25]]), 'sky', 'more', place(name, kind, [['Co to je', kind]], lat, lon, 800), kind);
   for (const [name, lat, lon, rank, kind] of GEO.seas) mapLabel(name, lat, lon, byRank(rank, [[1, 3.2], [2, 2.5], [4, 1.9], [99, 1.45]]), 'sea', 'more', place(name, kind, [['Co to je', kind]], lat, lon, 4000), kind);
-  for (const [name, lat, lon, elev, rank] of GEO.peaks) mapLabel(name + ', ' + elev.toLocaleString('cs-CZ') + ' m', lat, lon, byRank(rank, [[1, 2.2], [3, 1.7], [99, 1.35]]), 'mnt', 'hory', place(name, 'hora', [['Co to je', 'hora'], ['Výška', elev.toLocaleString('cs-CZ') + ' m nad mořem']], lat, lon, 150), 'hora');
+  for (const [name, lat, lon, elev0, rank] of GEO.peaks) { const elev = name === 'Mount Everest' ? 8849 : elev0; mapLabel(name + ', ' + elev.toLocaleString('cs-CZ') + ' m', lat, lon, byRank(rank, [[1, 2.2], [3, 1.7], [99, 1.35]]), 'mnt', 'hory', place(name, 'hora', [['Co to je', 'hora'], ['Výška', elev.toLocaleString('cs-CZ') + ' m nad mořem']], lat, lon, 150), 'hora'); } // Natural Earth má starší výšku 8 848 m, měření z roku 2020 dává 8 848,86 m
   for (const [name, lat, lon, rank] of GEO.lakeNames) mapLabel(name, lat, lon, byRank(rank, [[1, 2.2], [3, 1.6], [99, 1.3]]), 'sea', 'reky', place(name, 'jezero', [['Co to je', 'jezero']], lat, lon, 600), 'jezero');
   for (const [name, rank, line] of RIVERS) if (name) { const k = (line.length >> 2) * 2; mapLabel(name, line[k + 1], line[k], rank < 3 ? 3 : rank < 5 ? 2.3 : 1.8, 'sea', 'reky', place(name, 'řeka', [['Co to je', 'řeka']], line[k + 1], line[k], 5000), 'řeka'); }
   mapPool.sort((a, b) => b.maxD - a.maxD); // co je vidět zdálky, má při kolizi přednost
@@ -203,7 +203,7 @@ function drawMapLabels(placed, on) {
         m.el = document.createElement(m.click ? 'button' : 'span'); m.el.className = 'lbl ' + m.cls; m.el.textContent = m.text; if (m.click) m.el.onclick = m.click;
         $('#labels').append(m.el); m.w = m.el.offsetWidth; m.el.hidden = true;
       }
-      if (placed.some(q => Math.abs(q[0] - x) < (q[2] + m.w) / 2 + 4 && Math.abs(q[1] - y) < 20)) continue; // jmenovka na mapě nesmí uhnout jinam, radši počká na větší přiblížení
+      if (placed.some(q => Math.abs(q[0] - x) < (q[2] + m.w) / 2 + 4 && Math.abs(q[1] - y) < 20) || underUi(x - m.w / 2, y - 22, x + m.w / 2, y)) continue; // jmenovka na mapě nesmí uhnout jinam, radši počká na větší přiblížení
       placed.push([x, y, m.w]); m.stamp = stamp; next.push(m);
       m.el.hidden = false; m.el.style.transform = `translate(${x}px,${y}px) translate(-50%,-100%)`;
     }
