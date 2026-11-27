@@ -304,7 +304,7 @@ try {
   await ev('__t.newComet()');
   check('kometa přiletí', await until("[...document.querySelectorAll('.lbl')].some(e => !e.hidden && e.textContent === 'Kometa')", 15000)); await shot('31-kometa');
   await go('galaxie'); await sleep(600); check('galaxie nemá podmenu', await ev("document.querySelector('#sub').hidden"));
-  check('v galaxii jsou objekty s kartou', await tapLabel('Krabí mlhovina') && await title() === 'Krabí mlhovina'); await ev("document.querySelector('#close').click()");
+  check('v galaxii jsou objekty s popiskem a kartou', await ev("[...document.querySelectorAll('.lbl')].some(e => !e.hidden && e.textContent === 'Střed galaxie')") && await ev("[...document.querySelectorAll('#chipsB button')].find(b => b.textContent === 'Krabí mlhovina').click(), document.querySelector('#ttl').textContent") === 'Krabí mlhovina'); await ev("document.querySelector('#close').click()");
   await ev("document.querySelector('#close').click()");
   check('exoplanety z karty galaxie', await ev("[...document.querySelectorAll('#chipsB button')].find(b => b.textContent === 'Exoplanety').click(), document.querySelector('#ttl').textContent") === 'Exoplanety'); await shot('32-galaxie');
   await go('vesmir'); await sleep(800);
