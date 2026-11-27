@@ -110,7 +110,12 @@ function frame(now) {
       else if (d <= L.min * 1.002 && !focus && i >= NS) go(i === NS ? 0 : i - 1);
     }
   }
+  if (L.id === 'mapa') controls.enableRotate = !tiltOn; // ve 3D posouvá vlastní tažení
   if (L.id === 'mapa' && !tr) applyTilt(dt);
+  // křížek je vidět, kdykoli je něco vybrané; Zpět jen tam, kde je o úroveň výš kam jít
+  const open = !!(info || focus), nested = !!(focus && (info || focus.parent));
+  if ($('#close').hidden === open) $('#close').hidden = !open;
+  $('#back').classList.toggle('solo', !nested);
   renderer.render(scene, camera);
   drawLabels();
 
@@ -127,5 +132,5 @@ function frame(now) {
   if (rt !== rateText) $('#rate').textContent = rateText = rt;
 }
 setLevel(Math.max(0, LV.findIndex(l => '#' + l.id === location.hash)));
-window.__t = { get level() { return L.id; }, get quiz() { return quiz; }, get lines3d() { return vec ? vec.border.visible : null; }, newComet, showHistory, showExo, get tilt() { return tilt3d; }, setTilt: on => set3d(on), get volc() { return volc ? volc.length : 0; }, get issNow() { return issNow; }, get mapMode() { return mapMode; }, get tiles() { return [...tiles.values()].filter(t => t.mesh.visible).length; }, get tilesFailed() { return tilesFailed; }, get tileZ() { let z = 0; for (const t of tiles.values()) if (t.mesh.visible) z = Math.max(z, t.z); return z; }, lay, setLay, get linesOn() { return lineMat.visible; }, toggleQuakes, showRecords, get quakes() { return quakes ? quakes.list.length : 0; }, quizStart, quizAnswer, quizNext, findHits, pickHit, showCountry, mapFly, get theme() { return mapTheme; }, get info() { return info && info.name; }, get selected() { return !!(selLine || selPin && selPin.visible); }, setMapMode: m => pickMode(m), countryCard, countryAt, get camD() { return camD; }, get mapShown() { return mapShown.map(m => m.text); }, get mapPool() { return mapPool.length; }, get buildMs() { return buildMs; }, get fov() { return camera.fov; }, get dist() { return camera.position.distanceTo(controls.target); }, get focus() { return focus && focus.name; }, go: x => go(typeof x === 'string' ? LV.findIndex(l => l.id === x) : x), eclipse, toggleSizes, startLight, toggleGame, setFocus, planets, comet }; // háčky pro automatický test
+window.__t = { get level() { return L.id; }, get quiz() { return quiz; }, view3d: () => { const v = view3d(); return { d: v.d.toArray(), right: v.right.toArray(), fwd: v.fwd.toArray() }; }, turn3d, get lines3d() { return vec ? vec.border.visible : null; }, newComet, showHistory, showExo, get tilt() { return tilt3d; }, setTilt: on => set3d(on), get volc() { return volc ? volc.length : 0; }, get issNow() { return issNow; }, get mapMode() { return mapMode; }, get tiles() { return [...tiles.values()].filter(t => t.mesh.visible).length; }, get tilesFailed() { return tilesFailed; }, get tileZ() { let z = 0; for (const t of tiles.values()) if (t.mesh.visible) z = Math.max(z, t.z); return z; }, lay, setLay, get linesOn() { return lineMat.visible; }, toggleQuakes, showRecords, get quakes() { return quakes ? quakes.list.length : 0; }, quizStart, quizAnswer, quizNext, findHits, pickHit, showCountry, mapFly, get theme() { return mapTheme; }, get info() { return info && info.name; }, get selected() { return !!(selLine || selPin && selPin.visible); }, setMapMode: m => pickMode(m), countryCard, countryAt, get camD() { return camD; }, get mapShown() { return mapShown.map(m => m.text); }, get mapPool() { return mapPool.length; }, get buildMs() { return buildMs; }, get fov() { return camera.fov; }, get dist() { return camera.position.distanceTo(controls.target); }, get focus() { return focus && focus.name; }, go: x => go(typeof x === 'string' ? LV.findIndex(l => l.id === x) : x), eclipse, toggleSizes, startLight, toggleGame, setFocus, planets, comet }; // háčky pro automatický test
 requestAnimationFrame(frame);

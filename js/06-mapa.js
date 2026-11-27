@@ -77,7 +77,8 @@ function buildVector() {
     ranges.push([start, col.length]); // kde v poli barev leží tenhle stát, pro tematické mapy
     if (c[9]) { const w = P(c[9][0], c[9][1], 1.0014); caps.push(w.x, w.y, w.z); }
   });
-  ARCS.forEach((a, i) => seg(GEO.shared[i] === '1' ? border : coast, unwrap(a), 1.0011)); // každý úsek jednou, takže společná hranice je jedna čára
+  // každý úsek jednou, takže společná hranice je jedna čára; '2' = úsek uvnitř státu (Krym a pevninská Ukrajina), nekreslí se
+  ARCS.forEach((a, i) => GEO.shared[i] !== '2' && seg(GEO.shared[i] === '1' ? border : coast, unwrap(a), 1.0011));
   R = 1.00095; c3.set('#2f6fb5'); for (const lake of LAKES) fill([lake]);
   for (const [, rank, line] of RIVERS) seg(rank < 5 ? bigRiver : river, unwrap(line), 1.0012);
   for (const a of GEO.adm1) seg(adm, unwrap(dec(a)), 1.00105);
@@ -100,6 +101,7 @@ function mapSelect(sel) { // {c: index státu} | {lat, lon} | null
   if (selLine) { gM.remove(selLine); selLine.geometry.dispose(); selLine.material.dispose(); fatMats.splice(fatMats.indexOf(selLine.material), 1); selLine = null; }
   if (selPin) selPin.visible = false;
   if (!sel) return;
+  if (sel.rings) { const out = []; for (const ring of sel.rings) seg(out, ring, 1.0016); selLine = fat(out, 3.6); selLine.material.color.set(0xffc94d); gM.add(selLine); return; } // obrys libovolné oblasti, třeba časového pásma
   if (sel.c >= 0) { const out = []; for (const poly of geoShapes[sel.c]) for (const ring of poly) seg(out, ring, 1.0016); selLine = fat(out, 3.2); selLine.material.color.set(sel.color || 0xffc94d); gM.add(selLine); }
   else {
     if (!selPin) { selPin = points([0, 0, 0], new THREE.PointsMaterial({ size: 30, sizeAttenuation: false, transparent: true, depthTest: false, map: canvasTex((cx, sz) => { cx.strokeStyle = '#ffc94d'; cx.lineWidth = sz * .09; cx.beginPath(); cx.arc(sz / 2, sz / 2, sz * .38, 0, TAU); cx.stroke(); }, 64) })); gM.add(selPin); }

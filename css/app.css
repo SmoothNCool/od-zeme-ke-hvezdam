@@ -18,10 +18,12 @@ button:focus-visible,input:focus-visible{outline:3px solid var(--sun);outline-of
 #top{position:fixed;top:env(safe-area-inset-top,0px);left:0;right:0}
 #levels,#sub{display:flex;gap:8px;justify-content:safe center;
   overflow-x:auto;padding-block:10px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
-#levels button{flex:none;min-height:50px;padding:0 15px;border-radius:999px;border:1px solid var(--line);background:var(--panel);
-  font-family:var(--display);font-size:17px;white-space:nowrap;display:flex;align-items:center;gap:7px}
+#levels button{flex:none;min-height:40px;padding:0 13px;border-radius:999px;border:1px solid var(--line);background:var(--panel);
+  font-family:var(--display);font-size:15.5px;white-space:nowrap;display:flex;align-items:center;gap:6px}
 #levels button[aria-pressed="true"]{background:var(--sun);border-color:var(--sun);color:var(--sun-ink)}
-#levels .ico{font-size:23px}
+#levels .ico{font-size:18px}
+#sub .pill{min-height:34px;padding:0 13px;font-size:14.5px}
+#levels,#sub{padding-block:7px}
 #levels .short{display:none}
 #sub{padding-top:0}
 
@@ -75,7 +77,9 @@ body.bare #find{display:none}
 #more[aria-expanded="true"]{background:var(--sun);border-color:var(--sun);color:var(--sun-ink)}
 body.bare #top,body.bare #dock{display:none}
 #showUi{position:fixed;right:max(16px,env(safe-area-inset-right,0px));bottom:calc(12px + env(safe-area-inset-bottom,0px));opacity:.8}
-#read,#more{flex:none;width:46px;height:46px;border-radius:50%;border:1px solid var(--line);background:var(--chip);font-size:20px}
+#back.solo{display:none}
+#close{flex:none;width:40px;height:40px;border-radius:50%;border:1px solid var(--line);background:var(--chip);font-size:17px}
+#read,#more{flex:none;width:40px;height:40px;border-radius:50%;border:1px solid var(--line);background:var(--chip);font-size:20px}
 #card p{margin:0;line-height:1.45}
 #note,#clock{color:var(--muted);font-size:14px}
 #clock:empty{display:none}
@@ -86,11 +90,12 @@ body.bare #top,body.bare #dock{display:none}
 #moonView small{display:block;font:500 13px var(--body);color:var(--muted)}
 #acts{display:flex;flex-wrap:wrap;gap:8px}
 #back{align-self:flex-start;background:var(--sun);border-color:var(--sun);color:var(--sun-ink)}
-#ctl{display:flex;align-items:center;gap:14px;padding:10px 16px;flex-wrap:wrap}
-#play{min-width:56px;min-height:56px;border-radius:50%;border:0;background:var(--sun);color:var(--sun-ink);font-size:22px}
+#ctl{display:flex;align-items:center;gap:10px;padding:7px 12px;flex-wrap:wrap}
+#ctl .pill{min-height:34px;padding:0 12px;font-size:14.5px}
+#play{min-width:42px;min-height:42px;border-radius:50%;border:0;background:var(--sun);color:var(--sun-ink);font-size:17px}
 #snd[aria-pressed="false"]{opacity:.45}
-#full,#center,#snd{min-width:46px;height:46px;padding:0 14px;display:flex;align-items:center;gap:7px;border-radius:999px;border:1px solid var(--line);background:var(--chip);font-size:20px}
-#ctl label{display:flex;align-items:center;gap:8px;font-weight:700}
+#full,#center,#snd{min-width:36px;height:36px;padding:0 12px;display:flex;align-items:center;gap:6px;border-radius:999px;border:1px solid var(--line);background:var(--chip);font-size:14.5px}
+#ctl label{display:flex;align-items:center;gap:8px;font-weight:700;font-size:14.5px}
 #speed{width:150px;accent-color:var(--sun)}
 #lays,#sets{position:fixed;right:calc(max(16px,env(safe-area-inset-right,0px)) + 56px);top:50%;transform:translateY(-50%);z-index:4;background:var(--panel);border:1px solid var(--line);border-radius:16px;
   padding:12px 14px;display:flex;flex-direction:column;gap:8px;backdrop-filter:blur(8px);max-height:70vh;overflow-y:auto}
@@ -167,7 +172,8 @@ body.bare #zoom{display:none}
   button.lbl{padding:7px 10px}
   #card h1{font-size:18px}
   #card p{font-size:14px;line-height:1.35}
-  #read,#more{width:44px;height:44px;font-size:16px}
+  #read,#more,#close{width:44px;height:44px;font-size:16px}
+  #ctl .pill,#sub .pill{min-height:44px}
   #sub{flex-wrap:wrap;justify-content:center;row-gap:6px}
   #zoom{top:auto;transform:none;flex-direction:row;bottom:calc(var(--dockH,140px) + 8px + env(safe-area-inset-bottom,0px))}
   #zoom button{width:44px;height:44px}

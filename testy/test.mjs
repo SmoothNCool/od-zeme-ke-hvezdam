@@ -146,6 +146,7 @@ try {
   section('Mapa světa');
   await go('mapa');
   check('data mapy se stáhla a mapa se postavila', await until('__t.mapPool > 30000 && __t.buildMs > 0', 30000), (await ev('__t.mapPool')) + ' jmenovek, stavba ' + (await ev('__t.buildMs')) + ' ms');
+  check('Krym patří Ukrajině', await ev("GEO.c[__t.countryAt(34.1, 45.0)][0] === 'Ukrajina' && GEO.towns.find(t => t[0] === 'Simferopol')[4] === 'Ukrajina'"));
   check('bod v Čechách je Česko, bod na Sibiři Rusko, bod v Tichém oceánu nic', await ev("GEO.c[__t.countryAt(14.4, 50)][0] === 'Česko' && GEO.c[__t.countryAt(100, 60)][0] === 'Rusko' && __t.countryAt(-150, 0) === -1"));
   await sleep(1500); await shot('06-mapa');
   const midX = await ev("Math.round((document.querySelector('#card').getBoundingClientRect().right + innerWidth) / 2)"); // střed scény je vpravo od karty
@@ -236,6 +237,11 @@ try {
   await ev("__t.setLay('noc', 0), __t.setLay('pasma', 1)"); await sleep(600);
   await ev('__t.mapFly(10, -60, 3.4)'); await sleep(1800);
   const tzFar = (await lbls()).filter(t => t.startsWith('UTC'));
+  await shot('24a-pasma-zdalky');
+  await ev("[...document.querySelectorAll('.lbl.tz')].find(e => !e.hidden).click()"); await sleep(400);
+  check('vybrané pásmo má obrys a jde zrušit křížkem', (await title()).startsWith('Časové pásmo') && await ev('__t.selected') && await ev("!document.querySelector('#close').hidden"));
+  await ev("document.querySelector('#close').click()"); await sleep(200);
+  check('křížek zruší výběr i kartu', !(await ev('__t.selected')) && await title() === 'Časová pásma' || !(await ev('__t.selected')) && await title() === 'Mapa světa', await title());
   check('zdálky má každý posun nejvýš jeden popisek', tzFar.length > 3 && new Set(tzFar.map(t => t.split(' ')[0])).size === tzFar.length, tzFar.length + ' popisků');
   check('časová pásma ukazují UTC a čas', (await lbls()).some(t => /^UTC([+−]\d+)? · \d\d:\d\d$/.test(t)), (await lbls()).filter(t => t.startsWith('UTC')).slice(0, 3).join(', ')); await shot('24-pasma');
   await ev("__t.setLay('pasma', 0), __t.setLay('podnebi', 1)"); await sleep(500);
@@ -259,6 +265,12 @@ try {
   await ev('__t.setTilt(true)'); await sleep(4000);
   check('naklopení kamery do 3D a kamera nad nejvyšší horou okolí', await ev('__t.tilt') > 1 && await ev('(camera.position.length() - 1) * 6371000') > 4478 * 2 + 1000, (await ev('__t.tilt')).toFixed(2)); await shot('29-3d-alpy');
   check('ve 3D nejsou plovoucí čáry hranic a řek', await ev('__t.lines3d') === false);
+  await ev('__t.turn3d(1), __t.turn3d(1)'); await sleep(2500); // otočeno o 90°
+  const v0 = await ev('__t.view3d()'), cxm = await ev("Math.round((document.querySelector('#card').getBoundingClientRect().right + innerWidth) / 2)");
+  await mouse('mousePressed', cxm, 400); for (let k = 1; k <= 6; k++) { await mouse('mouseMoved', cxm + k * 20, 400); await sleep(20); } await mouse('mouseReleased', cxm + 120, 400); await sleep(300);
+  const v1 = await ev('__t.view3d()'), mv = v1.d.map((x, i) => x - v0.d[i]), dot = (a, b) => a[0] * b[0] + a[1] * b[1] + a[2] * b[2];
+  check('po otočení táhne myš ve směru pohledu', dot(mv, v0.right) < 0 && Math.abs(dot(mv, v0.fwd)) < Math.abs(dot(mv, v0.right)) * .3, dot(mv, v0.right).toExponential(1) + ' / ' + dot(mv, v0.fwd).toExponential(1));
+  await shot('29b-3d-otoceno');
   await ev('__t.setTilt(false)'); await sleep(2500); check('návrat do pohledu shora', await ev('__t.tilt') === 0);
   await ev("__t.setMapMode('staty')"); await ev('__t.mapFly(47, 15, 3.1)'); await sleep(1500);
 
@@ -280,7 +292,13 @@ try {
   await ev("[...document.querySelectorAll('#sub .dyn')].find(b => b.textContent === 'Kuiperův pás').click()"); check('Kuiperův pás z podmenu', await title() === 'Kuiperův pás');
   await ev('__t.newComet()');
   check('kometa přiletí', await until("[...document.querySelectorAll('.lbl')].some(e => !e.hidden && e.textContent === 'Kometa')", 15000)); await shot('31-kometa');
-  await go('galaxie'); await ev("[...document.querySelectorAll('#sub .dyn')].find(b => b.textContent === 'Exoplanety').click()"); check('exoplanety z podmenu', await title() === 'Exoplanety');
+  await go('galaxie'); await sleep(600); check('galaxie nemá podmenu', await ev("document.querySelector('#sub').hidden"));
+  check('v galaxii jsou objekty s kartou', await tapLabel('Krabí mlhovina') && await title() === 'Krabí mlhovina'); await ev("document.querySelector('#close').click()");
+  await ev("document.querySelector('#close').click()");
+  check('exoplanety z karty galaxie', await ev("[...document.querySelectorAll('#chipsB button')].find(b => b.textContent === 'Exoplanety').click(), document.querySelector('#ttl').textContent") === 'Exoplanety'); await shot('32-galaxie');
+  await go('vesmir'); await sleep(800);
+  check('vesmír: Místní skupina a Andromeda', await tapLabel('Galaxie v Andromedě') && await title() === 'Galaxie v Andromedě'); await shot('33-vesmir');
+  await ev("[...document.querySelectorAll('#sub .dyn')].find(b => b.textContent === 'Dějiny vesmíru').click()"); check('dějiny vesmíru', await title() === 'Dějiny vesmíru' && await ev("document.querySelectorAll('#chipsB button').length") === 9);
   await go('zeme'); check('Země má zase pohledy na Zemi v podmenu', await ev("!document.querySelector('#sub').hidden && !document.querySelector('#sub-zeme').hidden"));
 
   section('Ovládání');

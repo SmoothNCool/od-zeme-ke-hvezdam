@@ -18,6 +18,13 @@ python staty_encyklopedie.py     # měny, jazyky, vrcholy, naděje dožití… -
 python desky.py                  # hranice tektonických desek -> ../data/desky.json
 ```
 
+Po `mapa_2_vrstvy.py` vždy pustit `python oprava_krym.py`: Natural Earth kreslí Krym jako součást Ruska, podle mezinárodně uznaných hranic patří Ukrajině.
+
+```
+python pasma.py                  # skutečná časová pásma -> ../data/pasma.json
+python sopky.py                  # sopky -> ../data/sopky.json
+```
+
 Co je dobré vědět:
 
 - První skript potřebuje `pillow` (skládá vlajky do jedné mřížky) a soubor `geodata/wikidata2.json` s údaji o státech. Ten vznikl dotazem na Wikidata, jehož znění je ve skriptu u funkce `sparql`. Pokud soubor chybí, je potřeba dotaz pustit znovu přes `curl`.

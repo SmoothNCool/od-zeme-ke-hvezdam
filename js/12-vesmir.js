@@ -158,3 +158,60 @@ findList = () => {
   return findFixed;
 };
 applyLay();
+
+/* ---------- Mléčná dráha: skutečné objekty na svých místech; 1 jednotka modelu = 1 000 světelných let, Slunce je 26 až 27 000 ly od středu ---------- */
+// poloha z galaktických souřadnic: délka l (0° = směr ke středu galaxie), šířka b, vzdálenost od Slunce v ly
+const galAt = (l, b, ly) => V(-Math.cos(rad(l)) * Math.cos(rad(b)), Math.sin(rad(b)), -Math.sin(rad(l)) * Math.cos(rad(b))).multiplyScalar(ly / 1000).add(ourSun.position);
+const GAL_OBJ = [
+  ['Střed galaxie', 0, 0, 26000, 0xffd27a, 0, { name: 'Střed Mléčné dráhy', txt: 'Uprostřed galaxie je obří černá díra Sagittarius A*. Je čtyři milionykrát těžší než Slunce. Kolem ní je nejhustší shluk hvězd v celé galaxii. Ze Země ho vidíme v souhvězdí Střelce, ale zakrývá ho prach, proto ho astronomové pozorují hlavně v rádiovém a infračerveném světle.', facts: [['Daleko od Slunce', 'asi 26 000 světelných let'], ['Černá díra', 'Sagittarius A*, 4 miliony Sluncí'], ['První snímek Sgr A*', '2022, dalekohled EHT']], wiki: { t: 'Sagittarius A*' } }],
+  ['Mlhovina v Orionu', 209, -19.4, 1344, 0xff7fae, 1.6, { name: 'Mlhovina v Orionu', txt: 'Nejbližší velká porodnice hvězd. Za jasné zimní noci je vidět i pouhým okem jako mlhavá hvězdička pod Orionovým pásem. Rodí se v ní tisíce nových hvězd.', facts: [['Daleko od Slunce', 'asi 1 344 světelných let'], ['Kdy je vidět', 'u nás v zimě, v souhvězdí Orion']], wiki: { t: 'Velká mlhovina v Orionu' } }],
+  ['Krabí mlhovina', 184.6, -5.8, 6500, 0x9fd8ff, 1.6, { name: 'Krabí mlhovina', txt: 'Zbytek hvězdy, která vybuchla jako supernova. Výbuch v roce 1054 zaznamenali čínští astronomové, byl vidět i ve dne. Uprostřed zůstala neutronová hvězda, která se otočí třicetkrát za sekundu.', facts: [['Daleko od Slunce', 'asi 6 500 světelných let'], ['Výbuch viděli lidé', 'v roce 1054']], wiki: { t: 'Krabí mlhovina' } }],
+  ['Orlí mlhovina', 17, .8, 7000, 0xff9f7a, 1.6, { name: 'Orlí mlhovina', txt: 'Je v ní slavné místo Pilíře stvoření: vysoké sloupy plynu a prachu, ve kterých vznikají nové hvězdy. Fotka z Hubbleova dalekohledu patří k nejznámějším snímkům vesmíru.', facts: [['Daleko od Slunce', 'asi 7 000 světelných let'], ['Pilíře stvoření', 'vysoké asi 4 až 5 světelných let']], wiki: { t: 'Orlí mlhovina' } }],
+  ['Éta Carinae', 287.6, -.6, 7500, 0xfff0c0, 1.4, { name: 'Éta Carinae', txt: 'Jedna z nejhmotnějších a nejjasnějších hvězd v naší galaxii. V 19. století prudce zjasnila a vyvrhla obří oblak plynu. Astronomové čekají, že jednou vybuchne jako supernova.', facts: [['Daleko od Slunce', 'asi 7 500 světelných let'], ['Je to', 'dvojhvězda, větší hvězda má asi 100 Sluncí']], wiki: { t: 'Éta Carinae' } }],
+  ['Omega Centauri', 309.1, 15, 17000, 0xfff6d8, 2, { name: 'Omega Centauri', txt: 'Největší kulová hvězdokupa naší galaxie, koule z asi deseti milionů hvězd. Možná je to zbytek malé galaxie, kterou Mléčná dráha kdysi pohltila.', facts: [['Daleko od Slunce', 'asi 17 000 světelných let'], ['Hvězd', 'asi 10 milionů']], wiki: { t: 'Omega Centauri' } }],
+  ['Hvězdokupa M13', 59, 40.9, 22000, 0xfff6d8, 2, { name: 'Kulová hvězdokupa M13', txt: 'Kulová hvězdokupa v souhvězdí Herkula, jedna z nejjasnějších na severní obloze. V roce 1974 k ní lidé poslali rádiovou zprávu z observatoře Arecibo.', facts: [['Daleko od Slunce', 'asi 22 000 světelných let'], ['Hvězd', 'statisíce']], wiki: { t: 'Messier 13' } }],
+];
+for (const [name, l, b, ly, color, size, cardO] of GAL_OBJ) {
+  const o = size ? glow(color, size) : new THREE.Object3D(); o.position.copy(l || b || ly < 25000 ? galAt(l, b, ly) : V()); gG.add(o);
+  label(name, o, size ? .6 : 2, () => L.id === 'galaxie', () => showInfo(cardO), 'sky');
+}
+// kroužek kolem Slunce: skoro všechny známé exoplanety jsou do pár tisíc světelných let
+const exoRing = ring(3, 0x8ff0c8); exoRing.material.opacity = .9; exoRing.position.copy(ourSun.position); gG.add(exoRing);
+// na kartě galaxie tlačítka ke všem objektům a k exoplanetám
+LV[lv('galaxie')].chips = [['Exoplanety', () => showExo()], ...GAL_OBJ.map(o => [o[0], () => showInfo(o[6])])]; LV[lv('galaxie')].chipsTitle = 'Co v galaxii najdeš';
+Object.assign(INFO.NaseSlunce, { txt: 'Slunce leží v menším rameni galaxie, kterému se říká Orionovo rameno, asi 26 000 světelných let od středu. Kolem středu galaxie oběhne jednou za zhruba 230 milionů let.', note: 'Zelený kroužek ukazuje 3 000 světelných let kolem Slunce. Skoro všechny známé exoplanety jsou uvnitř.', facts: [['Rameno', 'Orionovo rameno'], ['Daleko od středu', 'asi 26 000 světelných let'], ['Jeden oběh kolem středu', 'asi 230 milionů let']],
+  chips: [['Exoplanety', () => showExo()]], chipsTitle: 'Planety u jiných hvězd' });
+
+/* ---------- Vesmír: Místní skupina zhruba v měřítku (1 jednotka = 6 250 ly), ostatní galaxie daleko za ní ---------- */
+const LOCAL = [
+  ['Velké Magellanovo mračno', V(8, -16, 18), 3.2, { name: 'Velké Magellanovo mračno', txt: 'Trpasličí galaxie, která je průvodcem Mléčné dráhy. Z jižní polokoule je vidět pouhým okem jako odtržený kus Mléčné dráhy. V roce 1987 v ní vybuchla supernova, nejbližší za posledních 400 let.', facts: [['Daleko', 'asi 160 000 světelných let'], ['Kde je vidět', 'jen z jižní polokoule']], wiki: { t: 'Velké Magellanovo mračno' } }],
+  ['Malé Magellanovo mračno', V(14, -24, 13), 2.2, { name: 'Malé Magellanovo mračno', txt: 'Menší sestra Velkého Magellanova mračna. Obě mračna pojmenovali Evropané podle mořeplavce Magellana, jehož výprava je popsala při cestě kolem světa.', facts: [['Daleko', 'asi 200 000 světelných let'], ['Kde je vidět', 'jen z jižní polokoule']], wiki: { t: 'Malé Magellanovo mračno' } }],
+  ['Galaxie v Andromedě', V(200, 60, -330), 32, { name: 'Galaxie v Andromedě', txt: 'Nejbližší velká galaxie, větší než Mléčná dráha. Je to jedna z nejvzdálenějších věcí, které jsou vidět pouhým okem, jako slabá mlhavá skvrnka na podzimní obloze. Blíží se k nám. Podle nových měření z dalekohledů Hubble a Gaia ale srážka není jistá: šance, že se galaxie během příštích 10 miliard let srazí a splynou, je asi poloviční.', facts: [['Daleko', 'asi 2,5 milionu světelných let'], ['Hvězd', 'asi bilion'], ['Kdy je vidět', 'u nás na podzim, v souhvězdí Andromeda']], wiki: { t: 'Galaxie v Andromedě' } }],
+  ['Galaxie v Trojúhelníku', V(110, -50, -400), 11, { name: 'Galaxie v Trojúhelníku', txt: 'Třetí největší galaxie Místní skupiny. Je to spirální galaxie, menší než Mléčná dráha i Andromeda.', facts: [['Daleko', 'asi 2,7 milionu světelných let']], wiki: { t: 'Galaxie v Trojúhelníku' } }],
+];
+for (const [name, pos, size, cardO] of LOCAL) {
+  const s = galaxy(size, size > 5); s.material.color.set(0xdfe6ff); s.position.copy(pos); gU.add(s);
+  label(name, s, size / 3, () => L.id === 'vesmir', () => showInfo(cardO), 'sky');
+}
+// ostatní galaxie daleko za Místní skupinou; ve skutečnosti jsou nejbližší další skupiny miliony světelných let daleko
+for (const s of gU.children.slice(0, 600)) { s.position.setLength(520 + Math.random() * 1300); s.scale.multiplyScalar(2.6); }
+const localMark = new THREE.Object3D(); localMark.position.set(60, 45, -120); gU.add(localMark);
+const LOCAL_CARD = { name: 'Místní skupina', txt: 'Mléčná dráha patří do skupiny asi osmdesáti galaxií, které drží pohromadě gravitace. Největší jsou Andromeda a naše galaxie, ostatní jsou většinou malé trpasličí galaxie.', note: 'Místní skupina je v modelu zhruba ve správných vzdálenostech. Ostatní galaxie jsou ve skutečnosti mnohem dál, než jak je model ukazuje.', facts: [['Galaxií', 'asi 80'], ['Průměr', 'asi 10 milionů světelných let'], ['Největší', 'Andromeda a Mléčná dráha']], wiki: { t: 'Místní skupina galaxií' } };
+label('Místní skupina galaxií', localMark, 0, () => L.id === 'vesmir', () => showInfo(LOCAL_CARD), 'star');
+
+/* ---------- dějiny vesmíru: od Velkého třesku po člověka ---------- */
+const COSMIC = [
+  ['před 13,8 miliardy let', 'Velký třesk', 'Vesmír vznikl z nesmírně horkého a hustého stavu a od té doby se rozpíná. Prostor, čas i hmota vznikly zároveň.', 'Velký třesk'],
+  ['asi 380 000 let po třesku', 'Vesmír zprůhledněl', 'Vesmír vychladl natolik, že se z částic poskládaly atomy a světlo mohlo volně letět. To nejstarší světlo zachycujeme dodnes jako reliktní záření.', 'Reliktní záření'],
+  ['asi 100 až 200 milionů let po třesku', 'První hvězdy', 'Z oblaků vodíku a hélia se zrodily první hvězdy. Byly obří a v jejich nitru vznikly těžší prvky, ze kterých jsme dnes složení i my.', 'Hvězda'],
+  ['před asi 13 miliardami let', 'Mléčná dráha', 'Nejstarší hvězdy naší galaxie jsou staré přes 13 miliard let. Galaxie rostla tím, že pohlcovala menší galaxie.', 'Galaxie Mléčná dráha'],
+  ['před 4,6 miliardy let', 'Slunce', 'Z oblaku plynu a prachu se zrodilo Slunce. Ze zbytku kolem něj vznikly planety.', 'Slunce'],
+  ['před 4,5 miliardy let', 'Země a Měsíc', 'Země se zformovala ze srážek menších těles. Brzy do ní narazilo těleso velké jako Mars a z vyvrženého materiálu vznikl Měsíc.', 'Země'],
+  ['před 3,5 miliardy let', 'První život', 'Nejstarší jisté stopy života jsou mikroorganismy v moři. Ještě skoro tři miliardy let pak byl život jen jednobuněčný.', 'Vznik života'],
+  ['před 230 až 66 miliony let', 'Dinosauři', 'Dinosauři vládli Zemi přes 160 milionů let. Vyhynuli po dopadu planetky na poloostrov Yucatán. Ptáci jsou jejich přímí potomci.', 'Dinosauři'],
+  ['před asi 300 000 lety', 'Člověk', 'V Africe se objevil moderní člověk. Kdyby se celé dějiny vesmíru stlačily do jednoho roku, objevili by se lidé 31. prosince asi deset minut před půlnocí.', 'Člověk moudrý'],
+];
+const cosmicChips = () => COSMIC.map(e => [e[1], () => showInfo({ name: e[1], txt: e[2], note: '', facts: [['Kdy', e[0]]], wiki: { t: e[3] }, chips: cosmicChips(), chipsTitle: 'Dějiny vesmíru' })]);
+const showCosmic = () => showInfo({ name: 'Dějiny vesmíru', txt: 'Vesmír je starý 13,8 miliardy let. Většinu té doby tu nebyla Země ani Slunce. Vyber si událost.', note: 'Kdyby se celé dějiny vesmíru stlačily do jednoho roku, Slunce by vzniklo na začátku září a dinosauři by žili od Vánoc.', facts: [['Stáří vesmíru', '13,8 miliardy let'], ['Stáří Země', '4,5 miliardy let']], wiki: { t: 'Vznik a vývoj vesmíru' }, chips: cosmicChips(), chipsTitle: 'Od Velkého třesku po člověka' });
+SUBS.galaxie = null; SUBS.vesmir = [['Vesmír', () => { info = null; card(L); $('#back').hidden = true; }], ['Místní skupina', () => showInfo(LOCAL_CARD)], ['Dějiny vesmíru', showCosmic]];
+LV[lv('vesmir')].chipsTitle = 'Co ve vesmíru najdeš'; LV[lv('vesmir')].chips = [['Galaxie v Andromedě', () => showInfo(LOCAL[2][3])], ['Magellanova mračna', () => showInfo(LOCAL[0][3])], ['Místní skupina', () => showInfo(LOCAL_CARD)], ['Dějiny vesmíru', showCosmic]];

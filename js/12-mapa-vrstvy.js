@@ -58,25 +58,37 @@ let tzData = null, tzWait = null, tzMinute = -1;
 const tzName = z => 'UTC' + (z ? (z > 0 ? '+' : '−') + Math.floor(Math.abs(z)) + (Math.abs(z) % 1 ? ':' + String(Math.round(Math.abs(z) % 1 * 60)).padStart(2, '0') : '') : '');
 console.assert(tzName(5.75) === 'UTC+5:45' && tzName(-3.5) === 'UTC−3:30' && tzName(0) === 'UTC', 'tzName');
 const tzTime = z => new Date(simMs + z * 36e5).toISOString().slice(11, 16);
-const TZ_COLORS = ['#8dd3c7', '#ffffb3', '#bebada', '#fb8072', '#80b1d3', '#fdb462', '#b3de69', '#fccde5'];
+// jako na klasické mapě pásem: celé hodiny se střídají ve dvou modrých, posun o půl nebo čtvrt hodiny je oranžový (barvy prošly kontrolou rozlišitelnosti)
+const TZ_EVEN = '#2f4fb0', TZ_ODD = '#7f9cf0', TZ_HALF = '#d9902a';
+const tzColor = z => z % 1 ? TZ_HALF : ((Math.round(z) % 2) + 2) % 2 ? TZ_ODD : TZ_EVEN;
 function loadZones() {
   if (tzWait) return tzWait;
   return tzWait = getJson('data/pasma.json').then(list => {
     tzData = list;
-    const W2 = 4096, H2 = 2048, cv = document.createElement('canvas'); cv.width = W2; cv.height = H2; const g = cv.getContext('2d'); g.globalAlpha = .38;
+    const W2 = 4096, H2 = 2048, cv = document.createElement('canvas'); cv.width = W2; cv.height = H2; const g = cv.getContext('2d'); g.globalAlpha = .72;
     const lines = [];
     const tzBest = new Map();
     for (const [z, , marks] of list) for (const [la, lo] of marks) { const b = tzBest.get(z); if (!b || Math.abs(la) < Math.abs(b[0])) tzBest.set(z, [la, lo]); }
     for (const [z, col, marks, rings] of list) {
-      g.fillStyle = TZ_COLORS[(col - 1) % 8]; g.beginPath();
+      g.fillStyle = tzColor(z); g.beginPath();
       for (const r of rings) { const flat = dec(r); for (let k = 0; k < flat.length; k += 2) g[k ? 'lineTo' : 'moveTo']((flat[k] + 180) / 360 * W2, (90 - flat[k + 1]) / 180 * H2); g.closePath(); seg(lines, flat, 1.0012); }
       g.fill('evenodd');
-      for (const [la, lo] of marks) mapLabel(tzName(z) + ' · ' + tzTime(z), la, lo, tzBest.get(z)[0] === la && tzBest.get(z)[1] === lo ? 99 : 2.1, 'tz', 'pasma', () => showInfo({ name: 'Časové pásmo ' + tzName(z), txt: 'V tomhle pásmu je teď ' + tzTime(z) + '.', note: 'Čas se počítá podle hodin dole, bez letního času.', facts: [['Posun proti světovému času', tzName(z)], ['Proti Česku', z === 1 ? 'stejný čas' : (z > 1 ? '+' : '−') + dec1(Math.abs(z - 1)) + ' h']], wiki: { t: 'Časové pásmo', noImg: true } }), 'časové pásmo'); mapPool[mapPool.length - 1].tz = z;
+      for (const [la, lo] of marks) mapLabel(tzName(z) + ' · ' + tzTime(z), la, lo, tzBest.get(z)[0] === la && tzBest.get(z)[1] === lo ? 99 : 2.1, 'tz', 'pasma', () => showZone(z), 'časové pásmo'); mapPool[mapPool.length - 1].tz = z;
     }
     ovU.tzT.value = new THREE.CanvasTexture(cv);
-    const f = fat(lines, 1.3); f.material.color.set(0x5b3f8f); f.material.opacity = .9; tzG.add(f);
+    const f = fat(lines, 2.2); f.material.color.set(0xffffff); f.material.opacity = .85; tzG.add(f);
     mapPool.sort((a, b) => b.maxD - a.maxD); tzMinute = -1;
   }).catch(err => { tzWait = null; throw err; });
+}
+const zoneRings = z => tzData.filter(t => t[0] === z).flatMap(t => t[3].map(dec));
+function showZone(z) {
+  mapSelect({ rings: zoneRings(z) });
+  showInfo({ name: 'Časové pásmo ' + tzName(z), txt: 'V tomhle pásmu je teď ' + tzTime(z) + '.', note: 'Čas se počítá podle hodin dole, bez letního času. Zvýrazněná jsou všechna místa se stejným časem.', facts: [['Posun proti světovému času', tzName(z)], ['Proti Česku', z === 1 ? 'stejný čas' : (z > 1 ? '+' : '−') + dec1(Math.abs(z - 1)).replace('.', ',') + ' h']], wiki: { t: 'Časové pásmo', noImg: true } });
+}
+function zoneAt(lon, lat) { // které pásmo leží pod bodem (paprskový test jako u států)
+  if (!tzData) return null;
+  for (const [z, , , rings] of tzData) { let inside = false; for (const r of rings) { const f = dec(r); for (let a = 0, b = f.length - 2; a < f.length; b = a, a += 2) if ((f[a + 1] > lat) !== (f[b + 1] > lat) && lon < (f[b] - f[a]) * (lat - f[a + 1]) / (f[b + 1] - f[a + 1]) + f[a]) inside = !inside; } if (inside) return z; }
+  return null;
 }
 function stepZones() { // jmenovky ukazují čas v pásmu, obnovují se jednou za minutu modelu
   const minute = Math.floor(simMs / 6e4); if (minute === tzMinute || !tzData) return; tzMinute = minute;
@@ -181,7 +193,7 @@ function pollIss(now) {
 /* ---------- karty k vrstvám a jejich zapínání ---------- */
 const MAP_LAY_CARDS = {
   noc: () => ({ name: 'Den a noc na mapě', txt: 'Tmavá část Země je právě v noci, rozsvícená místa jsou města. Žlutá tečka je místo, kde je Slunce právě přímo nad hlavou. Hranice dne a noci se posouvá na západ o 15° za hodinu.', note: 'Čas a jeho rychlost nastavíš dole, datum v ozubeném kolečku. Hranici světla model kreslí bez soumraku a lomu světla v atmosféře.', facts: [['Jedno otočení Země', '24 hodin'], ['Rychlost hranice na rovníku', 'asi 1 670 km/h']], wiki: { t: 'Den', noImg: true } }),
-  pasma: () => ({ name: 'Časová pásma', txt: 'Země se otočí o 15° za hodinu, proto se svět dělí na časová pásma. Ve stejném pásmu ukazují hodiny stejný čas. Hranice pásem se drží hranic států, proto jsou klikaté, a některé státy mají posun o půl hodiny. Jmenovky ukazují, kolik je v pásmu právě hodin.', note: 'Hranice pásem: Natural Earth. Čas je bez letního času a řídí se hodinami dole.', facts: [['Česko', 'UTC+1, v létě UTC+2'], ['Nejvíc pásem', 'Francie se zámořím, 12']], wiki: { t: 'Časové pásmo' } }),
+  pasma: () => ({ name: 'Časová pásma', txt: 'Země se otočí o 15° za hodinu, proto se svět dělí na časová pásma. Ve stejném pásmu ukazují hodiny stejný čas. Hranice pásem se drží hranic států, proto jsou klikaté, a některé státy mají posun o půl hodiny. Jmenovky ukazují, kolik je v pásmu právě hodin.', note: 'Hranice pásem: Natural Earth. Čas je bez letního času a řídí se hodinami dole.', legend: [[TZ_EVEN, 'celé hodiny'], [TZ_ODD, 'sousední celé hodiny'], [TZ_HALF, 'posun o půl nebo čtvrt hodiny']], facts: [['Česko', 'UTC+1, v létě UTC+2'], ['Nejvíc pásem', 'Francie se zámořím, 12']], wiki: { t: 'Časové pásmo' } }),
   podnebi: () => ({ name: 'Podnebné pásy', txt: 'Čím dál od rovníku, tím šikměji dopadá sluneční světlo a tím je chladněji. Proto se Země dělí na podnebné pásy: tropický, subtropický, mírný, subpolární a polární.', note: 'Na mapě jsou pásy zjednodušeně podle zeměpisné šířky. Skutečné hranice posouvají moře, proudy a hory.', facts: [['Tropický', 'mezi obratníky'], ['Subtropický', 'do 40°'], ['Mírný', 'do 60°, tady žijeme'], ['Subpolární', 'do polárních kruhů'], ['Polární', 'za polárními kruhy']], wiki: { t: 'Klasifikace podnebí' }, legend: [['#e85c40', 'tropický'], ['#f2a840', 'subtropický'], ['#6bbf6b', 'mírný'], ['#59a8d6', 'subpolární'], ['#e6eff9', 'polární']] }),
   lide: () => ({ name: 'Kde žijí lidé', txt: 'Na Zemi žije přes 8 miliard lidí, ale rozložení je velmi nerovné. Nejvíc jich žije ve východní a jižní Asii, v Evropě a podél řek a pobřeží. Pouště, hory a polární oblasti jsou skoro prázdné.', note: 'Mapa je spočítaná z 25 000 měst nad 15 000 obyvatel (GeoNames), lidé na venkově v ní chybí.', facts: [['Lidí na Zemi', 'přes 8 miliard'], ['Ve městech', 'víc než polovina']], wiki: { t: 'Hustota zalidnění' }, legend: [['#fff3b0', 'málo'], ['#ff9a3c', ''], ['#d7301f', ''], ['#780028', 'nejvíc']] }),
   proudy: () => ({ name: 'Mořské proudy', txt: 'Mořská voda neustále proudí jako obří řeky v oceánu. Teplé proudy (červeně) nesou teplo od rovníku k pólům, studené (modře) vracejí chladnou vodu. Díky Golfskému proudu je v Evropě tepleji než v Kanadě ve stejné zeměpisné šířce.', note: 'Na mapě je zjednodušené schéma hlavních proudů.', facts: [['Teplé proudy', 'červeně'], ['Studené proudy', 'modře'], ['Největší', 'Antarktický cirkumpolární proud']], wiki: { t: 'Mořský proud' }, legend: [['#ff6f4f', 'teplý proud'], ['#4fc3ff', 'studený proud']] }),

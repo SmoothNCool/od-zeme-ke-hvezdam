@@ -3,7 +3,7 @@
 // Dlaždice se zapínají v režimu Příroda pod výškou TILE_H (v poloměrech Země) a doplňují celou kouli s fotkou, která zblízka rozmazává.
 const IMG_URL = (z, x, y) => `https://tiles.maps.eox.at/wmts/1.0.0/s2cloudless-2024_3857/default/g/${z}/${y}/${x}.jpg`;
 const DEM_URL = (z, x, y) => `https://s3.amazonaws.com/elevation-tiles-prod/terrarium/${z}/${x}/${y}.png`;
-const TILE_H = .7, TILE_MAX = 14, DEM_UP = 2; // výšky stačí o dvě úrovně hrubší, jedna výšková dlaždice pokryje 16 snímků
+const TILE_H = .7, TILE_MAX = 14, DEM_UP = 1; // výšky o úroveň hrubší než snímky, jedna výšková dlaždice pokryje 4 snímky
 const tileG = new THREE.Group(); gM.add(tileG);
 const tileLoader = new THREE.TextureLoader(); tileLoader.setCrossOrigin('anonymous');
 const tiles = new Map(), dems = new Map(); // klíč "z/x/y" -> { mesh, used } a { tex, used }
@@ -34,7 +34,7 @@ function demTex(z, x, y) { // výšková dlaždice, sdílená sousedními snímk
   d.used = tileFrame; return d;
 }
 function makeTile(z, x, y) {
-  const n = 2 ** z, SEG = z < 6 ? 16 : 24, pos = [], uv = [], idx = [];
+  const n = 2 ** z, SEG = z < 6 ? 16 : 40, pos = [], uv = [], idx = [];
   const lon0 = x / n * 360 - 180, lon1 = (x + 1) / n * 360 - 180;
   for (let j = 0; j <= SEG; j++) for (let i = 0; i <= SEG; i++) { // mřížka rovnoměrná v Mercatoru, aby textura seděla
     const p = mapP(lon0 + (lon1 - lon0) * i / SEG, latOfY(y + j / SEG, n), 1.0002 + z * 3e-6); pos.push(p.x, p.y, p.z); uv.push(i / SEG, 1 - j / SEG); // jemnější úroveň o kousek výš, jinak by se s hrubší přetahovala
@@ -82,7 +82,7 @@ function updateTiles() { // volá se každý snímek z hlavní smyčky
 
 /* ---------- 3D pohled: kamera se nakloní k obzoru a terén se zvedne ---------- */
 // OrbitControls umí obíhat jen kolem středu Země, proto se náklon přidává až po jejich výpočtu a na začátku dalšího snímku se vrací (camOrbit)
-const LIFT = 2; let peakDirs = null;
+const LIFT = 3; let peakDirs = null;
 let tiltOn = false, tilt3d = 0, tilted = false, head3d = 0, headTo = 0; const camOrbit = V();
 function untilt() { if (tilted) { camera.position.copy(camOrbit); camera.up.set(0, 1, 0); tilted = false; } }
 function applyTilt(dt) {
@@ -91,9 +91,9 @@ function applyTilt(dt) {
   if (!peakDirs && window.GEO) peakDirs = GEO.peaks.map(p => [latLon(p[1], p[2]), p[3]]);
   let top = 2500; if (peakDirs) for (const [d, e] of peakDirs) if (e > top && d.dot(dir0) > .99969) top = e;
   const need = (top * LIFT + 1500) / 6371000, maxT = h > need ? Math.acos(need / h) : 0;
-  const want = tiltOn && L.id === 'mapa' && mapMode === 'priroda' && h < .1 ? Math.min(rad(68), maxT) : 0;
+  const want = tiltOn && L.id === 'mapa' && mapMode === 'priroda' && h < .1 ? Math.min(rad(74), maxT) : 0;
   tilt3d += (want - tilt3d) * Math.min(1, dt * 2.5); head3d += (headTo - head3d) * Math.min(1, dt * 3);
-  // hory dvakrát vyšší, jinak by z výšky působily ploše
+  // hory třikrát vyšší, jinak by z výšky působily ploše
   lift.value = tiltOn && mapMode === 'priroda' ? THREE.MathUtils.clamp(tilt3d / rad(40), 0, 1) * LIFT : 0;
   if (tilt3d < .01) { tilt3d = 0; return; }
   camOrbit.copy(camera.position); const dir = camOrbit.clone().normalize(), north = V(0, 1, 0).addScaledVector(dir, -dir.y).normalize(), east = north.clone().cross(dir);
@@ -110,3 +110,16 @@ function set3d(on) { // zapne 3D terén; z velké výšky nejdřív sletí blí�
   layPanel();
 }
 const turn3d = k => { headTo += k * Math.PI / 4; };
+// ve 3D se tažením posouvá po zemi podle toho, kam se kamera dívá; otáčení kolem středu Země z ovládání by po otočení pohledu táhlo jiným směrem
+const view3d = () => { const d = (tilted ? camOrbit : camera.position).clone().normalize(), north = V(0, 1, 0).addScaledVector(d, -d.y).normalize(), east = north.clone().cross(d);
+  const fwd = north.multiplyScalar(Math.cos(head3d)).addScaledVector(east, Math.sin(head3d)); return { d, fwd, right: fwd.clone().cross(d) }; };
+let drag3d = null;
+renderer.domElement.addEventListener('pointerdown', e => { drag3d = tiltOn && L.id === 'mapa' && e.isPrimary ? [e.clientX, e.clientY] : null; });
+addEventListener('pointerup', () => { drag3d = null; });
+renderer.domElement.addEventListener('pointermove', e => {
+  if (!drag3d || !tiltOn || L.id !== 'mapa' || !e.buttons) return;
+  const base = tilted ? camOrbit : camera.position, len = base.length(), h = len - 1, { d, fwd, right } = view3d(), k = h * 1.6 / H;
+  // chycená zem jde s myší: doprava táhnout = posun doleva, dolů táhnout = posun dopředu
+  d.addScaledVector(right, -(e.clientX - drag3d[0]) * k).addScaledVector(fwd, (e.clientY - drag3d[1]) * k);
+  base.copy(d.normalize().multiplyScalar(len)); drag3d = [e.clientX, e.clientY]; mapFlyTo = null;
+});

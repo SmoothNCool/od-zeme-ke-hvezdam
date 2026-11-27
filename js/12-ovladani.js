@@ -174,6 +174,7 @@ renderer.domElement.addEventListener('pointerup', e => {
     const q = hit && quakesOn && quakes && !quiz && quakeAt(latLon(hit.uv.y * 180 - 90, hit.uv.x * 360 - 180));
     if (quiz) { if (quiz.mode === 'najdi' && i >= 0) quizAnswer(i); } // v kvízu je ťuknutí odpověď
     else if (q) showQuake(q);
+    else if (hit && lay.pasma && zoneAt(hit.uv.x * 360 - 180, hit.uv.y * 180 - 90) !== null) showZone(zoneAt(hit.uv.x * 360 - 180, hit.uv.y * 180 - 90));
     else if (i >= 0) showCountry(i);
   } else if (L.id === 'rez') { // ťuknutí na vrstvu ve výseči
     const hit = ray.intersectObjects(cutPicks).find(h => h.object.parent.visible); if (hit) showInfo(INFO[hit.object.userData.key]);

@@ -22,12 +22,12 @@ const LV = [
   { id: 'soustava', ico: '☀️', name: 'Sluneční soustava', group: gS, cam: [0, 46, 80], min: 3, max: 240, def: 4, anchor: planets[2].holder,
     txt: 'Kolem Slunce obíhá osm planet, trpasličí planety, komety a pás asteroidů. Pluto se od roku 2006 řadí mezi trpasličí planety, proto má čárkovanou dráhu. Ťukni na planetu nebo měsíc a přiletíme k nim.',
     note: 'Vzdálenosti a velikosti nejsou v měřítku, jinak by planety nebyly vidět. Polohy planet odpovídají nastavenému datu, dráhy mají skutečný sklon a tvar. Při rychlém čase model otáčení planet přibrzdí, aby nebyly rozmazané.' },
-  { id: 'galaxie', ico: '🌌', name: 'Mléčná dráha', group: gG, cam: [0, 48, 78], min: 15, max: 200, def: 0, anchor: ourSun,
-    txt: 'Slunce je jedna ze stovek miliard hvězd Mléčné dráhy. Je to spirální galaxie s příčkou. Slunce obíhá kolem jejího středu a jeden oběh mu trvá 230 milionů let.',
+  { id: 'galaxie', ico: '🌌', name: 'Mléčná dráha', group: gG, cam: [0, 100, 92], min: 15, max: 200, def: 0, anchor: ourSun,
+    txt: 'Slunce je jedna ze stovek miliard hvězd Mléčné dráhy, spirální galaxie s příčkou. Ťukni na střed galaxie, mlhoviny a hvězdokupy a dozvíš se, co v nich je. Zelený kroužek kolem Slunce ukazuje, kde známe skoro všechny planety u jiných hvězd.',
     note: 'Zvenku ji nikdo nevyfotil, žijeme uvnitř. Model ukazuje, jak si ji astronomové složili z měření.' },
   { id: 'vesmir', ico: '✨', name: 'Vesmír', group: gU, cam: [0, 50, 330], min: 40, max: 700, def: 0, anchor: ourGalaxy,
-    txt: 'Každý obláček je celá galaxie s miliardami hvězd. V pozorovatelném vesmíru jich jsou stovky miliard. Vesmír se rozpíná, vzdálené galaxie se od nás vzdalují.',
-    note: 'Naše galaxie je jedna z nich. Rozmístění galaxií je v modelu jen ilustrační.' },
+    txt: 'Mléčná dráha patří do Místní skupiny galaxií. Nejbližší velká galaxie je Andromeda, 2,5 milionu světelných let daleko. Každý obláček v pozadí je další galaxie s miliardami hvězd a v pozorovatelném vesmíru jich jsou stovky miliard.',
+    note: 'Místní skupina je v modelu zhruba ve správných vzdálenostech, galaxie v pozadí jsou ve skutečnosti mnohem dál.' },
 ];
 // fakta do informačního panelu; „autem“ = nepřetržitě stovkou, k planetám v době, kdy jsou Zemi nejblíž; „sondou“ = jak dlouho letěla skutečná sonda
 const FACTS = {
@@ -127,7 +127,7 @@ function setLevel(i, keepCam) {
   [gE, gY, gC, gM, gO, gS, gG, gU].forEach(g => g.visible = g === L.group);
   if (L.id === 'mapa') setMapMode(mapMode);
   sky.visible = L.id !== 'vesmir'; stars.visible = L.id !== 'obloha'; skyBodies.visible = L.id === 'obloha';
-  const flat = L.id === 'rez'; controls.enableRotate = !flat; controls.mouseButtons.LEFT = flat ? THREE.MOUSE.PAN : THREE.MOUSE.ROTATE; controls.touches.ONE = flat ? THREE.TOUCH.PAN : THREE.TOUCH.ROTATE; // plochý řez se neotáčí, tažením se posouvá
+  const flat = L.id === 'rez'; controls.enableRotate = !flat && !(L.id === 'mapa' && tiltOn); controls.mouseButtons.LEFT = flat ? THREE.MOUSE.PAN : THREE.MOUSE.ROTATE; controls.touches.ONE = flat ? THREE.TOUCH.PAN : THREE.TOUCH.ROTATE; // plochý řez se neotáčí, tažením se posouvá
   camera.fov = L.id === 'obloha' ? 65 : 45; camera.near = .05; controls.zoomSpeed = 1; controls.rotateSpeed = L.id === 'obloha' ? -.3 : 1; controls.enablePan = L.id !== 'obloha' && L.id !== 'mapa'; resize(); // mapa se točí kolem středu Země, posun by ji rozhodil
   if (!keepCam) { camera.position.copy(preset()); controls.target.set(0, 0, 0); }
   controls.minDistance = L.min; controls.maxDistance = L.max;
@@ -184,4 +184,7 @@ const goBack = () => {
   unfocus(); flyTo = overview(); card(baseCard());
 };
 $('#back').onclick = goBack;
+function closeAll() { for (let k = 0; k < 4 && (info || focus); k++) goBack(); mapSelect(null); if (quiz) quizStop(); }
+$('#close').onclick = closeAll;
+addEventListener('keydown', e => { if (e.key === 'Escape' && $('#find').hidden && !$('#close').hidden) closeAll(); });
 controls.addEventListener('start', () => { zoomTo = 0; flyTo = null; mapFlyTo = null; });
