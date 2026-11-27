@@ -27,31 +27,38 @@ const SKY_FX = {
     facts: [['Maximum', '12. až 13. srpna'], ['Za hodinu', 'až kolem 100 meteorů'], ['Mateřská kometa', '109P/Swift–Tuttle'], ['Radiant', 'souhvězdí Persea']], wiki: { t: 'Perseidy' } },
   geminidy: { name: 'Geminidy', when: () => nextUTC(11, 14, 21), radiant: [7.47, 32.5], look: true,
     txt: 'Nejsilnější roj roku, padá v prosinci. Zvláštní je tím, že ho nezpůsobuje kometa, ale planetka Phaethon. Meteory jsou pomalejší a často jasné.', note: SHOWER_NOTE,
-    facts: [['Maximum', '13. až 14. prosince'], ['Za hodinu', 'až kolem 120 meteorů'], ['Mateřské těleso', 'planetka 3200 Phaethon'], ['Radiant', 'souhvězdí Blíženců']], wiki: { t: 'Geminidy' } },
+    facts: [['Maximum', '13. až 14. prosince'], ['Za hodinu', 'až kolem 150 meteorů'], ['Mateřské těleso', 'planetka 3200 Phaethon'], ['Radiant', 'souhvězdí Blíženců']], wiki: { t: 'Geminidy' } },
   leonidy: { name: 'Leonidy', when: () => nextUTC(10, 18, 3), radiant: [10.13, 21.6], look: true,
     txt: 'Listopadový roj z komety Tempel–Tuttle. Většinou je slabý, ale jednou za zhruba 33 let může nastat meteorický déšť s tisíci meteorů za hodinu, jako v letech 1833 a 1966. Meteory jsou nejrychlejší ze všech rojů.', note: SHOWER_NOTE,
     facts: [['Maximum', '17. až 18. listopadu, nad ránem'], ['Rychlost', '71 km/s'], ['Mateřská kometa', '55P/Tempel–Tuttle'], ['Radiant', 'souhvězdí Lva']], wiki: { t: 'Leonidy' } },
   kometa: { name: 'Jasná kometa', when: () => findTime(t => sunAltAt(t) < rad(-10)), look: true,
-    txt: 'Párkrát za desetiletí přiletí kometa, kterou je vidět pouhým okem. Večer po setmění stojí nízko nad západem a její ohon míří vždy od Slunce, které je pod obzorem. Naposledy to tak vypadalo v říjnu 2024 s kometou Tsuchinshan–ATLAS.', note: 'Kometa v modelu je ukázka, ne skutečná kometa na nastavené datum. Jasné komety nejde dlouho dopředu předpovědět.',
-    facts: [['Ohon míří', 'vždy od Slunce'], ['Slavné komety', 'Hale–Bopp 1997, NEOWISE 2020, Tsuchinshan–ATLAS 2024']], wiki: { t: 'Kometa' } },
+    txt: 'Párkrát za desetiletí přiletí kometa, kterou je vidět pouhým okem. Večer po setmění stojí nízko nad západem a její ohon míří od Slunce, které je pod obzorem. Naposledy to tak vypadalo v říjnu 2024 s kometou Tsuchinshan–ATLAS.', note: 'Kometa v modelu je ukázka, ne skutečná kometa na nastavené datum. Jasné komety nejde dlouho dopředu předpovědět.',
+    facts: [['Ohon míří', 'od Slunce'], ['Slavné komety', 'Hale–Bopp 1997, NEOWISE 2020, Tsuchinshan–ATLAS 2024']], wiki: { t: 'Kometa' } },
   polarni: { name: 'Polární záře', when: () => findTime(t => sunAltAt(t) < rad(-15)) || findTime(t => sunAltAt(t) < rad(-8)), look: true,
     txt: 'Když Slunce vyvrhne obří oblak nabitých částic a ten narazí do Země, rozzáří se vysoko v atmosféře kyslík a dusík. U pólů je polární záře častá, u nás jen při nejsilnějších magnetických bouřích, nízko nad severním obzorem.', note: 'Zelenou barvu dává kyslík ve výšce asi 100 až 250 km, červenou kyslík ještě výš. Z Česka byla výrazná polární záře vidět třeba v květnu a říjnu 2024.',
     facts: [['Výška', '100 až 300 km'], ['U nás je vidět', 'na severu, vzácně'], ['Zelená', 'kyslík'], ['Červená', 'kyslík ve větší výšce']], wiki: { t: 'Polární záře' } },
+  zatmeni: { name: 'Zatmění Měsíce', ico: '🌘', when: () => { const e = ECLIPSES.moon.find(e => e[0] > simMs - 864e5); return e ? e[0] - 75 * 6e4 : null; }, look: true,
+    txt: 'Při úplňku se Měsíc dostane do stínu Země. Nezmizí, ale potemní a zčervená, protože na něj dopadá jen světlo lomené zemskou atmosférou, stejně červené jako při západu Slunce. Model přepne na nejbližší skutečné zatmění viditelné z Evropy.', note: 'Data zatmění: NASA. Zatmění Měsíce je vidět ze všech míst, kde je Měsíc zrovna nad obzorem, a dívat se na něj je úplně bezpečné.',
+    facts: [['Kdy', 'jen při úplňku'], ['Barva', 'tmavě červená až měděná'], ['Trvá', 'až kolem 4 hodin, úplná fáze nejvýš asi 1 hodinu 45 minut']], wiki: { t: 'Zatmění Měsíce' } },
   druzice: { name: 'Družice', when: () => findTime(t => sunAltAt(t) < rad(-8)), look: false,
     txt: 'Po setmění je vidět, jak po obloze pomalu a bez blikání plují světelné tečky. Jsou to družice, které jsou vysoko ještě na slunci a odrážejí jeho světlo. Za pár minut přeletí celou oblohu. Řada teček za sebou je vlak družic Starlink krátce po startu.', note: 'Družice v modelu letí po náhodných drahách, skutečné přelety se počítají z jejich drah. Nejjasnější je Mezinárodní vesmírná stanice.',
-    facts: [['Kdy jsou vidět', 'hlavně 1 až 2 hodiny po západu a před východem Slunce'], ['Na oběžné dráze', 'přes deset tisíc funkčních družic, nejvíc Starlink'], ['Nejjasnější', 'Mezinárodní vesmírná stanice']], wiki: { t: 'Umělá družice' } },
+    facts: [['Kdy jsou vidět', 'hlavně 1 až 2 hodiny po západu a před východem Slunce'], ['Na oběžné dráze', 'kolem 17 tisíc funkčních družic, dvě třetiny z nich jsou Starlink'], ['Nejjasnější', 'Mezinárodní vesmírná stanice']], wiki: { t: 'Umělá družice' } },
 };
 let skyFx = null;
 const fxOn = key => !!(info && info.fx === key && L.id === 'obloha');
 function startFx(key) {
-  const f = SKY_FX[key], t = f.when(); if (t) simMs = t; skySlow();
-  showInfo(Object.assign({ fx: key, chips: fxChips(), chipsTitle: 'Další úkazy' }, f));
+  const f = SKY_FX[key], t = f.when(); if (t) simMs = t; skySlow(); caught = 0;
+  const ev = key === 'zatmeni' && ECLIPSES.moon.find(e => e[0] > simMs);
+  showInfo(Object.assign({ fx: key, tiles: fxTiles(key), chipsTitle: 'Další úkazy' }, f, ev ? { note: 'Tohle zatmění doopravdy nastane ' + fmtD.format(ev[0]) + ': ' + ev[1] + '. ' + f.note } : {}));
   setTimeout(() => { // po přepnutí času se natočí obloha, teprve pak jde zamířit pohled
-    if (f.radiant) lookSky(skyWorld(...f.radiant)); else if (key === 'kometa') lookSky(azAlt(285, 15)); else if (key === 'polarni') lookSky(azAlt(0, 15)); else lookSky(azAlt(180, 45));
+    if (f.radiant) lookSky(skyWorld(...f.radiant)); else if (key === 'zatmeni') lookSky(moonSky.getWorldPosition(V()).normalize()); else if (key === 'kometa') lookSky(azAlt(285, 15)); else if (key === 'polarni') lookSky(azAlt(0, 15)); else lookSky(azAlt(180, 45));
   }, 60);
 }
-const fxChips = () => Object.keys(SKY_FX).map(k => [SKY_FX[k].name, () => startFx(k)]);
-const showSkyFx = () => showInfo({ name: 'Úkazy na obloze', txt: 'Vyber úkaz a model přepne čas na noc, kdy je vidět, a natočí pohled tam, kam se dívat.', note: 'Čas běží pomalu, 1 s = 1 minuta. Tlačítkem Teď dole se vrátíš do skutečného okamžiku.', facts: [], chips: fxChips(), chipsTitle: 'Úkazy' });
+const FX_ICO = { perseidy: '☄️', geminidy: '🌠', leonidy: '🦁', kometa: '☄️', polarni: '🌌', zatmeni: '🌘', druzice: '🛰️' };
+const fxWhen = k => { const f = SKY_FX[k]; if (!f.radiant && k !== 'zatmeni') return { kometa: 'ukázka jasné komety', polarni: 'ukázka, u nás vzácně', druzice: 'každý večer po setmění' }[k]; const t = f.when(); return t ? 'nejbližší: ' + fmtD.format(t) : ''; };
+const fxTiles = skip => Object.keys(SKY_FX).filter(k => k !== skip).map(k => [FX_ICO[k], SKY_FX[k].name, fxWhen(k), () => startFx(k)]);
+const fxChips = () => [];
+const showSkyFx = () => showInfo({ name: 'Úkazy na obloze', txt: 'Vyber úkaz. Model přepne čas na noc, kdy je vidět, a natočí pohled tam, kam se dívat. Padající hvězdy jde chytat ťuknutím.', note: 'Čas běží pomalu, 1 s = 1 minuta. Tlačítkem Teď dole se vrátíš do skutečného okamžiku.', facts: [], tiles: fxTiles(), chipsTitle: 'Úkazy' });
 function skyActs(a) {
   const night = sunAlt < rad(-6);
   a.append(pill('Noc', goNight, night), pill('Den', goDay, sunAlt > 0), pill('Úkazy na obloze', showSkyFx));
@@ -62,10 +69,24 @@ function skyActs(a) {
 const radMark = new THREE.Object3D(); gO.add(radMark);
 label('Radiant', radMark, 0, () => !!(info && SKY_FX[info.fx] && SKY_FX[info.fx].radiant && L.id === 'obloha' && radMark.position.y > 60), null, 'star');
 let showerWait = 0;
-function meteorLine(a, b, color) {
-  const line = new THREE.Line(new THREE.BufferGeometry().setFromPoints([a, b]), new THREE.LineBasicMaterial({ color, transparent: true, opacity: 1 }));
-  line.userData.t = 0; meteors.add(line);
+// meteor: svítící hlava letí z a do b a táhne za sebou slábnoucí stopu; pak zhasne
+const MET_FLY = .55, MET_FADE = .5;
+function spawnMeteor(a, b, color) {
+  const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.Float32BufferAttribute([0, 0, 0, 0, 0, 0], 3));
+  g.setAttribute('color', new THREE.Float32BufferAttribute([0, 0, 0, 1, 1, 1], 3));
+  const trail = new THREE.Line(g, new THREE.LineBasicMaterial({ vertexColors: true, transparent: true, blending: THREE.AdditiveBlending, depthWrite: false })), head = glow(color, 46, 1);
+  const m = new THREE.Group(); m.add(trail, head); m.userData = { a, b, t: 0, trail, head }; meteors.add(m); return m;
 }
+function stepMeteorAnim(dt) {
+  for (const m of [...meteors.children]) {
+    const u = m.userData; u.t += dt; const k = Math.min(1, u.t / MET_FLY), fade = Math.max(0, 1 - Math.max(0, u.t - MET_FLY) / MET_FADE);
+    const hp = u.a.clone().lerp(u.b, k), tp = u.a.clone().lerp(u.b, Math.max(0, k - .45));
+    const pos = u.trail.geometry.attributes.position; pos.setXYZ(0, tp.x, tp.y, tp.z); pos.setXYZ(1, hp.x, hp.y, hp.z); pos.needsUpdate = true;
+    u.trail.material.opacity = fade; u.head.position.copy(hp); u.head.material.opacity = k < 1 ? 1 : fade * .6;
+    if (u.t > MET_FLY + MET_FADE || u.caught) { meteors.remove(m); u.trail.geometry.dispose(); u.trail.material.dispose(); u.head.material.dispose(); }
+  }
+}
+function meteorLine(a, b, color) { spawnMeteor(a, b, color); }
 function stepShower(dt, f) {
   const R = skyWorld(...f.radiant); radMark.position.copy(R).multiplyScalar(1880);
   if (R.y < -.15 || sunAlt > rad(-6)) return;
@@ -78,13 +99,16 @@ function stepShower(dt, f) {
 // kometa: hlava a ohon od Slunce
 const cometSky = new THREE.Group(); cometSky.visible = false; gO.add(cometSky);
 const cometHead = glow(0xe8fbff, 70); cometSky.add(cometHead);
-const cometTail = Array.from({ length: 16 }, (_, i) => { const s = glow(0xa9e8ff, 110 * (1 - i / 20), .55 * (1 - i / 17)); cometSky.add(s); return s; });
+const cometTail = Array.from({ length: 18 }, (_, i) => { const s = glow(0x8fd4ff, 70 * (1 - i / 22), .5 * (1 - i / 19)); cometSky.add(s); return s; }); // iontový ohon: rovný a modrý
+const dustTail = Array.from({ length: 14 }, (_, i) => { const s = glow(0xfff0c8, 120 * (1 - i / 18), .5 * (1 - i / 15)); cometSky.add(s); return s; }); // prachový ohon: širší, nažloutlý, zahnutý
 label('Kometa', cometHead, 0, () => fxOn('kometa'), null, 'star');
 function stepCometSky() {
   const head = azAlt(285, 15), sun = eclDir(sunLamAt(simMs)).applyQuaternion(sky.quaternion);
   const away = head.clone().sub(sun).addScaledVector(head, -head.clone().sub(sun).dot(head)).normalize(); // tečný směr od Slunce
   cometHead.position.copy(head).multiplyScalar(1850);
-  cometTail.forEach((s, i) => s.position.copy(head).addScaledVector(away, (i + 1) * .018).normalize().multiplyScalar(1850));
+  cometTail.forEach((s, i) => s.position.copy(head).addScaledVector(away, (i + 1) * .02).normalize().multiplyScalar(1850));
+  const side = away.clone().cross(head).normalize();
+  dustTail.forEach((s, i) => { const t = (i + 1) * .016; s.position.copy(head).addScaledVector(away, t).addScaledVector(side, t * t * 2.2).normalize().multiplyScalar(1850); });
 }
 // polární záře: záclona nad severním obzorem, paprsky se pomalu vlní
 const auroraU = { time: { value: 0 } };
@@ -99,11 +123,14 @@ aurora.position.y = 520; aurora.visible = false; gO.add(aurora);
 // družice: tečky po velkých kružnicích od obzoru k obzoru, občas vlak Starlinku
 const sats = []; let satWait = 2;
 const satMat = new THREE.PointsMaterial({ size: 4, sizeAttenuation: false, color: 0xf4f7ff, transparent: true });
+const issSkyMark = new THREE.Object3D(); gO.add(issSkyMark); let issSky = null;
+label('Vesmírná stanice', issSkyMark, 0, () => L.id === 'obloha' && !!issSky && issSkyMark.position.y > 60, () => showInfo(INFO.ISS), 'star');
+const issMat = new THREE.PointsMaterial({ size: 8, sizeAttenuation: false, color: 0xfffbea, transparent: true });
 function newSat(train) {
   const A = azAlt(Math.random() * 360, 0), B = azAlt(Math.random() * 360, 25 + Math.random() * 60), w = B.addScaledVector(A, -B.dot(A)).normalize();
   const n = train ? 14 : 1, g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.Float32BufferAttribute(new Array(n * 3).fill(0), 3));
-  const p = new THREE.Points(g, satMat); gO.add(p);
-  sats.push({ p, A, w, n, t: 0, dur: 22 + Math.random() * 18 });
+  const bright = !train && !issSky && Math.random() < .3, p = new THREE.Points(g, bright ? issMat : satMat); gO.add(p);
+  const s = { p, A, w, n, t: 0, dur: 22 + Math.random() * 18, bright }; sats.push(s); if (bright) issSky = s;
 }
 function stepSats(dt) {
   const night = L.id === 'obloha' && sunAlt < rad(-6);
@@ -111,11 +138,16 @@ function stepSats(dt) {
   for (const s of [...sats]) {
     s.t += dt / s.dur; const pos = s.p.geometry.attributes.position;
     for (let k = 0; k < s.n; k++) { const th = Math.max(0, s.t - k * .012) * Math.PI, v = s.A.clone().multiplyScalar(Math.cos(th)).addScaledVector(s.w, Math.sin(th)).multiplyScalar(1880); pos.setXYZ(k, v.x, v.y, v.z); }
-    pos.needsUpdate = true; s.p.visible = night;
-    if (s.t > 1.2 || !night && L.id !== 'obloha') { gO.remove(s.p); s.p.geometry.dispose(); sats.splice(sats.indexOf(s), 1); }
+    pos.needsUpdate = true; s.p.visible = night; if (s === issSky) issSkyMark.position.set(pos.getX(0), pos.getY(0), pos.getZ(0));
+    if (s.t > 1.2 || !night && L.id !== 'obloha') { gO.remove(s.p); s.p.geometry.dispose(); sats.splice(sats.indexOf(s), 1); if (s === issSky) issSky = null; }
   }
 }
+const MOON_COL = new THREE.Color(0xe9edf5), MOON_RED = new THREE.Color(0x9a3a22);
 function stepSkyFx(dt) {
+  const ev = fxOn('zatmeni') && ECLIPSES.moon.find(e => Math.abs(e[0] - simMs) < 3 * 36e5), k = ev ? 1 - THREE.MathUtils.smoothstep(Math.abs(ev[0] - simMs) / 6e4, 30, 80) : 0;
+  moonSky.material.color.copy(MOON_COL).lerp(MOON_RED, k); moonSky.material.opacity = 1 - k * .35;
+  $('#catch').hidden = !(info && SKY_FX[info.fx] && SKY_FX[info.fx].radiant && L.id === 'obloha');
+  if (!$('#catch').hidden) $('#catch').textContent = 'Chyceno meteorů: ' + caught + (bestCatch ? ' · rekord ' + bestCatch : '') + ' · ťukni na padající hvězdu';
   const f = info && SKY_FX[info.fx];
   if (f && f.radiant && L.id === 'obloha') stepShower(dt, f);
   cometSky.visible = fxOn('kometa') && sunAlt < rad(-4); if (cometSky.visible) stepCometSky();
@@ -127,3 +159,21 @@ stepMeteors = (dt, now) => { stepMeteors0(dt, now); stepSkyFx(dt); };
 // úkazy jdou najít lupou
 const findList2 = findList;
 findList = () => { if (findFixed) return findFixed; findList2(); for (const k in SKY_FX) findFixed.push({ text: SKY_FX[k].name, kind: 'úkaz na obloze', n: norm(SKY_FX[k].name), run: () => goThen(lv('obloha'), () => startFx(k)) }); return findFixed; };
+
+/* ---------- hra: chytej meteory ---------- */
+let caught = 0, bestCatch = 0; try { bestCatch = +localStorage.getItem('meteory') || 0; } catch (e) { /* bez úložiště bez rekordu */ }
+const catchEl = document.createElement('div'); catchEl.id = 'catch'; catchEl.hidden = true; document.body.append(catchEl);
+renderer.domElement.addEventListener('pointerup', e => {
+  if (L.id !== 'obloha' || !meteors.children.length) return;
+  for (const m of meteors.children) {
+    const u = m.userData; if (u.t > MET_FLY + .3) continue; // zhaslý meteor už chytit nejde
+    // stačí ťuknout kamkoli na jeho stopu, meteor je rychlý
+    const scr = v3 => { const p = v3.clone().project(camera); return [(p.x + 1) / 2 * W, (1 - p.y) / 2 * H, p.z]; }, h = scr(u.head.position), a0 = scr(u.a);
+    const dx = h[0] - a0[0], dy = h[1] - a0[1], l2 = dx * dx + dy * dy || 1, k = THREE.MathUtils.clamp(((e.clientX - a0[0]) * dx + (e.clientY - a0[1]) * dy) / l2, 0, 1);
+    if (h[2] < 1 && Math.hypot(a0[0] + dx * k - e.clientX, a0[1] + dy * k - e.clientY) < 55) {
+      u.caught = true; caught++; sfx('ok');
+      if (caught > bestCatch) { bestCatch = caught; try { localStorage.setItem('meteory', caught); } catch (er) { /* bez úložiště */ } }
+      return;
+    }
+  }
+});

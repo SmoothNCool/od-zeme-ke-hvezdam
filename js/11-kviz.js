@@ -63,7 +63,7 @@ function mapActs(a) {
   a.classList.toggle('quiz', !!quiz && !quiz.menu && !quiz.done); // odpovědi se zalomí, na telefonu by jinak utekly do strany
   if (!quiz) {
     a.append(pill('Vrstvy a podklad mapy', () => { $('#lays').hidden = false; $('#sets').hidden = true; $('#layB').setAttribute('aria-expanded', true); }));
-    a.append(pill('Kvíz', quizMenu), pill('Rekordy', showRecords), pill('Zemětřesení', toggleQuakes, quakesOn));
+    a.append(pill('Rekordy', showRecords), pill('Zemětřesení', toggleQuakes, quakesOn));
   } else if (quiz.menu) {
     const s = document.createElement('select'); s.className = 'pill'; s.id = 'quizArea'; s.setAttribute('aria-label', 'Oblast kvízu');
     for (const k in QUIZ_AREAS) s.append(new Option(k, k, false, k === quizArea));

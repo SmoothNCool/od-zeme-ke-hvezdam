@@ -125,7 +125,6 @@ try {
   await ev("document.querySelector('#back').click()"); check('Zpět vrátí k Saturnu', await ev('__t.focus') === 'Saturn');
   await ev("document.querySelector('#back').click()"); check('další Zpět pustí planetu', await ev('__t.focus') === null);
   await ev('__t.toggleSizes()'); check('skutečné velikosti', await title() === 'Skutečné velikosti'); await sleep(1500); await shot('04-velikosti'); await ev('__t.toggleSizes()');
-  await ev('__t.startLight()'); check('světlo ze Slunce', await until("document.querySelector('#dn').textContent.startsWith('Světlo letí')", 3000)); await ev('__t.startLight()');
   await ev('__t.toggleGame()'); check('hra Najdi planetu', await title() === 'Najdi planetu'); await ev('__t.toggleGame()');
   check('Pluto je označené jako trpasličí planeta', await ev("[...document.querySelectorAll('.lbl')].some(e => e.textContent === 'Pluto, trpasličí planeta')"));
 
@@ -151,6 +150,13 @@ try {
   check('Perseidy: karta, srpen a padající meteory', await title() === 'Perseidy' && /srpna/.test(await ev("document.querySelector('#clock').textContent")) && await ev('__t.meteorsN') > 0, await ev("document.querySelector('#clock').textContent")); await shot('34-perseidy');
   await ev("__t.startFx('polarni')"); await sleep(1500); check('polární záře', await title() === 'Polární záře' && await ev('__t.auroraOn')); await shot('35-polarni-zare');
   await ev("__t.startFx('kometa')"); await sleep(1500); check('kometa na obloze', await ev('__t.cometOn')); await shot('36-kometa-obloha');
+  await ev("__t.startFx('perseidy')"); const head = await until('!!__t.meteorHead()', 20000) && await ev('__t.meteorHead()');
+  if (head) { await click(head[0], head[1]); await sleep(200); }
+  check('meteor jde chytit ťuknutím', await ev('__t.caught') >= 1 && /Chyceno meteorů: [1-9]/.test(await ev("document.querySelector('#catch').textContent")), await ev("document.querySelector('#catch').textContent")); await shot('39-chytej');
+  await ev("__t.startFx('zatmeni')"); await sleep(1500);
+  check('zatmění Měsíce: skutečné datum a čas běží k maximu', await title() === 'Zatmění Měsíce' && /doopravdy nastane/.test(await ev("document.querySelector('#note').textContent")));
+  await ev('simMs = ECLIPSES.moon.find(e => e[0] > simMs - 864e5)[0]'); await sleep(500); check('Měsíc při zatmění zčervená', await ev('__t.moonRed') > .25, (await ev('__t.moonRed')).toFixed(2)); await shot('40-zatmeni-mesice');
+  check('úkazy mají dlaždice s termínem', await ev("document.querySelectorAll('#chipsB .tile').length") >= 6 && /nejbližší/.test(await ev("document.querySelector('#chipsB').textContent")));
   await ev("__t.startFx('druzice')"); check('družice přeletí', await until('__t.satsN > 0', 8000));
   await ev("document.querySelector('#close').click()");
 
@@ -214,7 +220,8 @@ try {
   await ev("__t.setMapMode('staty')");
 
   section('Kvíz');
-  await ev("[...document.querySelectorAll('#acts button')].find(b => b.textContent === 'Kvíz').click()");
+  await ev("document.querySelector('#gamesB').click()"); check('kostka otevře hry', await ev("!document.querySelector('#games').hidden && document.querySelectorAll('#games .tile').length") === 4);
+  await ev("[...document.querySelectorAll('#games .tile')].find(b => b.textContent.includes('Zeměpisný kvíz')).click()"); await until("document.querySelector('#ttl').textContent === 'Zeměpisný kvíz'", 8000);
   check('nabídka kvízu', await title() === 'Zeměpisný kvíz' && await ev("document.querySelectorAll('#acts button').length") === 5, await ev("document.querySelectorAll('#acts button').length"));
   await ev("__t.quizStart('vlajka')"); await sleep(500);
   check('kolo má deset otázek a čtyři možnosti', await ev('__t.quiz.list.length') === 10 && await ev('__t.quiz.opts.length') === 4 && await title() === 'Otázka 1 z 10');
@@ -288,9 +295,13 @@ try {
   section('Vesmír navíc');
   await go('soustava'); await sleep(800); await wheel(10, 1); await sleep(800);
   check('vzdálené sondy mají jmenovky', ['Voyager 1', 'Voyager 2', 'New Horizons'].every(async n => true) && (await lbls()).includes('Voyager 1'), (await lbls()).filter(t => /Voyager|Horizons/.test(t)).join(', '));
-  await ev('__t.showHistory()'); check('časová osa dobývání vesmíru', await title() === 'Dobývání vesmíru' && await ev("document.querySelectorAll('#chipsB button').length") === 18);
-  await ev("[...document.querySelectorAll('#chipsB button')].find(b => b.textContent.includes('Artemis II')).click()"); check('událost na časové ose', await title() === 'Artemis II');
-  await ev("document.querySelector('#back').click()");
+  await ev('__t.openJourney()'); await sleep(300);
+  check('Cesta do vesmíru: 18 zastávek na cestě', await ev("!document.querySelector('#journey').hidden && document.querySelectorAll('#journey .jn').length") === 18); await shot('37-cesta');
+  await ev("document.querySelector('#journey .jn').dispatchEvent(new MouseEvent('click', { bubbles: true }))"); await sleep(300);
+  const st0 = await ev('__t.stars');
+  await ev("[...document.querySelectorAll('#journey .jo .pill')].find(b => b.textContent === 'Vysílal pípání rádiem').click()"); await sleep(300);
+  check('správná odpověď dá hvězdičku', await ev('__t.stars') === Math.max(st0, 1) && /Správně/.test(await ev("document.querySelector('#journey .jr').textContent"))); await sleep(1800); await shot('38-cesta-otazka');
+  await ev("document.querySelector('#journey .jx').click()"); check('cesta jde zavřít', await ev("document.querySelector('#journey').hidden"));
   await go('galaxie'); await ev('__t.showExo()'); check('exoplanety: počet a vybrané planety', await title() === 'Exoplanety' && await ev("document.querySelectorAll('#chipsB button').length") === 7);
   await ev("[...document.querySelectorAll('#chipsB button')].find(b => b.textContent === 'Proxima Centauri b').click()");
   check('karta exoplanety', (await ev("document.querySelector('#facts').textContent")).includes('4,2 světelných let'), await ev("document.querySelector('#facts').textContent")); await shot('30-exoplaneta');
@@ -298,9 +309,10 @@ try {
 
   section('Kuiperův pás, komety, meteory, podmenu');
   await go('soustava'); await sleep(600);
-  check('podmenu soustavy', (await ev("[...document.querySelectorAll('#sub .dyn')].map(b => b.textContent)")).join('|') === 'Planety|Kuiperův pás|Dobývání vesmíru');
-  await ev("[...document.querySelectorAll('#sub .dyn')].find(b => b.textContent === 'Dobývání vesmíru').click()"); check('dobývání vesmíru z podmenu', await title() === 'Dobývání vesmíru');
-  await ev("[...document.querySelectorAll('#sub .dyn')].find(b => b.textContent === 'Kuiperův pás').click()"); check('Kuiperův pás z podmenu', await title() === 'Kuiperův pás');
+  check('podmenu soustavy', (await ev("[...document.querySelectorAll('#sub .dyn')].map(b => b.textContent)")).join('|') === 'Planety|Skutečné velikosti|Cesta do vesmíru');
+  await ev("[...document.querySelectorAll('#sub .dyn')].find(b => b.textContent === 'Skutečné velikosti').click()"); check('skutečné velikosti z horního menu', await title() === 'Skutečné velikosti');
+  await ev("[...document.querySelectorAll('#sub .dyn')].find(b => b.textContent === 'Planety').click()"); check('zpět na planety', await title() === 'Sluneční soustava');
+  await ev("[...document.querySelectorAll('#sub .dyn')].find(b => b.textContent === 'Cesta do vesmíru').click()"); check('cesta do vesmíru z horního menu', await ev("!document.querySelector('#journey').hidden")); await ev("document.querySelector('#journey .jx').click()");
   await ev('__t.newComet()');
   check('kometa přiletí', await until("[...document.querySelectorAll('.lbl')].some(e => !e.hidden && e.textContent === 'Kometa')", 15000)); await shot('31-kometa');
   await go('galaxie'); await sleep(600); check('galaxie nemá podmenu', await ev("document.querySelector('#sub').hidden"));
@@ -354,6 +366,13 @@ try {
   await ev("document.querySelector('#factsMore').click()"); check('všechny údaje po ťuknutí', await ev("[...document.querySelectorAll('#facts > div')].filter(d => getComputedStyle(d).display !== 'none').length") > 6);
 
   await send('Emulation.setCPUThrottlingRate', { rate: 1 });
+
+  await ev('__t.openJourney(5)'); await sleep(800); await shot('41-telefon-cesta');
+  check('cesta do vesmíru se na telefonu vejde na šířku', await ev('document.documentElement.scrollWidth <= innerWidth'));
+  await ev("document.querySelector('#journey .jx').click()");
+  await ev("document.querySelector('#gamesB').click()"); await sleep(300); await shot('42-telefon-hry');
+  check('panel her je na telefonu celý vidět', await ev("(r => r.top >= 0 && r.bottom <= innerHeight && r.right <= innerWidth)(document.querySelector('#games').getBoundingClientRect())"));
+  await ev("document.querySelector('#gamesB').click()");
 
   section('Konzole');
   check('žádné chyby ani varování v konzoli', errors.length === 0, errors.slice(0, 5).join(' | '));

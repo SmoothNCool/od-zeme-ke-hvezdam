@@ -36,7 +36,9 @@ for (const l of LV) if (WIKI_T[l.id]) l.wiki = { t: WIKI_T[l.id] };
 let wikiTok = 0;
 function cardExtras(o) {
   const ch = o.chips || []; $('#chips').hidden = !ch.length; $('#chipsT').textContent = o.chipsTitle || '';
-  $('#chipsB').replaceChildren(...ch.map(([t, fn]) => pill(t, fn)));
+  // dlaždice = tlačítko s ikonou, názvem a podtitulkem; jinak obyčejná malá tlačítka
+  $('#chipsB').classList.toggle('tiles', !!o.tiles); if (o.tiles) { $('#chips').hidden = false; $('#chipsT').textContent = o.chipsTitle || ''; }
+  $('#chipsB').replaceChildren(...(o.tiles ? o.tiles.map(([ico, t, sub, fn]) => { const b = document.createElement('button'), i = document.createElement('span'), n = document.createElement('b'), s = document.createElement('small'); b.className = 'tile'; i.textContent = ico; n.textContent = t; s.textContent = sub; b.append(i, n, s); b.onclick = fn; return b; }) : ch.map(([t, fn]) => pill(t, fn))));
   $('#flag').classList.toggle('big', !!o.bigFlag);
   $('#pic').hidden = $('#wiki').hidden = true; const tok = ++wikiTok;
   if (o.wiki) wikiGet(o.wiki).then(w => {

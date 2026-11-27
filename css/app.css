@@ -31,7 +31,9 @@ button:focus-visible,input:focus-visible{outline:3px solid var(--sun);outline-of
   justify-content:space-between;pointer-events:none;padding-block:12px;
   padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
 #dock>*{pointer-events:auto;background:var(--panel);border:1px solid var(--line);border-radius:18px;backdrop-filter:blur(10px)}
-#card{flex:1 1 300px;max-width:460px;max-height:70vh;overflow-y:auto;padding:14px 18px;display:flex;flex-direction:column;gap:7px}
+#card{flex:1 1 300px;max-width:440px;max-height:min(62vh,calc(100vh - 190px));overflow-y:auto;padding:14px 18px;display:flex;flex-direction:column;gap:8px;scrollbar-width:thin;scrollbar-color:#3a4775 transparent}
+#card::-webkit-scrollbar{width:6px}#card::-webkit-scrollbar-thumb{background:#3a4775;border-radius:3px}
+#head{position:sticky;top:-14px;z-index:1;background:linear-gradient(var(--panel) 80%,transparent);margin:-14px -18px 0;padding:14px 18px 4px}
 #head{display:flex;align-items:center;justify-content:space-between;gap:10px}
 #card h1{margin:0;font-family:var(--display);font-size:26px;line-height:1.1;text-wrap:balance}
 #card h1{flex:1}
@@ -42,8 +44,20 @@ button:focus-visible,input:focus-visible{outline:3px solid var(--sun);outline-of
 #card.min.show #acts{display:flex}
 #when{font:inherit;color:var(--ink);background:var(--chip);border:1px solid var(--line);border-radius:10px;padding:5px 8px}
 #pic{margin:0}
-#pic img{display:block;width:100%;max-height:190px;object-fit:cover;border-radius:12px}
-#wiki{font-size:14.5px}
+#pic img{display:block;width:100%;aspect-ratio:16/8;max-height:150px;object-fit:cover;border-radius:12px}
+#wiki{font-size:14px;color:#cfd6ee}
+#wikiT{display:-webkit-box;-webkit-line-clamp:4;-webkit-box-orient:vertical;overflow:hidden}
+.tile{display:grid;grid-template-columns:34px 1fr;column-gap:10px;align-items:center;text-align:left;width:100%;background:var(--chip);border:1px solid var(--line);border-radius:14px;padding:9px 12px}
+.tile:hover,.tile:focus-visible{border-color:var(--sun)}
+.tile span{grid-row:span 2;font-size:24px;text-align:center}
+.tile b{font-family:var(--display);font-size:15.5px;font-weight:700}
+.tile small{color:var(--muted);font-size:12.5px;line-height:1.3}
+#chipsB.tiles{display:grid;grid-template-columns:1fr;gap:6px}
+#games{overflow-y:auto;position:fixed;right:calc(max(16px,env(safe-area-inset-right,0px)) + 56px);top:50%;transform:translateY(-50%);z-index:4;width:min(300px,78vw);background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:12px;display:flex;flex-direction:column;gap:8px;backdrop-filter:blur(8px)}
+#games strong{font-family:var(--display);font-size:16px}
+.gl{display:flex;flex-direction:column;gap:6px}
+body.bare #games{display:none}
+#catch{position:fixed;left:50%;top:calc(96px + env(safe-area-inset-top,0px));transform:translateX(-50%);background:var(--panel);border:1px solid var(--line);border-radius:999px;padding:6px 14px;font-family:var(--display);font-size:15px;pointer-events:none}
 #wiki a{color:var(--sun);white-space:nowrap}
 #chips small{display:block;color:var(--muted);font-size:12px;margin-bottom:5px}
 #chipsB{display:flex;flex-wrap:wrap;gap:6px}
@@ -177,7 +191,7 @@ body.bare #zoom{display:none}
   #sub{flex-wrap:wrap;justify-content:center;row-gap:6px}
   #zoom{top:auto;transform:none;flex-direction:row;bottom:calc(var(--dockH,140px) + 8px + env(safe-area-inset-bottom,0px))}
   #zoom button{width:44px;height:44px}
-  #lays,#sets{top:auto;transform:none;right:max(16px,env(safe-area-inset-right,0px));bottom:calc(var(--dockH,140px) + 62px + env(safe-area-inset-bottom,0px));max-height:45vh}
+  #lays,#sets,#games{max-height:calc(100vh - var(--dockH,140px) - 150px)!important;top:auto;transform:none;right:max(16px,env(safe-area-inset-right,0px));bottom:calc(var(--dockH,140px) + 62px + env(safe-area-inset-bottom,0px));max-height:45vh}
   #chipsB .pill{min-height:40px}
   #find{top:calc(96px + env(safe-area-inset-top,0px))}
   #flag.big{transform:scale(1.5);margin-right:22px}
@@ -195,5 +209,26 @@ body.bare #zoom{display:none}
 /* mobil na šířku: karta a ovládání vedle sebe */
 @media (max-height:560px) and (min-width:701px){#card{flex-basis:280px;max-width:360px}#ctl{flex:none}}
 @media (max-width:700px),(max-height:560px){#factsMore:not([hidden]){display:inline-flex;align-items:center}}
+/* Cesta do vesmíru: přes celou obrazovku nad scénou */
+#journey{position:fixed;inset:0;z-index:20;background:rgba(5,7,15,.9);backdrop-filter:blur(6px);display:flex;flex-direction:column;padding:calc(14px + env(safe-area-inset-top,0px)) max(16px,env(safe-area-inset-right,0px)) calc(14px + env(safe-area-inset-bottom,0px)) max(16px,env(safe-area-inset-left,0px));gap:10px}
+#journey header{display:flex;justify-content:space-between;align-items:flex-start;gap:12px}
+#journey h2{margin:0;font-family:var(--display);font-size:26px}
+#journey header p{margin:2px 0 0;color:var(--muted)}
+.jx{width:42px;height:42px;border-radius:50%;border:1px solid var(--line);background:var(--chip);font-size:18px;flex:none}
+.jw{overflow-x:auto;overflow-y:hidden;flex:none;border-radius:16px;background:linear-gradient(#0b1230,#122046 70%,#1b3a2a);scrollbar-width:thin}
+.jw svg{display:block}
+.jg{fill:#24502f}.jl{stroke:#ffffff14;stroke-dasharray:4 6}.jz{fill:#9ba7cb;font:600 12px var(--body)}
+.jp{fill:none;stroke:#ffc94d;stroke-width:3;stroke-dasharray:2 9;stroke-linecap:round}
+.jn{cursor:pointer}.jn circle{fill:#1c2748;stroke:#6f7fb0;stroke-width:2}.jn.done circle{stroke:#ffc94d;fill:#2b2a1a}.jn.sel circle{stroke:#fff;stroke-width:4}
+.jn:focus-visible circle{stroke:#ffc94d;stroke-width:4}.jn:hover circle{stroke:#fff}
+.ji{text-anchor:middle;font-size:24px}.jy{text-anchor:middle;fill:#dfe6ff;font:700 13px var(--body)}.js{font-size:15px}
+.jd{flex:1;min-height:0;overflow-y:auto;display:grid;grid-template-columns:minmax(0,1.3fr) minmax(0,1fr);gap:18px;align-content:start}
+.jh{color:var(--muted);grid-column:1/-1}
+.jt{display:flex;gap:14px;align-items:flex-start}.jt figure{margin:0;flex:none;width:200px}.jt img{width:200px;height:140px;object-fit:cover;border-radius:12px;display:block}
+.jt h3{margin:0;font-family:var(--display);font-size:22px}.jm{margin:2px 0 6px;color:var(--sun);font-weight:700;font-size:14px}.jtx{margin:0;line-height:1.45}
+.jq{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:14px;display:flex;flex-direction:column;gap:10px}
+.jq strong{font-family:var(--display);font-size:17px}.jo{display:flex;flex-direction:column;gap:6px}.jo .pill{text-align:left;font-size:15px}.jr{margin:0;min-height:1.4em}
+body.jopen #top,body.jopen #dock,body.jopen #zoom,body.jopen #labels{visibility:hidden}
+@media (max-width:700px){.jw svg{height:240px;width:auto}.jd{grid-template-columns:1fr}.jt{flex-direction:column}.jt figure,.jt img{width:100%}#journey h2{font-size:21px}}
 /* úzký telefon: menu i ovládání se musí vejít do jednoho řádku */
 @media (max-width:480px){#levels .ico,#full,#snd{display:none}#speed{width:56px}}

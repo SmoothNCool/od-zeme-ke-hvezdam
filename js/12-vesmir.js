@@ -124,7 +124,7 @@ function stepComet(dt) {
   if (cv.t >= 1) { cv = { on: false, wait: 15 + Math.random() * 25 }; return; }
   // na začátku a na konci pomalu, u Slunce rychle, jako skutečná kometa
   const u = cv.t * 2 - 1, s = cv.S * Math.sign(u) * Math.pow(Math.abs(u), .6);
-  comet.holder.position.copy(cometAt(cv.q, s)); comet.holder.visible = cometPath.visible = true;
+  comet.holder.position.copy(cometAt(cv.q, s)); comet.holder.visible = true; cometPath.visible = false; // dráhu prolétající komety nekreslit, jen ji samotnou
   const cd = comet.holder.position.length(), tl = Math.min(9, 60 / cd);
   tail.forEach((sp, i) => sp.position.copy(comet.holder.position).multiplyScalar((i + 1) * tl / 12 / cd));
 }
@@ -133,14 +133,13 @@ function stepComet(dt) {
 const meteors = new THREE.Group(); gO.add(meteors);
 let meteorWait = 3;
 function stepMeteors(dt) {
-  for (const m of [...meteors.children]) { m.userData.t += dt; m.material.opacity = Math.max(0, 1 - m.userData.t / .9); if (m.userData.t > .9) { meteors.remove(m); m.geometry.dispose(); m.material.dispose(); } }
+  stepMeteorAnim(dt);
   if (L.id !== 'obloha' || sunAlt > rad(-6)) return;
   meteorWait -= dt; if (meteorWait > 0) return; meteorWait = 2 + Math.random() * 7;
   const az = Math.random() * TAU, alt = rad(25 + Math.random() * 50), len = rad(5 + Math.random() * 9), dirA = Math.random() * TAU;
   const p = (a, h) => V(Math.cos(h) * Math.sin(a), Math.sin(h), -Math.cos(h) * Math.cos(a)).multiplyScalar(1900);
   const a2 = az + Math.cos(dirA) * len / Math.max(.3, Math.cos(alt)), h2 = alt + Math.sin(dirA) * len;
-  const line = new THREE.Line(new THREE.BufferGeometry().setFromPoints([p(az, alt), p(a2, h2)]), new THREE.LineBasicMaterial({ color: 0xffffff, transparent: true, opacity: 1 }));
-  line.userData.t = 0; meteors.add(line);
+  spawnMeteor(p(az, alt), p(a2, h2), 0xffffff);
 }
 
 // sondy jdou vypnout jako vrstva; hesla vesmíru jdou najít
