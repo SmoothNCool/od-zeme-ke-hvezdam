@@ -92,7 +92,13 @@ body.bare #top,body.bare #dock{display:none}
 #full,#center,#snd{width:46px;height:46px;border-radius:50%;border:1px solid var(--line);background:var(--chip);font-size:20px}
 #ctl label{display:flex;align-items:center;gap:8px;font-weight:700}
 #speed{width:150px;accent-color:var(--sun)}
-#names{width:22px;height:22px;accent-color:var(--sun)}
+#lays{position:fixed;right:calc(max(16px,env(safe-area-inset-right,0px)) + 56px);top:50%;transform:translateY(-50%);z-index:4;background:var(--panel);border:1px solid var(--line);border-radius:16px;
+  padding:12px 14px;display:flex;flex-direction:column;gap:8px;backdrop-filter:blur(8px);max-height:70vh;overflow-y:auto}
+#lays strong{font-family:var(--display);font-size:16px}
+#laysB{display:flex;flex-direction:column;gap:8px}
+#lays label{display:flex;align-items:center;gap:8px;font-weight:700;font-size:15px;white-space:nowrap}
+#lays input{width:22px;height:22px;accent-color:var(--sun);flex:none}
+body.bare #lays{display:none}
 
 .lbl{position:fixed;left:0;top:0;font-family:var(--display);font-size:16px;line-height:1;padding:5px 10px;border-radius:999px;
   background:rgba(13,19,38,.7);border:1px solid var(--line);white-space:nowrap;pointer-events:none;will-change:transform}
@@ -119,7 +125,7 @@ body.bare #zoom{display:none}
 @media (max-width:700px),(max-height:560px){
   #levels,#sub{gap:6px;padding-block:6px}
   #levels button{min-height:40px;padding:0 10px;font-size:15px;gap:5px}
-  #levels .long,#ctl .cap,#ctl #namesL{display:none}
+  #levels .long,#ctl .cap{display:none}
   #levels .short{display:inline}
   #levels .ico{font-size:18px}
   .pill{min-height:38px;padding:0 12px;font-size:15px;white-space:nowrap}

@@ -37,3 +37,5 @@ function kepler(M, e) { let E = M + e * Math.sin(M); for (let i = 0; i < 8; i++)
 console.assert(latLon(0, 0).distanceTo(V(1)) < 1e-9 && latLon(90, 0).y > .999, 'latLon');
 const HOME = [49.8, 15.5]; // střed Česka (šířka, délka): odtud se počítá den a noc, hodiny i obloha
 console.assert(Math.abs(kepler(1, 0) - 1) < 1e-9 && Math.abs(kepler(Math.PI, .7) - Math.PI) < 1e-9, 'kepler');
+// vrstvy, které jdou zapnout a vypnout (panel je v 12-vrstvy.js); 1 = zapnuto
+const lay = { mraky: 1, iss: 1, rok: 0, atmo: 1, staty: 1, mesta: 1, regiony: 1, reky: 1, hory: 0, more: 1, souhvezdi: 1, jmenaS: 1, hvezdy: 1, drahy: 1, pas: 1 };

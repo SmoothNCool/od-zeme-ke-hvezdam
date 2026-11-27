@@ -4,14 +4,15 @@ Interaktivní 3D atlas Země a vesmíru. Začal jako model pro pětiletého kluk
 
 ## Co umí
 
-- **Země a Měsíc**: den a noc podle skutečného času, fáze Měsíce, zatmění Slunce a Měsíce, roční období, vesmírná stanice.
+- **Země a Měsíc**: den a noc podle skutečného času, fáze Měsíce, zatmění Slunce a Měsíce, vesmírná stanice. Roční období jsou vrstva přímo na Zemi: rovník, obratníky, polární kruhy a místo, kde je Slunce v nadhlavníku.
+- **Vrstvy**: tlačítko ☰ zapíná a vypíná, co je vidět. Na mapě jména států, města, regiony, řeky, hory a moře, na Zemi oblačnost a roční období, na obloze čáry a jména souhvězdí, v soustavě dráhy.
 - **Mapa světa**: zeměkoule s politickou a přírodní mapou, 255 území z dat 1:10 milionů, hranice tisíců krajů a regionů, přes 25 000 měst, řeky, jezera, moře, zálivy, ostrovy, pohoří a vrcholy s výškou. Jmenovek je přes 30 000 a přibývají s přiblížením.
 - **Encyklopedie**: karta státu s vlajkou, hlavním městem, počtem obyvatel a rozlohou včetně pořadí na světě, hustotou zalidnění, měnou, jazyky, nejvyšší horou, nadějí dožití, sousedy a srovnáním s Českem. Ke státům, městům, horám, řekám, planetám i souhvězdím se načítá úvod článku a obrázek z české Wikipedie.
 - **Hledání**: lupa nebo klávesa `/` hledá ve 30 000 jménech (státy, města, hory, řeky, planety, měsíce, souhvězdí) a doletí na místo.
 - **Tematické mapy**: státy obarvené podle počtu obyvatel, hustoty zalidnění, naděje dožití, indexu lidského rozvoje, strany, po které se jezdí, přístupu k moři a členství v EU a NATO.
 - **Zeměpisný kvíz**: najdi stát na mapě, poznej stát podle tvaru, poznej vlajku, hlavní města. Celý svět nebo jeden světadíl, deset otázek na kolo.
 - **Živá Země**: zemětřesení za posledních 30 dní z USGS a hranice tektonických desek. Rekordy Země, od Mount Everestu po Marianský příkop.
-- **Uvnitř Země**: průřez zeměkoulí s kůrou, pláštěm a jádrem.
+- **Uvnitř Země**: průřez zeměkoulí s kůrou, pláštěm a jádrem a nad povrchem pět vrstev atmosféry s oblačností.
 - **Obloha**: hvězdná obloha nad Českem ve zvoleném čase, všech 88 souhvězdí s českými jmény, Slunce, Měsíc a planety.
 - **Sluneční soustava**: planety na skutečných místech, jejich měsíce, kometa, pás asteroidů, skutečné velikosti vedle sebe, rychlost světla, hra „Najdi planetu“.
 - **Mléčná dráha a vesmír**: kde v galaxii je Slunce a kolik galaxií je kolem.
@@ -38,7 +39,7 @@ a pak otevřít `http://localhost:8000`.
 
 - `index.html`: kostra stránky, načítá vše ostatní.
 - `css/app.css`: vzhled.
-- `js/`: kód rozdělený podle témat (základ, hvězdy, Země, soustava, galaxie, mapa, průřez a obloha, aplikace, režimy, encyklopedie, kvíz, ovládání, smyčka). Soubory sdílejí jeden prostor jmen a načítají se v pořadí podle čísla.
+- `js/`: kód rozdělený podle témat (základ, hvězdy, Země, soustava, galaxie, mapa, průřez a obloha, aplikace, režimy, encyklopedie, kvíz, ovládání, vrstvy, smyčka). Soubory sdílejí jeden prostor jmen a načítají se v pořadí podle čísla.
 - `data/sky.js`: katalog hvězd a souhvězdí, načítá se hned.
 - `data/geo.json`: data mapy světa (4 MB), stahují se až při prvním otevření mapy nebo hledání. Spolu s nimi `data/staty.json` (údaje o státech).
 - `data/desky.json`: hranice tektonických desek, stahují se se zemětřesením.

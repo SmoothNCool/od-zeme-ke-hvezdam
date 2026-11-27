@@ -126,7 +126,7 @@ function setMapMode(mode) {
     }
     return acts();
   }
-  vec.land.visible = vec.caps.visible = !nature;
+  vec.land.visible = !nature;
   const style = (line, color, opacity) => { line.material.color.set(color); line.material.opacity = opacity; };
   style(vec.border, nature ? 0xffffff : 0x16233f, nature ? .8 : 1); style(vec.coast, nature ? 0xffffff : 0x0e1a33, nature ? .3 : 1);
   style(vec.river, nature ? 0x8fd0ff : 0x2f6fb5, 1); style(vec.bigRiver, nature ? 0x8fd0ff : 0x2f6fb5, 1); style(vec.adm1, nature ? 0xffffff : 0x4d5d80, nature ? .4 : .85);
@@ -170,16 +170,16 @@ function initMapData() { // spustí se jednou, až se stáhnou data mapy: rozbal
   [['Tichý oceán', -5, -150], ['Atlantský oceán', 28, -42], ['Indický oceán', -22, 80], ['Severní ledový oceán', 86, -30], ['Jižní oceán', -63, -120]].forEach(([t, la, lo]) => mapLabel(t, la, lo, 99, 'sea', '', () => showInfo({ name: t, txt: t + ', jeden z pěti oceánů Země.', note: '', facts: [], wiki: { t } }), 'oceán'));
   const byArea = GEO.c.map((c, i) => i).sort((a, b) => GEO.c[b][4] - GEO.c[a][4]); // při kolizi jmenovek vyhrává větší stát
   for (const i of byArea) { const c = GEO.c[i]; if (c[8]) mapLabel(c[0], c[8][1], c[8][0], showAt(c[4]), 'ctry', 'staty', () => showCountry(i), 'stát', c[2]); }
-  for (const i of byArea) { const c = GEO.c[i]; if (c[9]) mapLabel(c[1].split(' / ')[0], c[9][1], c[9][0], Math.max(1.3, showAt(c[4]) - .55), 'cap', 'staty', place(c[1].split(' / ')[0], 'hlavní město', [['Stát', c[0]]], c[9][1], c[9][0], 60, c[0]), 'hlavní město', c[0]); } // hlavní město o něco později než jeho stát
-  for (const [name, lat, lon, rank, kind, country] of GEO.regions) mapLabel(name, lat, lon, byRank(rank, [[2, 1.8], [4, 1.38], [6, 1.2], [99, 1.1]]), 'reg', 'staty', place(name, kind, [['Co to je', kind], ['Stát', country]], lat, lon, 500, country), kind, country);
+  for (const i of byArea) { const c = GEO.c[i]; if (c[9]) mapLabel(c[1].split(' / ')[0], c[9][1], c[9][0], Math.max(1.3, showAt(c[4]) - .55), 'cap', 'mesta', place(c[1].split(' / ')[0], 'hlavní město', [['Stát', c[0]]], c[9][1], c[9][0], 60, c[0]), 'hlavní město', c[0]); } // hlavní město o něco později než jeho stát
+  for (const [name, lat, lon, rank, kind, country] of GEO.regions) mapLabel(name, lat, lon, byRank(rank, [[2, 1.8], [4, 1.38], [6, 1.2], [99, 1.1]]), 'reg', 'regiony', place(name, kind, [['Co to je', kind], ['Stát', country]], lat, lon, 500, country), kind, country);
   for (const [name, lat, lon, pop, country] of GEO.towns)
-    mapLabel(name, lat, lon, pop > 5e6 ? 2.4 : pop > 1e6 ? 1.9 : pop > 3e5 ? 1.5 : pop > 1e5 ? 1.3 : pop > 3e4 ? 1.16 : 1.075, 'cap', 'staty', place(name, 'město', [['Obyvatel', pop ? 'asi ' + fmtPop(pop) : ''], ['Stát', country]], lat, lon, 60, country), 'město', country);
-  for (const [name, lat, lon, rank, kind] of GEO.phys) mapLabel(name, lat, lon, byRank(rank, [[1, 3.2], [2, 2.6], [3, 2.1], [4, 1.7], [99, 1.4]]), 'mnt', 'priroda', place(name, kind, [['Co to je', kind]], lat, lon, 2500), kind);
-  for (const [name, lat, lon, rank, kind] of GEO.isles) mapLabel(name, lat, lon, byRank(rank, [[1, 2.9], [2, 2.3], [3, 1.8], [4, 1.5], [99, 1.25]]), 'sky', '', place(name, kind, [['Co to je', kind]], lat, lon, 800), kind);
-  for (const [name, lat, lon, rank, kind] of GEO.seas) mapLabel(name, lat, lon, byRank(rank, [[1, 3.2], [2, 2.5], [4, 1.9], [99, 1.45]]), 'sea', '', place(name, kind, [['Co to je', kind]], lat, lon, 4000), kind);
-  for (const [name, lat, lon, elev, rank] of GEO.peaks) mapLabel(name + ', ' + elev.toLocaleString('cs-CZ') + ' m', lat, lon, byRank(rank, [[1, 2.2], [3, 1.7], [99, 1.35]]), 'mnt', 'priroda', place(name, 'hora', [['Co to je', 'hora'], ['Výška', elev.toLocaleString('cs-CZ') + ' m nad mořem']], lat, lon, 150), 'hora');
-  for (const [name, lat, lon, rank] of GEO.lakeNames) mapLabel(name, lat, lon, byRank(rank, [[1, 2.2], [3, 1.6], [99, 1.3]]), 'sea', '', place(name, 'jezero', [['Co to je', 'jezero']], lat, lon, 600), 'jezero');
-  for (const [name, rank, line] of RIVERS) if (name) { const k = (line.length >> 2) * 2; mapLabel(name, line[k + 1], line[k], rank < 3 ? 3 : rank < 5 ? 2.3 : 1.8, 'sea', '', place(name, 'řeka', [['Co to je', 'řeka']], line[k + 1], line[k], 5000), 'řeka'); }
+    mapLabel(name, lat, lon, pop > 5e6 ? 2.4 : pop > 1e6 ? 1.9 : pop > 3e5 ? 1.5 : pop > 1e5 ? 1.3 : pop > 3e4 ? 1.16 : 1.075, 'cap', 'mesta', place(name, 'město', [['Obyvatel', pop ? 'asi ' + fmtPop(pop) : ''], ['Stát', country]], lat, lon, 60, country), 'město', country);
+  for (const [name, lat, lon, rank, kind] of GEO.phys) mapLabel(name, lat, lon, byRank(rank, [[1, 3.2], [2, 2.6], [3, 2.1], [4, 1.7], [99, 1.4]]), 'mnt', 'hory', place(name, kind, [['Co to je', kind]], lat, lon, 2500), kind);
+  for (const [name, lat, lon, rank, kind] of GEO.isles) mapLabel(name, lat, lon, byRank(rank, [[1, 2.9], [2, 2.3], [3, 1.8], [4, 1.5], [99, 1.25]]), 'sky', 'more', place(name, kind, [['Co to je', kind]], lat, lon, 800), kind);
+  for (const [name, lat, lon, rank, kind] of GEO.seas) mapLabel(name, lat, lon, byRank(rank, [[1, 3.2], [2, 2.5], [4, 1.9], [99, 1.45]]), 'sea', 'more', place(name, kind, [['Co to je', kind]], lat, lon, 4000), kind);
+  for (const [name, lat, lon, elev, rank] of GEO.peaks) mapLabel(name + ', ' + elev.toLocaleString('cs-CZ') + ' m', lat, lon, byRank(rank, [[1, 2.2], [3, 1.7], [99, 1.35]]), 'mnt', 'hory', place(name, 'hora', [['Co to je', 'hora'], ['Výška', elev.toLocaleString('cs-CZ') + ' m nad mořem']], lat, lon, 150), 'hora');
+  for (const [name, lat, lon, rank] of GEO.lakeNames) mapLabel(name, lat, lon, byRank(rank, [[1, 2.2], [3, 1.6], [99, 1.3]]), 'sea', 'reky', place(name, 'jezero', [['Co to je', 'jezero']], lat, lon, 600), 'jezero');
+  for (const [name, rank, line] of RIVERS) if (name) { const k = (line.length >> 2) * 2; mapLabel(name, line[k + 1], line[k], rank < 3 ? 3 : rank < 5 ? 2.3 : 1.8, 'sea', 'reky', place(name, 'řeka', [['Co to je', 'řeka']], line[k + 1], line[k], 5000), 'řeka'); }
   mapPool.sort((a, b) => b.maxD - a.maxD); // co je vidět zdálky, má při kolizi přednost
 }
 const showAt = a => a > 2e6 ? 3.6 : a > 4e5 ? 2.7 : a > 8e4 ? 2 : a > 1e4 ? 1.6 : 1.36; // velké státy jsou vidět zdálky, malé až zblízka
@@ -193,7 +193,7 @@ function drawMapLabels(placed, on) {
     const minDot = Math.cos(Math.min(Math.PI / 2, reach * 1.25 + .02));
     for (const m of mapPool) {
       if (m.maxD <= cd || next.length >= 140) break; // seřazeno od nejdřív viditelných, dál už není nic
-      if (m.mode && m.mode !== mapMode || m.dir.dot(camDir) < minDot) continue;
+      if (m.mode && !lay[m.mode] || m.dir.dot(camDir) < minDot) continue; // mode = vrstva, ke které jmenovka patří
       wp.copy(m.dir).multiplyScalar(1.004).project(camera);
       const x = (wp.x + 1) / 2 * W, y = (1 - wp.y) / 2 * H - 6;
       if (x < -40 || x > W + 40 || y < 0 || y > H + 30) continue;

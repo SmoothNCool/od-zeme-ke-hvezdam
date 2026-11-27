@@ -12,7 +12,8 @@ function frame(now) {
 
   // Země a Měsíc
   const lean = -ya - Math.PI; yaw.rotation.y = lean; // v létě je severní pól přikloněný ke Slunci (+X)
-  earth.rotation.y = (days % 1 - .5) * TAU - lean; // ve 12:00 UTC míří ke Slunci nultý poledník
+  // ve 12:00 UTC míří ke Slunci nultý poledník; při čase po dnech a rychlejším by Země jen náhodně poskakovala, proto se ukazuje vždy v poledne našeho času
+  earth.rotation.y = ((playing && !ecl && rate >= 86400 ? 11 / 24 : days % 1) - .5) * TAU - lean; stepSeasons();
   const phi = moonPhi(simMs);
   moonPivot.rotation.y = phi; issPivot.rotation.y += turn(1 / 15.5, 1); // stanice obletí Zemi 15,5krát za den
   moon.getWorldPosition(moonW);
@@ -66,15 +67,15 @@ function frame(now) {
     const near = THREE.MathUtils.clamp(h * .3, .003, .05); if (Math.abs(camera.near - near) > 1e-4) { camera.near = near; camera.updateProjectionMatrix(); }
     if (vec) { // podrobnosti přibývají s přiblížením
       const nature = mapMode === 'priroda';
-      vec.adm1.visible = camD < 1.75; vec.river.visible = camD < 2.6;
-      vec.towns[0].visible = !nature && camD < 2.6; vec.towns[1].visible = !nature && camD < 1.6; vec.towns[2].visible = !nature && camD < 1.22; vec.towns[3].visible = !nature && camD < 1.1;
+      vec.adm1.visible = camD < 1.75 && !!lay.regiony; vec.river.visible = camD < 2.6 && !!lay.reky; vec.bigRiver.visible = !!lay.reky; vec.caps.visible = !!lay.mesta;
+      [2.6, 1.6, 1.22, 1.1].forEach((d, k) => vec.towns[k].visible = !!lay.mesta && camD < d);
     }
   }
   // ve dne obloha zmodrá a hvězdy zmizí, i když tam pořád jsou
   const dayK = L.id === 'obloha' ? THREE.MathUtils.smoothstep(sunAlt, rad(-10), rad(3)) : 0;
   renderer.setClearColor(dayK ? new THREE.Color(0x05070f).lerp(new THREE.Color(0x6fa8e6), dayK) : 0x000000);
   const inSky = L.id === 'obloha'; // na obloze jsou hvězdy i čáry výraznější než jako pozadí jinde
-  starMats.forEach(mt => { mt.opacity = 1 - dayK; mt.size = mt.userData.base * (inSky ? 1.5 : .8); }); lineMat.opacity = (inSky ? .75 : .25) * (1 - dayK);
+  starMats.forEach(mt => { mt.opacity = 1 - dayK; mt.size = mt.userData.base * (inSky ? 1.5 : .8); }); lineMat.opacity = .75 * (1 - dayK); lineMat.visible = inSky && !!lay.souhvezdi; // čáry souhvězdí jen na obloze
   cloudShift.value = (days * .03 % 1 + 1) % 1;
 
   if (tr) stepTransition(dt);
@@ -106,7 +107,7 @@ function frame(now) {
   renderer.render(scene, camera);
   drawLabels();
 
-  if (L.group === gE) { const d = home.getWorldPosition(v).dot(SUN_DIR) > 0; chip(d ? 'U nás je den' : 'U nás je noc', d ? 'day' : ''); }
+  if (L.group === gE) { const d = home.getWorldPosition(v).dot(SUN_DIR) > 0; chip((d ? 'U nás je den' : 'U nás je noc') + (lay.rok ? ', ' + seasonNow() : ''), d ? 'day' : ''); }
   else if (L.id === 'rok') {
     chip('U nás je ' + SEASONS[Math.floor(((ya / TAU) % 1 + 1) % 1 * 4)] + ', ' + fmtM.format(simMs), 'day');
   } else if (L.id === 'obloha') chip(sunAlt > 0 ? 'U nás je den' : sunAlt > rad(-8) ? 'U nás je soumrak' : 'U nás je noc', sunAlt > 0 ? 'day' : '');
@@ -119,5 +120,5 @@ function frame(now) {
   if (rt !== rateText) $('#rate').textContent = rateText = rt;
 }
 setLevel(Math.max(0, LV.findIndex(l => '#' + l.id === location.hash)));
-window.__t = { get level() { return L.id; }, get quiz() { return quiz; }, toggleQuakes, showRecords, get quakes() { return quakes ? quakes.list.length : 0; }, quizStart, quizAnswer, quizNext, findHits, pickHit, showCountry, get theme() { return mapTheme; }, get info() { return info && info.name; }, get selected() { return !!(selLine || selPin && selPin.visible); }, setMapMode: m => setMapMode(m), countryCard, countryAt, get camD() { return camD; }, get mapShown() { return mapShown.map(m => m.text); }, get mapPool() { return mapPool.length; }, get buildMs() { return buildMs; }, get fov() { return camera.fov; }, get dist() { return camera.position.distanceTo(controls.target); }, get focus() { return focus && focus.name; }, go: x => go(typeof x === 'string' ? LV.findIndex(l => l.id === x) : x), eclipse, toggleSizes, startLight, toggleGame, setFocus, planets, comet }; // háčky pro automatický test
+window.__t = { get level() { return L.id; }, get quiz() { return quiz; }, lay, setLay, get linesOn() { return lineMat.visible; }, toggleQuakes, showRecords, get quakes() { return quakes ? quakes.list.length : 0; }, quizStart, quizAnswer, quizNext, findHits, pickHit, showCountry, get theme() { return mapTheme; }, get info() { return info && info.name; }, get selected() { return !!(selLine || selPin && selPin.visible); }, setMapMode: m => pickMode(m), countryCard, countryAt, get camD() { return camD; }, get mapShown() { return mapShown.map(m => m.text); }, get mapPool() { return mapPool.length; }, get buildMs() { return buildMs; }, get fov() { return camera.fov; }, get dist() { return camera.position.distanceTo(controls.target); }, get focus() { return focus && focus.name; }, go: x => go(typeof x === 'string' ? LV.findIndex(l => l.id === x) : x), eclipse, toggleSizes, startLight, toggleGame, setFocus, planets, comet }; // háčky pro automatický test
 requestAnimationFrame(frame);

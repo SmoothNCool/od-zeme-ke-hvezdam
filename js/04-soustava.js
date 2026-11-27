@@ -1,7 +1,8 @@
 // Sluneční soustava. Soubory v js/ sdílejí jeden prostor jmen a načítají se v pořadí podle čísla.
 /* ---------- Sluneční soustava (velikosti a vzdálenosti nejsou v měřítku) ---------- */
 const gS = new THREE.Group(); scene.add(gS);
-const gOrb = new THREE.Group(); gS.add(gOrb); // všechno, co v režimu skutečných velikostí mizí
+const gOrb = new THREE.Group(), gPath = new THREE.Group(); gS.add(gOrb); gOrb.add(gPath); // gPath = dráhy planet, jdou vypnout jako vrstva
+// // všechno, co v režimu skutečných velikostí mizí
 gS.add(new THREE.PointLight(0xffffff, 1.5, 0), new THREE.AmbientLight(0xffffff, .3));
 const sunMesh = new THREE.Mesh(new THREE.SphereGeometry(3, 48, 32), new THREE.MeshBasicMaterial({ map: sunT }));
 gS.add(sunMesh); gOrb.add(glow(0xffa530, 16));
@@ -84,9 +85,9 @@ planets.forEach((p, i) => {
   const [e, inc, node, peri] = ELEMENTS[i], rot = (axis, deg) => new THREE.Matrix4()['makeRotation' + axis](rad(deg));
   Object.assign(p, { e, inc, peri: rad(peri), M: rot('Y', node).multiply(rot('X', inc)).multiply(rot('Y', peri - node)) });
   const pts = Array.from({ length: 160 }, (_, k) => orbitPos(p, k / 160 * TAU));
-  if (!p.dwarf) return gOrb.add(loop(pts));
+  if (!p.dwarf) return gPath.add(loop(pts));
   const dashed = new THREE.LineLoop(new THREE.BufferGeometry().setFromPoints(pts), new THREE.LineDashedMaterial({ color: 0xa08c6e, dashSize: 1.1, gapSize: .9 })); // trpasličí planeta = čárkovaná dráha
-  dashed.computeLineDistances(); gOrb.add(dashed);
+  dashed.computeLineDistances(); gPath.add(dashed);
 });
 console.assert(orbitPos(planets[0], 1.2).y !== 0 && Math.abs(orbitPos(planets[2], 1.2).y) < 1e-9, 'sklon: Merkur mimo rovinu, Země v ní');
 const SUN_BIG = 109 * .5 / 3, SUN_X = -(109 * .5) + .5;

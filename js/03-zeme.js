@@ -2,12 +2,12 @@
 /* ---------- Země: den, noc a stín Měsíce při zatmění ---------- */
 const dayT = tex('earth_daymap.jpg'), nightT = tex('earth_nightmap.jpg'), moonT = tex('moon.jpg'), sunT = tex('sun.jpg');
 const cloudT = tex('earth_clouds.jpg'); cloudT.wrapS = THREE.RepeatWrapping;
-const cloudShift = { value: 0 };
+const cloudShift = { value: 0 }, cloudOn = { value: 1 }; // cloudOn = vrstva oblačnosti, 0 ji vypne
 function earthMat(sunDir, moonPos) {
   return new THREE.ShaderMaterial({
-    uniforms: { dayT: { value: dayT }, nightT: { value: nightT }, cloudT: { value: cloudT }, shift: cloudShift, sunDir: { value: sunDir }, moonPos: { value: moonPos || V() }, ecl: { value: 0 } },
+    uniforms: { dayT: { value: dayT }, nightT: { value: nightT }, cloudT: { value: cloudT }, shift: cloudShift, clouds: cloudOn, sunDir: { value: sunDir }, moonPos: { value: moonPos || V() }, ecl: { value: 0 } },
     vertexShader: 'varying vec2 vUv;varying vec3 vN;varying vec3 vP;void main(){vUv=uv;vN=normalize(mat3(modelMatrix)*normal);vP=(modelMatrix*vec4(position,1.0)).xyz;gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.0);}',
-    fragmentShader: 'uniform sampler2D dayT,nightT,cloudT;uniform vec3 sunDir,moonPos;uniform float ecl,shift;varying vec2 vUv;varying vec3 vN;varying vec3 vP;void main(){float d=dot(normalize(vN),sunDir);float k=smoothstep(-0.12,0.18,d);vec3 dc=texture2D(dayT,vUv).rgb;float cl=texture2D(cloudT,vec2(vUv.x+shift,vUv.y)).r;vec3 day=mix(dc,vec3(1.0),cl*0.85)*(0.45+0.75*max(d,0.0));vec3 night=texture2D(nightT,vUv).rgb*1.4*(1.0-cl*0.6)+dc*0.05+vec3(cl*0.02);vec3 m=moonPos-vP;float al=dot(m,sunDir);float sh=ecl*step(0.0,al)*(1.0-smoothstep(0.08,0.3,length(m-al*sunDir)));gl_FragColor=vec4(mix(night,day,k)*(1.0-0.93*sh),1.0);}'
+    fragmentShader: 'uniform sampler2D dayT,nightT,cloudT;uniform vec3 sunDir,moonPos;uniform float ecl,shift,clouds;varying vec2 vUv;varying vec3 vN;varying vec3 vP;void main(){float d=dot(normalize(vN),sunDir);float k=smoothstep(-0.12,0.18,d);vec3 dc=texture2D(dayT,vUv).rgb;float cl=texture2D(cloudT,vec2(vUv.x+shift,vUv.y)).r*clouds;vec3 day=mix(dc,vec3(1.0),cl*0.85)*(0.45+0.75*max(d,0.0));vec3 night=texture2D(nightT,vUv).rgb*1.4*(1.0-cl*0.6)+dc*0.05+vec3(cl*0.02);vec3 m=moonPos-vP;float al=dot(m,sunDir);float sh=ecl*step(0.0,al)*(1.0-smoothstep(0.08,0.3,length(m-al*sunDir)));gl_FragColor=vec4(mix(night,day,k)*(1.0-0.93*sh),1.0);}'
   });
 }
 // tenká modrá záře na okraji, silnější na osvětlené straně

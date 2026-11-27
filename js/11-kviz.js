@@ -21,7 +21,7 @@ function quizCard(o) { card(Object.assign({ note: '', say: o.txt }, o)); acts();
 function quizMenu() {
   if (!window.STATY) { $('#note').textContent = 'Mapa se ještě stahuje, zkus to za chvilku.'; return; }
   mapSelect(null); info = null; $('#back').hidden = true; quiz = { menu: true }; // při kvízu je mapa politická, zvolené téma se po něm vrátí
-  if (mapMode !== 'staty') setMapMode('staty'); paint();
+  if (mapMode !== 'staty') pickMode('staty'); paint();
   quizCard({ name: 'Zeměpisný kvíz', txt: 'Vyber si oblast a druh otázek. Kolo má nejvýš ' + QUIZ_LEN + ' otázek.' });
 }
 function quizStart(mode) {
@@ -61,7 +61,7 @@ function quizStop() { quiz = null; mapSelect(null); card(L); acts(); paint(); }
 /* ---------- tlačítka pod kartou mapy ---------- */
 function mapActs(a) {
   if (!quiz) {
-    a.append(pill('Státy', () => setMapMode('staty'), mapMode === 'staty'), pill('Příroda', () => setMapMode('priroda'), mapMode === 'priroda'));
+    a.append(pill('Státy', () => pickMode('staty'), mapMode === 'staty'), pill('Příroda', () => pickMode('priroda'), mapMode === 'priroda'));
     if (mapMode === 'staty') a.append(themeSelect());
     a.append(pill('Kvíz', quizMenu), pill('Rekordy', showRecords), pill('Zemětřesení', toggleQuakes, quakesOn));
   } else if (quiz.menu) {

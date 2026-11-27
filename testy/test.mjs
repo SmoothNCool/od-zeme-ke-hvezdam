@@ -85,6 +85,29 @@ try {
   check('tlačítko Teď vrátí dnešek', !(await ev("document.querySelector('#clock').textContent")).includes('24. prosince 2026') || new Date().toISOString().startsWith('2026-12-24'));
   await ev("if (document.querySelector('#play').textContent === '▶') document.querySelector('#play').click()");
 
+  section('Vrstvy');
+  await go('zeme'); await sleep(400);
+  const shown = sel => ev(`[...document.querySelectorAll(${JSON.stringify(sel)})].filter(e => !e.hidden).map(e => e.textContent)`);
+  check('mimo oblohu nejsou čáry ani jména souhvězdí', !(await ev('__t.linesOn')) && (await shown('.lbl.sky')).length === 0 && (await shown('.lbl.star')).length === 0);
+  check('roční období nemají vlastní záložku', await ev("!document.querySelector('#sub-rok')"));
+  await ev("document.querySelector('#layB').click()");
+  check('panel vrstev nabízí vrstvy Země', (await ev("[...document.querySelectorAll('#lays label')].map(l => l.textContent.trim())")).join('|') === 'Popisky|Oblačnost|Vesmírná stanice|Roční období');
+  await ev("document.querySelector('#lays [data-lay=rok]').click()"); await sleep(700);
+  check('vrstva Roční období: karta, rovnoběžky, roční doba a čas po týdnech', await title() === 'Roční období' && (await shown('.lbl.sky')).includes('Rovník') && /, (jaro|léto|podzim|zima)$/.test(await ev("document.querySelector('#dn').textContent")) && await ev("document.querySelector('#speed').value") === '6', (await shown('.lbl.sky')).join(', ')); await shot('21-rocni-obdobi');
+  await ev("document.querySelector('#lays [data-lay=rok]').click()"); await sleep(300);
+  check('vypnutí vrstvy vrátí kartu i rychlost', await title() === 'Den a noc' && (await shown('.lbl.sky')).length === 0 && await ev("document.querySelector('#speed').value") === '2');
+  await ev("document.querySelector('#lays [data-lay=iss]').click()"); await sleep(300);
+  check('vypnutá vesmírná stanice nemá jmenovku', !(await shown('.lbl')).includes('Vesmírná stanice')); await ev("__t.setLay('iss', 1)");
+  await go('rez'); await sleep(600);
+  const airNames = await shown('.lbl');
+  check('průřez ukazuje vrstvy atmosféry', ['Troposféra', 'Stratosféra', 'Mezosféra', 'Termosféra', 'Exosféra'].every(n => airNames.some(t => t.startsWith(n + ','))), airNames.join(', ')); await shot('22-atmosfera');
+  await tapLabel('Stratosféra, do 50 km'); check('karta vrstvy atmosféry', await title() === 'Stratosféra' && await ev("document.querySelectorAll('#facts > div').length") === 3);
+  await ev("__t.setLay('atmo', 0)"); await sleep(300); check('atmosféra jde vypnout', !(await shown('.lbl')).some(t => t.startsWith('Troposféra'))); await ev("__t.setLay('atmo', 1)");
+  await go('obloha'); await sleep(500);
+  check('na obloze jsou čáry souhvězdí a jdou vypnout', await ev('__t.linesOn') && (await ev("__t.setLay('souhvezdi', 0), __t.setLay('jmenaS', 0), new Promise(r => setTimeout(() => r(__t.linesOn), 300))")) === false && (await shown('.lbl.sky')).length === 0);
+  await ev("__t.setLay('souhvezdi', 1), __t.setLay('jmenaS', 1)");
+  await ev("document.querySelector('#layB').click()");
+
   section('Sluneční soustava');
   await go('soustava'); await shot('03-soustava');
   await ev('__t.setFocus(__t.planets[5])'); await sleep(2500);
@@ -122,6 +145,8 @@ try {
   await ev("document.querySelector('#back').click()");
   await wheel(22, -1); await sleep(900);
   check('po přiblížení přibudou jmenovky', (await ev('__t.mapShown')).length > 15, (await ev('__t.mapShown')).slice(0, 8).join(', ')); await shot('07-mapa-blizko');
+  const before = (await ev('__t.mapShown')).length; await ev("__t.setLay('mesta', 0), __t.setLay('regiony', 0)"); await sleep(400);
+  check('vypnutí měst a regionů ubere jmenovky', (await ev('__t.mapShown')).length < before, before + ' → ' + (await ev('__t.mapShown')).length);
   await ev("__t.setMapMode('priroda')"); await sleep(1500);
   check('režim Příroda', await ev("document.querySelector('#acts [aria-pressed=true]').textContent") === 'Příroda'); await shot('08-priroda');
   await ev("__t.setMapMode('staty')");

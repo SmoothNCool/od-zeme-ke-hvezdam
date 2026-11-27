@@ -173,7 +173,8 @@ function pickHit(m) {
   closeFind();
   if (m.run) return m.run();
   goThen(lv('mapa'), () => { // jmenovka mapy: otevřít kartu a doletět tam
-    quiz = null; if (m.mode && m.mode !== mapMode) setMapMode(m.mode);
+    quiz = null; if (m.mode === 'hory' && mapMode !== 'priroda') pickMode('priroda'); // hory jsou nejlíp vidět na přírodní mapě
+    if (m.mode && !lay[m.mode]) { lay[m.mode] = 1; layPanel(); }
     m.click(); acts(); mapFly(m.lat, m.lon, THREE.MathUtils.clamp(m.maxD * .8, 1.12, 3));
   });
 }
@@ -264,6 +265,6 @@ function showRecord([t, what, lat, lon]) {
   showInfo({ name, txt: name + ', ' + what + '.', note: '', facts: [], wiki: { t }, chips: recordChips(), chipsTitle: 'Další rekordy' });
 }
 function showRecords() {
-  if (mapMode !== 'priroda') setMapMode('priroda');
+  if (mapMode !== 'priroda') pickMode('priroda');
   showInfo({ name: 'Rekordy Země', txt: 'Místa, která jsou na naší planetě v něčem nej. Vyber si a přeletíme tam.', note: '', facts: [], chips: recordChips(), chipsTitle: 'Kam to bude' });
 }

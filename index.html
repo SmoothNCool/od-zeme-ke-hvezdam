@@ -10,8 +10,9 @@
 <div id="labels"></div>
 <div id="top"><nav id="levels" aria-label="Zastávky"></nav><nav id="sub" aria-label="Pohledy na Zemi a Měsíc"></nav></div>
 <div id="sunHint" hidden>Slunce</div>
-<div id="zoom"><button id="findB" aria-label="Hledat" title="Hledat (klávesa /)">🔍</button><button id="zin" aria-label="Přiblížit">+</button><button id="zout" aria-label="Oddálit">−</button></div>
+<div id="zoom"><button id="findB" aria-label="Hledat" title="Hledat (klávesa /)">🔍</button><button id="layB" aria-label="Vrstvy" title="Vrstvy: co je vidět" aria-expanded="false">☰</button><button id="zin" aria-label="Přiblížit">+</button><button id="zout" aria-label="Oddálit">−</button></div>
 <div id="find" hidden><input id="q" type="search" placeholder="Hledat stát, město, horu, planetu…" autocomplete="off" aria-label="Hledat"><p id="findNote"></p><div id="hits"></div></div>
+<div id="lays" hidden><strong>Co je vidět</strong><label id="namesL"><input id="names" type="checkbox" checked> Popisky</label><div id="laysB"></div></div>
 <div id="fade" aria-hidden="true">🚀</div>
 <div id="dock">
   <section id="card">
@@ -35,7 +36,6 @@
     <button id="play" aria-label="Zastavit čas">⏸</button>
     <label id="speedL"><span class="cap">Čas</span> <input id="speed" type="range" min="0" max="8" step="1" value="3"> <span id="rate"></span></label>
     <button id="now" class="pill" title="Vrátit se do skutečného dneška">Teď</button>
-    <label id="namesL"><input id="names" type="checkbox" checked> Popisky</label>
     <button id="snd" aria-label="Zvuky" title="Zvuky" aria-pressed="true">♪</button>
     <button id="center" aria-label="Zpět na střed" title="Zpět na střed">⌖</button>
     <button id="full" aria-label="Celá obrazovka" hidden>⤢</button>
@@ -62,4 +62,5 @@
 <script src="js/10-encyklopedie.js"></script>
 <script src="js/11-kviz.js"></script>
 <script src="js/12-ovladani.js"></script>
+<script src="js/12-vrstvy.js"></script>
 <script src="js/13-smycka.js"></script>

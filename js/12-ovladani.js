@@ -8,7 +8,7 @@ MAIN.forEach(m => {
   b.innerHTML = '<span class="ico" aria-hidden="true">' + l.ico + '</span><span class="long">' + (m ? l.name : 'Země a Měsíc') + '</span><span class="short">' + { zeme: 'Země', soustava: 'Soustava', galaxie: 'Galaxie', vesmir: 'Vesmír' }[l.id] + '</span>';
   b.onclick = () => inMain(m, LV.indexOf(L)) || go(m); $('#levels').append(b);
 });
-LV.slice(0, NS).forEach((l, i) => $('#sub').append(Object.assign(pill(l.tab || l.name, () => go(i)), { id: 'sub-' + l.id })));
+LV.slice(0, NS).forEach((l, i) => l.hidden || $('#sub').append(Object.assign(pill(l.tab || l.name, () => go(i)), { id: 'sub-' + l.id })));
 function syncPlay() { $('#play').textContent = playing ? '⏸' : '▶'; $('#play').setAttribute('aria-label', playing ? 'Zastavit čas' : 'Pustit čas'); }
 $('#play').onclick = () => { playing = !playing; syncPlay(); };
 syncPlay();
@@ -72,7 +72,7 @@ const front = (obj, ball) => { obj.getWorldPosition(wp); ball.getWorldPosition(v
 const inS = () => L.id === 'soustava' && !game;
 const tip = key => () => showInfo(INFO[key]);
 label('Tady bydlíme', home, .03, () => L.group === gE && front(home, earth), tip('Doma'), 'home');
-label('Vesmírná stanice', iss, .05, () => L.id === 'zeme' && front(iss, earth), tip('ISS'));
+label('Vesmírná stanice', iss, .05, () => L.id === 'zeme' && lay.iss && front(iss, earth), tip('ISS'));
 label('Měsíc', moon, .27, () => L.group === gE, tip('Mesic'));
 label('Tady bydlíme', yHome, .08, () => L.id === 'rok' && front(yHome, yEarth), tip('Doma'), 'home');
 SEASONS.forEach((s, i) => label(s[0].toUpperCase() + s.slice(1), seasonMarks[i], 0, () => L.id === 'rok'));
@@ -82,12 +82,12 @@ planets.forEach(p => {
   p.moons.forEach(m => label(m.name, m.mesh, m.r, () => inS() && focus !== m && (focus === p || (focus && focus.parent === p)), () => setFocus(m)));
 });
 label('Kometa', comet.holder, .5, () => inS() && !sizes && focus !== comet, () => setFocus(comet));
-label('Pás asteroidů', beltMark, .3, () => inS() && !sizes, tip('Pas'));
+label('Pás asteroidů', beltMark, .3, () => inS() && !sizes && lay.pas, tip('Pas'));
 label('Tady je naše Slunce', ourSun, 1, () => L.id === 'galaxie', tip('NaseSlunce'), 'home');
 label('Naše galaxie', ourGalaxy, 6, () => L.id === 'vesmir', tip('NaseGalaxie'), 'home');
 layerMarks.forEach(([name, o, key]) => label(name, o, 0, () => L.id === 'rez', tip(key)));
 compass.forEach(([name, o]) => label(name, o, 0, () => L.id === 'obloha', null, 'home'));
-// souhvězdí: na obloze všechna nad obzorem, jinde jen tři nejznámější
+// souhvězdí a hvězdy mají jmenovky jen na obloze, a to ty nad obzorem
 const FAMOUS = { UMa: 'Velký vůz', Ori: 'Orion', Cas: 'Kasiopeja' }, up = o => o.getWorldPosition(v).y > 60;
 const MONTH_IN = ['v lednu', 'v únoru', 'v březnu', 'v dubnu', 'v květnu', 'v červnu', 'v červenci', 'v srpnu', 'v září', 'v říjnu', 'v listopadu', 'v prosinci'];
 function constInfo(c) {
@@ -96,8 +96,8 @@ function constInfo(c) {
   const known = INFO[FAMOUS[c.id]];
   return { name: c.cz, txt: known ? known.txt : 'Jedno z 88 souhvězdí, na která je rozdělená celá obloha. Lidé si z hvězd odjakživa skládali obrázky, aby se na obloze vyznali.', note: '', facts: [['Latinsky', c.la], ['Kdy je vidět', when]], wiki: { s: 'souhvězdí ' + c.cz, name: c.cz, word: 'souhvězdí', km: Infinity } };
 }
-constMarks.forEach(c => label(c.cz, c.mark, 0, () => L.id === 'obloha' ? up(c.mark) : !!L.def && c.id in FAMOUS, () => showInfo(constInfo(c)), 'sky'));
-starMarks.forEach(st => label(st.name, st.mark, 0, () => L.id === 'obloha' ? up(st.mark) : st.name === 'Polárka' && !!L.def, st.name === 'Polárka' ? tip('Polárka') : null, 'star'));
+constMarks.forEach(c => label(c.cz, c.mark, 0, () => L.id === 'obloha' && lay.jmenaS && up(c.mark), () => showInfo(constInfo(c)), 'sky'));
+starMarks.forEach(st => label(st.name, st.mark, 0, () => L.id === 'obloha' && lay.hvezdy && up(st.mark), st.name === 'Polárka' ? tip('Polárka') : null, 'star'));
 label('Slunce', sunSky, 0, () => L.id === 'obloha' && up(sunSky));
 label('Měsíc', moonSky, 0, () => L.id === 'obloha' && up(moonSky), tip('Mesic'));
 skyPlanets.forEach(([i, sp]) => label(planets[i].name, sp, 0, () => L.id === 'obloha' && up(sp)));

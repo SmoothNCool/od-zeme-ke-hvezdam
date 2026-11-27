@@ -7,12 +7,12 @@ const LV = [
   { id: 'mesic', ico: '🌙', name: 'Země a Měsíc', tab: 'Měsíc', group: gE, cam: [0, 7, 15], min: 1.6, max: 30, def: 2, anchor: gE,
     txt: 'Měsíc oběhne Zemi jednou za 27 dní. Sám nesvítí, jen odráží sluneční světlo. Podle toho, z jakého úhlu se díváme na jeho osvětlenou polovinu, vidíme nov, srpek, čtvrť nebo úplněk.',
     note: 'Pomůcka: vypadá jako D, dorůstá. Vypadá jako C, couvá. V modelu je Měsíc blíž, než odpovídá měřítku. Ve skutečnosti by se mezi něj a Zemi vešlo třicet Zemí vedle sebe.' },
-  { id: 'rok', ico: '🍂', name: 'Roční období', group: gY, cam: [0, 20, 42], min: 6, max: 90, def: 6, anchor: yHolder,
+  { id: 'rok', ico: '🍂', name: 'Roční období', hidden: true, group: gY, cam: [0, 20, 42], min: 6, max: 90, def: 6, anchor: yHolder,
     txt: 'Země oběhne Slunce za jeden rok. Její osa je nakloněná a míří pořád stejným směrem. Když je severní polokoule přikloněná ke Slunci, dopadá na ni světlo strměji a déle a máme léto. O půl roku později je odkloněná a je zima.',
     note: 'Roční období nezpůsobuje vzdálenost od Slunce. Země je mu nejblíž začátkem ledna, kdy je u nás zima. Při rychlém čase model otáčení Země přibrzdí, jinak by z ní byla jen šmouha.' },
-  { id: 'rez', ico: '🌍', name: 'Uvnitř Země', group: gC, cam: [-2.5, 1.5, -3], min: 1.4, max: 12, def: 0, anchor: gC,
-    txt: 'Země má vrstvy. Na povrchu je tenká pevná kůra, pod ní horký plášť, který se velmi pomalu přelévá, a uprostřed jádro ze železa a niklu. Vnější jádro je tekuté, vnitřní pevné. Šipky ukazují proudění v plášti, které hýbe kontinenty. Ťukni na vrstvu a dozvíš se víc.',
-    note: 'Tak hluboko se nikdo nedostal. Nejhlubší vrt měří 12 km, to je jen škrábnutí do kůry. O nitru Země víme hlavně z toho, jak jím procházejí vlny zemětřesení. Kůra je v modelu nakreslená tlustší, jinak by nebyla vidět.' },
+  { id: 'rez', ico: '🌍', name: 'Uvnitř Země', group: gC, cam: [-3, 1.8, -4.1], min: .5, max: 12, def: 0, anchor: gC,
+    txt: 'Země má vrstvy. Na povrchu je tenká pevná kůra, pod ní horký plášť, který se velmi pomalu přelévá, a uprostřed jádro ze železa a niklu. Vnější jádro je tekuté, vnitřní pevné. Šipky ukazují proudění v plášti, které hýbe kontinenty. Nad povrchem je pět vrstev atmosféry. Ťukni na vrstvu a dozvíš se víc.',
+    note: 'Tak hluboko se nikdo nedostal. Nejhlubší vrt měří 12 km, to je jen škrábnutí do kůry. O nitru Země víme hlavně z toho, jak jím procházejí vlny zemětřesení. Kůra a vrstvy atmosféry jsou v modelu nakreslené tlustší, jinak by nebyly vidět. Kolečkem se dá přiblížit až k řezu.' },
   { id: 'mapa', ico: '🌍', name: 'Mapa světa', group: gM, cam: latLon(47, 15).multiplyScalar(3.1).toArray(), min: 1.02, max: 9, def: 0, anchor: gM,
     txt: 'Podrobná mapa světa na zeměkouli. Ťukni na stát, město, horu nebo moře a otevře se karta s údaji a článkem z Wikipedie. Státy jdou obarvit podle počtu obyvatel, naděje dožití a dalších údajů. Zeměpis si vyzkoušíš v kvízu.',
     note: 'Čím víc se přiblížíš, tím víc jmen se objeví. Velké bílé tečky jsou hlavní města, tenké čáry uvnitř států hranice krajů a regionů. Lupa vpravo hledá ve 30 000 jménech. Fotka pod přírodní mapou se při velkém přiblížení rozmaže.' },
@@ -130,10 +130,10 @@ function setLevel(i, keepCam) {
   if (!keepCam) { camera.position.copy(preset()); controls.target.set(0, 0, 0); }
   controls.minDistance = L.min; controls.maxDistance = L.max;
   document.querySelectorAll('#levels button').forEach((b, j) => b.setAttribute('aria-pressed', inMain(MAIN[j], i)));
-  $('#sub').hidden = i >= NS; document.querySelectorAll('#sub button').forEach((b, j) => b.setAttribute('aria-pressed', j === i));
+  $('#sub').hidden = i >= NS; document.querySelectorAll('#sub button').forEach(b => b.setAttribute('aria-pressed', b.id === 'sub-' + L.id));
   $('#back').hidden = true; $('#moonView').hidden = L.id !== 'mesic';
-  $('#speed').value = L.def || 3; $('#speedL').hidden = $('#now').hidden = $('#whenL').hidden = !L.def; // galaxie a vesmír se za lidský čas nepohnou
-  card(L); acts(); if (synth) synth.cancel();
+  $('#speed').value = lay.rok && L.group === gE ? 6 : L.def || 3; $('#speedL').hidden = $('#now').hidden = $('#whenL').hidden = !L.def; // galaxie a vesmír se za lidský čas nepohnou
+  card(L); acts(); layPanel(); if (synth) synth.cancel();
 }
 const home0 = () => ({ pos: preset(), target: V() });
 const SIZES_CARD = { name: 'Skutečné velikosti', txt: 'Takhle velké jsou planety doopravdy, když je postavíš vedle sebe. Ta žlutá stěna vlevo je jen kousíček Slunce, celé by se sem nevešlo. Najdeš malinkou Zemi? Ťukni na planetu a přiblížíme se k ní.', note: 'Vedle Jupiteru je Země jako hrášek vedle melounu.' };
