@@ -21,7 +21,7 @@ const URL0 = process.env.ADRESA || 'http://127.0.0.1:' + server.address().port +
 
 // ---------- Chrome a spojení přes DevTools protokol ----------
 const profile = fs.mkdtempSync(path.join(os.tmpdir(), 'vesmir-test-'));
-const chrome = spawn(CHROME, ['--headless=new', '--enable-unsafe-swiftshader', '--remote-debugging-port=0', '--user-data-dir=' + profile, '--window-size=1280,800', 'about:blank'], { stdio: ['ignore', 'ignore', 'pipe'] });
+const chrome = spawn(CHROME, ['--headless=new', '--enable-unsafe-swiftshader', '--remote-debugging-port=0', '--user-data-dir=' + profile, '--window-size=1280,800', '--js-flags=--expose-gc', 'about:blank'], { stdio: ['ignore', 'ignore', 'pipe'] });
 const port = await new Promise((res, rej) => {
   let buf = ''; chrome.stderr.on('data', d => { buf += d; const m = buf.match(/DevTools listening on ws:\/\/[^:]+:(\d+)\//); if (m) res(m[1]); });
   chrome.on('exit', () => rej(new Error('Chrome se nespustil: ' + CHROME))); setTimeout(() => rej(new Error('Chrome neodpověděl')), 20000);
@@ -35,7 +35,7 @@ ws.onmessage = m => {
   if (d.method === 'Runtime.exceptionThrown') errors.push('výjimka: ' + (d.params.exceptionDetails.exception?.description || d.params.exceptionDetails.text));
   if (d.method === 'Runtime.consoleAPICalled' && ['error', 'assert', 'warning'].includes(d.params.type)) errors.push(d.params.type + ': ' + d.params.args.map(a => a.value ?? a.description).join(' '));
   // výpadek cizí služby (dlaždice, Wikipedie, USGS) není chyba aplikace, ty se hlásí jako info u svých kontrol
-  if (d.method === 'Log.entryAdded' && d.params.entry.level === 'error' && !(d.params.entry.url && !d.params.entry.url.startsWith('http://127.0.0.1'))) errors.push('prohlížeč: ' + d.params.entry.text + ' ' + (d.params.entry.url || '')); // sem padají i nenalezené soubory
+  if (d.method === 'Log.entryAdded' && d.params.entry.level === 'error' && !(d.params.entry.url && !d.params.entry.url.startsWith('http://127.0.0.1')) && !/^Access to .* at 'https:\/\//.test(d.params.entry.text)) errors.push('prohlížeč: ' + d.params.entry.text + ' ' + (d.params.entry.url || '')); // sem padají i nenalezené soubory
 };
 const send = (method, params = {}) => new Promise(r => { pending.set(++seq, r); ws.send(JSON.stringify({ id: seq, method, params })); });
 const ev = async expr => { // vyhodnotí výraz ve stránce a vrátí hodnotu (i pole a výsledek slibu)
@@ -234,6 +234,9 @@ try {
   check('den a noc na mapě: karta a Slunce v nadhlavníku', await title() === 'Den a noc na mapě' && (await lbls()).includes('Slunce v nadhlavníku'));
   await ev('__t.mapFly(subSolar(simMs)[0], subSolar(simMs)[1] + 85, 2.9)'); await sleep(1800); await shot('23-noc');
   await ev("__t.setLay('noc', 0), __t.setLay('pasma', 1)"); await sleep(600);
+  await ev('__t.mapFly(10, -60, 3.4)'); await sleep(1800);
+  const tzFar = (await lbls()).filter(t => t.startsWith('UTC'));
+  check('zdálky má každý posun nejvýš jeden popisek', tzFar.length > 3 && new Set(tzFar.map(t => t.split(' ')[0])).size === tzFar.length, tzFar.length + ' popisků');
   check('časová pásma ukazují UTC a čas', (await lbls()).some(t => /^UTC([+−]\d+)? · \d\d:\d\d$/.test(t)), (await lbls()).filter(t => t.startsWith('UTC')).slice(0, 3).join(', ')); await shot('24-pasma');
   await ev("__t.setLay('pasma', 0), __t.setLay('podnebi', 1)"); await sleep(500);
   check('podnebné pásy s legendou', await title() === 'Podnebné pásy' && await ev("document.querySelectorAll('#legend span').length") === 5); await shot('25-podnebi');
@@ -252,9 +255,10 @@ try {
   await ev("__t.setLay('issNow', 0)");
 
   section('Hory ve 3D');
-  await ev("__t.setMapMode('priroda')"); await ev('__t.mapFly(46.0, 7.75, 1.0035)'); await until('__t.tileZ >= 11', 20000);
+  await ev("__t.setMapMode('priroda')"); await ev('__t.mapFly(46.0, 7.75, 1.0055)'); await until('__t.tileZ >= 11', 20000);
   await ev('__t.setTilt(true)'); await sleep(4000);
-  check('naklopení kamery do 3D', await ev('__t.tilt') > 1, (await ev('__t.tilt')).toFixed(2)); await shot('29-3d-alpy');
+  check('naklopení kamery do 3D a kamera nad nejvyšší horou okolí', await ev('__t.tilt') > 1 && await ev('(camera.position.length() - 1) * 6371000') > 4478 * 2 + 1000, (await ev('__t.tilt')).toFixed(2)); await shot('29-3d-alpy');
+  check('ve 3D nejsou plovoucí čáry hranic a řek', await ev('__t.lines3d') === false);
   await ev('__t.setTilt(false)'); await sleep(2500); check('návrat do pohledu shora', await ev('__t.tilt') === 0);
   await ev("__t.setMapMode('staty')"); await ev('__t.mapFly(47, 15, 3.1)'); await sleep(1500);
 
@@ -289,12 +293,26 @@ try {
 
   section('Telefon na výšku');
   await send('Emulation.setDeviceMetricsOverride', { width: 390, height: 844, deviceScaleFactor: 2, mobile: true });
+  await send('Emulation.setTouchEmulationEnabled', { enabled: true, maxTouchPoints: 5 });
   await send('Page.reload'); check('aplikace naběhla', await until("typeof __t === 'object'", 15000)); await sleep(800);
   check('karta je sbalená do jednoho řádku', await ev("document.querySelector('#card').classList.contains('min') && getComputedStyle(document.querySelector('#txt')).display === 'none'"));
   check('stránka nepřetéká do šířky', await ev('document.documentElement.scrollWidth <= innerWidth'), await ev('document.documentElement.scrollWidth + " / " + innerWidth'));
   check('pohled soustava', await go('soustava') === 'soustava'); await shot('09-telefon');
+  // dotyk: tažení jedním prstem otáčí, dvěma prsty se přibližuje
+  const touch = (type, pts) => send('Input.dispatchTouchEvent', { type, touchPoints: pts.map(([x, y], id) => ({ x, y, id })) });
+  const d0 = await ev('__t.dist'), pos0 = await ev('camera.position.toArray().join()');
+  await touch('touchStart', [[195, 420]]); for (let k = 1; k <= 8; k++) { await touch('touchMove', [[195 + k * 15, 420]]); await sleep(16); } await touch('touchEnd', []); await sleep(400);
+  check('tažení prstem otáčí pohledem', await ev('camera.position.toArray().join()') !== pos0);
+  await touch('touchStart', [[195, 380], [195, 460]]); for (let k = 1; k <= 8; k++) { await touch('touchMove', [[195, 380 - k * 12], [195, 460 + k * 12]]); await sleep(16); } await touch('touchEnd', []); await sleep(600);
+  check('dvěma prsty se přibližuje', await ev('__t.dist') < d0 * .9, d0.toFixed(1) + ' → ' + (await ev('__t.dist')).toFixed(1));
+  // výkon na pomalém telefonu: procesor 4× zpomalený, grafika je ale softwarová, takže snímků je méně než na skutečném telefonu
+  await send('Emulation.setCPUThrottlingRate', { rate: 4 });
+  const fps = () => ev('new Promise(r => { let n = 0; const t0 = performance.now(), f = () => { n++; if (performance.now() - t0 < 3000) requestAnimationFrame(f); else r(Math.round(n / 3)); }; requestAnimationFrame(f); })');
+  console.log('  info  soustava při 4× pomalejším procesoru: ' + await fps() + ' snímků za sekundu');
 
   check('pohled mapa na telefonu', await go('mapa') === 'mapa' && await until('__t.buildMs > 0', 30000));
+  console.log('  info  mapa při 4× pomalejším procesoru: ' + await fps() + ' snímků za sekundu, stavba mapy ' + await ev('__t.buildMs') + ' ms, paměť JavaScriptu po úklidu ' + Math.round(await ev('(window.gc && gc(), performance.memory ? performance.memory.usedJSHeapSize / 1048576 : 0)')) + ' MB');
+  check('mapa na telefonu se vejde do 150 MB paměti JavaScriptu', await ev('(window.gc && gc(), performance.memory ? performance.memory.usedJSHeapSize / 1048576 : 0)') < 150);
   await ev("__t.quizStart('vlajka')"); await sleep(600);
   check('kvíz na telefonu: otázka i možnosti jsou vidět ve sbalené kartě', await ev("getComputedStyle(document.querySelector('#txt')).display !== 'none' && document.querySelector('#acts').getBoundingClientRect().height > 20 && document.documentElement.scrollWidth <= innerWidth")); await shot('18-telefon-kviz');
   await ev("document.querySelector('#findB').click()"); await ev("(() => { const q = document.querySelector('#q'); q.value = 'praha'; q.dispatchEvent(new Event('input')); })()"); await sleep(300);
@@ -305,6 +323,8 @@ try {
   const cz2 = await ev("GEO.c.findIndex(c => c[0] === 'Česko')"); await ev(`__t.showCountry(${cz2}, false)`); await sleep(400);
   check('na telefonu nejdřív jen šest údajů a tlačítko na další', await ev("[...document.querySelectorAll('#facts > div')].filter(d => getComputedStyle(d).display !== 'none').length") === 6 && await ev("getComputedStyle(document.querySelector('#factsMore')).display !== 'none'"));
   await ev("document.querySelector('#factsMore').click()"); check('všechny údaje po ťuknutí', await ev("[...document.querySelectorAll('#facts > div')].filter(d => getComputedStyle(d).display !== 'none').length") > 6);
+
+  await send('Emulation.setCPUThrottlingRate', { rate: 1 });
 
   section('Konzole');
   check('žádné chyby ani varování v konzoli', errors.length === 0, errors.slice(0, 5).join(' | '));

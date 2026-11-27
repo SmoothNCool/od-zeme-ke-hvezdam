@@ -179,7 +179,7 @@ function initMapData() { // spustí se jednou, až se stáhnou data mapy: rozbal
   for (const [name, lat, lon, rank, kind] of GEO.phys) mapLabel(name, lat, lon, byRank(rank, [[1, 3.2], [2, 2.6], [3, 2.1], [4, 1.7], [99, 1.4]]), 'mnt', 'hory', place(name, kind, [['Co to je', kind]], lat, lon, 2500), kind);
   for (const [name, lat, lon, rank, kind] of GEO.isles) mapLabel(name, lat, lon, byRank(rank, [[1, 2.9], [2, 2.3], [3, 1.8], [4, 1.5], [99, 1.25]]), 'sky', 'more', place(name, kind, [['Co to je', kind]], lat, lon, 800), kind);
   for (const [name, lat, lon, rank, kind] of GEO.seas) mapLabel(name, lat, lon, byRank(rank, [[1, 3.2], [2, 2.5], [4, 1.9], [99, 1.45]]), 'sea', 'more', place(name, kind, [['Co to je', kind]], lat, lon, 4000), kind);
-  for (const [name, lat, lon, elev0, rank] of GEO.peaks) { const elev = name === 'Mount Everest' ? 8849 : elev0; mapLabel(name + ', ' + elev.toLocaleString('cs-CZ') + ' m', lat, lon, byRank(rank, [[1, 2.2], [3, 1.7], [99, 1.35]]), 'mnt', 'hory', place(name, 'hora', [['Co to je', 'hora'], ['Výška', elev.toLocaleString('cs-CZ') + ' m nad mořem']], lat, lon, 150), 'hora'); } // Natural Earth má starší výšku 8 848 m, měření z roku 2020 dává 8 848,86 m
+  for (const [name, lat, lon, elev0, rank] of GEO.peaks) { const elev = name === 'Mount Everest' ? 8849 : elev0; mapLabel(name + ', ' + elev.toLocaleString('cs-CZ') + ' m', lat, lon, byRank(rank, [[1, 2.2], [3, 1.7], [99, 1.35]]), 'mnt', 'hory', place(name, 'hora', [['Co to je', 'hora'], ['Výška', elev.toLocaleString('cs-CZ') + ' m nad mořem']], lat, lon, 150), 'hora'); mapPool[mapPool.length - 1].h = elev; } // Natural Earth má starší výšku 8 848 m, měření z roku 2020 dává 8 848,86 m
   for (const [name, lat, lon, rank] of GEO.lakeNames) mapLabel(name, lat, lon, byRank(rank, [[1, 2.2], [3, 1.6], [99, 1.3]]), 'sea', 'reky', place(name, 'jezero', [['Co to je', 'jezero']], lat, lon, 600), 'jezero');
   for (const [name, rank, line] of RIVERS) if (name) { const k = (line.length >> 2) * 2; mapLabel(name, line[k + 1], line[k], rank < 3 ? 3 : rank < 5 ? 2.3 : 1.8, 'sea', 'reky', place(name, 'řeka', [['Co to je', 'řeka']], line[k + 1], line[k], 5000), 'řeka'); }
   mapPool.sort((a, b) => b.maxD - a.maxD); // co je vidět zdálky, má při kolizi přednost
@@ -196,7 +196,8 @@ function drawMapLabels(placed, on) {
     for (const m of mapPool) {
       if (m.maxD <= cd || next.length >= 140) break; // seřazeno od nejdřív viditelných, dál už není nic
       if (m.mode && !lay[m.mode] || m.dir.dot(camDir) < minDot) continue; // mode = vrstva, ke které jmenovka patří
-      wp.copy(m.dir).multiplyScalar(1.0008).project(camera);
+      // h = výška vrcholu v metrech; ve 3D se jmenovka zvedne stejně jako terén
+      wp.copy(m.dir).multiplyScalar(1.0008 + (m.h ? m.h * lift.value / 6371000 : 0)).project(camera);
       const x = (wp.x + 1) / 2 * W, y = (1 - wp.y) / 2 * H;
       if (x < -40 || x > W + 40 || y < 0 || y > H + 30) continue;
       if (!m.el) { // prvek vzniká až teď

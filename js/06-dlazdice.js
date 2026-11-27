@@ -45,8 +45,14 @@ function makeTile(z, x, y) {
   const lat = latOfY(y + .5, n);
   Object.assign(m.uniforms, { lift, dem: { value: d.tex }, demOff: { value: new THREE.Vector2((x % k) / k, 1 - ((y % k) + 1) / k) }, demK: { value: 1 / k }, mpp: { value: 40075016 * Math.cos(lat * Math.PI / 180) / 2 ** dz / 256 }, relief: { value: 1 } });
   const mesh = new THREE.Mesh(g, m); mesh.visible = false;
-  m.uniforms.img = { value: tileLoader.load(IMG_URL(z, x, y), t => { t.anisotropy = renderer.capabilities.getMaxAnisotropy(); mesh.visible = true; }, undefined, () => { tilesFailed++; }) };
+  m.uniforms.img = { value: tileLoader.load(IMG_URL(z, x, y), t => { t.anisotropy = renderer.capabilities.getMaxAnisotropy(); mesh.visible = true; }, undefined, () => { tilesFailed++; retryTile(z + '/' + x + '/' + y); }) };
   tileG.add(mesh); return { mesh, used: 0, z };
+}
+// server dlaždic občas při náporu odpoví chybou; dlaždice se po chvíli zahodí a při dalším snímku stáhne znovu, nejvýš dvakrát
+const tileTries = new Map();
+function retryTile(key) {
+  const n = (tileTries.get(key) || 0) + 1; tileTries.set(key, n);
+  if (n <= 2) setTimeout(() => { const t = tiles.get(key); if (t && !t.mesh.visible) dropTile(key, t); }, 2000 * n);
 }
 function dropTile(key, t) { tileG.remove(t.mesh); t.mesh.geometry.dispose(); t.mesh.material.uniforms.img.value.dispose(); t.mesh.material.dispose(); tiles.delete(key); }
 function updateTiles() { // volá se každý snímek z hlavní smyčky
@@ -76,13 +82,19 @@ function updateTiles() { // volá se každý snímek z hlavní smyčky
 
 /* ---------- 3D pohled: kamera se nakloní k obzoru a terén se zvedne ---------- */
 // OrbitControls umí obíhat jen kolem středu Země, proto se náklon přidává až po jejich výpočtu a na začátku dalšího snímku se vrací (camOrbit)
+const LIFT = 2; let peakDirs = null;
 let tiltOn = false, tilt3d = 0, tilted = false, head3d = 0, headTo = 0; const camOrbit = V();
 function untilt() { if (tilted) { camera.position.copy(camOrbit); camera.up.set(0, 1, 0); tilted = false; } }
 function applyTilt(dt) {
-  const h = camera.position.length() - 1, want = tiltOn && L.id === 'mapa' && mapMode === 'priroda' && h < .1 ? rad(70) : 0;
+  const h = camera.position.length() - 1, dir0 = camera.position.clone().normalize();
+  // kamera musí zůstat nad horami: náklon se omezí podle nejvyšší známé hory do 160 km (aspoň 2 500 m) a převýšení
+  if (!peakDirs && window.GEO) peakDirs = GEO.peaks.map(p => [latLon(p[1], p[2]), p[3]]);
+  let top = 2500; if (peakDirs) for (const [d, e] of peakDirs) if (e > top && d.dot(dir0) > .99969) top = e;
+  const need = (top * LIFT + 1500) / 6371000, maxT = h > need ? Math.acos(need / h) : 0;
+  const want = tiltOn && L.id === 'mapa' && mapMode === 'priroda' && h < .1 ? Math.min(rad(68), maxT) : 0;
   tilt3d += (want - tilt3d) * Math.min(1, dt * 2.5); head3d += (headTo - head3d) * Math.min(1, dt * 3);
-  // hory dvaapůlkrát vyšší, jinak by z výšky působily ploše
-  lift.value = THREE.MathUtils.clamp(tilt3d / rad(70), 0, 1) * 2.5;
+  // hory dvakrát vyšší, jinak by z výšky působily ploše
+  lift.value = tiltOn && mapMode === 'priroda' ? THREE.MathUtils.clamp(tilt3d / rad(40), 0, 1) * LIFT : 0;
   if (tilt3d < .01) { tilt3d = 0; return; }
   camOrbit.copy(camera.position); const dir = camOrbit.clone().normalize(), north = V(0, 1, 0).addScaledVector(dir, -dir.y).normalize(), east = north.clone().cross(dir);
   // kamera stojí za bodem pod sebou a dívá se přes něj; head3d otáčí, odkud se díváme (0 = od jihu k severu)

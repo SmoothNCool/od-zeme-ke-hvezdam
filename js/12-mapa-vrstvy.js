@@ -65,11 +65,13 @@ function loadZones() {
     tzData = list;
     const W2 = 4096, H2 = 2048, cv = document.createElement('canvas'); cv.width = W2; cv.height = H2; const g = cv.getContext('2d'); g.globalAlpha = .38;
     const lines = [];
+    const tzBest = new Map();
+    for (const [z, , marks] of list) for (const [la, lo] of marks) { const b = tzBest.get(z); if (!b || Math.abs(la) < Math.abs(b[0])) tzBest.set(z, [la, lo]); }
     for (const [z, col, marks, rings] of list) {
       g.fillStyle = TZ_COLORS[(col - 1) % 8]; g.beginPath();
       for (const r of rings) { const flat = dec(r); for (let k = 0; k < flat.length; k += 2) g[k ? 'lineTo' : 'moveTo']((flat[k] + 180) / 360 * W2, (90 - flat[k + 1]) / 180 * H2); g.closePath(); seg(lines, flat, 1.0012); }
       g.fill('evenodd');
-      for (const [la, lo] of marks) mapLabel(tzName(z) + ' · ' + tzTime(z), la, lo, 99, 'tz', 'pasma', () => showInfo({ name: 'Časové pásmo ' + tzName(z), txt: 'V tomhle pásmu je teď ' + tzTime(z) + '.', note: 'Čas se počítá podle hodin dole, bez letního času.', facts: [['Posun proti světovému času', tzName(z)], ['Proti Česku', z === 1 ? 'stejný čas' : (z > 1 ? '+' : '−') + dec1(Math.abs(z - 1)) + ' h']], wiki: { t: 'Časové pásmo', noImg: true } }), 'časové pásmo'); mapPool[mapPool.length - 1].tz = z;
+      for (const [la, lo] of marks) mapLabel(tzName(z) + ' · ' + tzTime(z), la, lo, tzBest.get(z)[0] === la && tzBest.get(z)[1] === lo ? 99 : 2.1, 'tz', 'pasma', () => showInfo({ name: 'Časové pásmo ' + tzName(z), txt: 'V tomhle pásmu je teď ' + tzTime(z) + '.', note: 'Čas se počítá podle hodin dole, bez letního času.', facts: [['Posun proti světovému času', tzName(z)], ['Proti Česku', z === 1 ? 'stejný čas' : (z > 1 ? '+' : '−') + dec1(Math.abs(z - 1)) + ' h']], wiki: { t: 'Časové pásmo', noImg: true } }), 'časové pásmo'); mapPool[mapPool.length - 1].tz = z;
     }
     ovU.tzT.value = new THREE.CanvasTexture(cv);
     const f = fat(lines, 1.3); f.material.color.set(0x5b3f8f); f.material.opacity = .9; tzG.add(f);
@@ -149,7 +151,7 @@ function loadVolcanoes() {
     for (const v of list) { const w = mapP(v[2], v[1], 1.0015); (v[5] >= 2000 ? recent : old).push(w.x, w.y, w.z); }
     volc.obj = [points(recent, new THREE.PointsMaterial({ size: 15, sizeAttenuation: false, map: tex, alphaTest: .5 })), points(old, new THREE.PointsMaterial({ size: 9, sizeAttenuation: false, map: tex, alphaTest: .5 }))];
     volc.obj.forEach(o => { o.visible = !!lay.sopky; gM.add(o); });
-    for (const v of list) mapLabel(v[0], v[1], v[2], v[5] >= 2000 ? 2.2 : 1.35, 'vol', 'sopky', () => { mapSelect({ lat: v[1], lon: v[2] }); showInfo(volcCard(v)); }, 'sopka', v[4]);
+    for (const v of list) { mapLabel(v[0], v[1], v[2], v[5] >= 2000 ? 2.2 : 1.35, 'vol', 'sopky', () => { mapSelect({ lat: v[1], lon: v[2] }); showInfo(volcCard(v)); }, 'sopka', v[4]); mapPool[mapPool.length - 1].h = Math.max(0, v[3] || 0); }
     mapPool.sort((a, b) => b.maxD - a.maxD);
   }).catch(err => { volcWait = null; throw err; });
 }
