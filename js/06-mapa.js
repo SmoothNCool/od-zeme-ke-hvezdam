@@ -40,10 +40,12 @@ function seg(out, flat, r) { // lomená čára; dlouhé úseky se dělí, jinak 
     for (let i = 0; i < n; i++) { const a = mapP(x0 + dx * i / n, y0 + dy * i / n, r), b = mapP(x0 + dx * (i + 1) / n, y0 + dy * (i + 1) / n, r); out.push(a.x, a.y, a.z, b.x, b.y, b.z); }
   }
 }
-const fat = (flat, width) => { // čára s tloušťkou v pixelech
+const fat = (flat, width, dash) => { // čára s tloušťkou v pixelech; dash = délka čárky na kouli (poloměr 1), bez ní plná
   const g = new THREE.LineSegmentsGeometry(); g.setPositions(flat);
   const m = new THREE.LineMaterial({ color: 0xffffff, linewidth: width, transparent: true }); m.resolution.set(W, H); fatMats.push(m);
-  return new THREE.LineSegments2(g, m);
+  const line = new THREE.LineSegments2(g, m);
+  if (dash) { m.dashed = true; m.defines.USE_DASH = ''; m.dashSize = dash; m.gapSize = dash * .7; line.computeLineDistances(); }
+  return line;
 };
 // Mapa je vektorová: plochy států jsou trojúhelníky přímo na kouli, hranice a řeky čáry, města body. Proto zůstává ostrá při jakémkoli přiblížení.
 function buildVector() {
@@ -84,7 +86,7 @@ function buildVector() {
   const dot = canvasTex((cx, sz) => { cx.fillStyle = '#16233f'; cx.beginPath(); cx.arc(sz / 2, sz / 2, sz * .46, 0, TAU); cx.fill(); cx.fillStyle = '#fff'; cx.beginPath(); cx.arc(sz / 2, sz / 2, sz * .32, 0, TAU); cx.fill(); }, 32);
   const v = {
     ranges, land: new THREE.Mesh(g, new THREE.MeshBasicMaterial({ vertexColors: true, side: THREE.DoubleSide })),
-    border: fat(border, 1.9), coast: fat(coast, 1.1), river: fat(river, 1.1), bigRiver: fat(bigRiver, 2.2), adm1: fat(adm, 1),
+    border: fat(border, 1.9), coast: fat(coast, 1.1), river: fat(river, 1.5), bigRiver: fat(bigRiver, 2.6), adm1: fat(adm, 1.1, .0022),
     caps: points(caps, new THREE.PointsMaterial({ size: 10, sizeAttenuation: false, map: dot, alphaTest: .5 })),
     towns: towns.map((t, i) => points(t, new THREE.PointsMaterial({ size: [7, 5.5, 4.5, 4][i], sizeAttenuation: false, map: dot, alphaTest: .5 }))),
   };
@@ -105,7 +107,7 @@ function mapSelect(sel) { // {c: index státu} | {lat, lon} | null
   }
 }
 let mapFlyTo = null; // přelet po mapě jde po povrchu koule, ne přímou čarou skrz Zemi
-const mapFly = (lat, lon, d) => { flyTo = null; mapFlyTo = { dir: latLon(lat, lon), d: THREE.MathUtils.clamp(d, 1.05, 8) }; };
+const mapFly = (lat, lon, d) => { flyTo = null; mapFlyTo = { dir: latLon(lat, lon), d: THREE.MathUtils.clamp(d, 1.0025, 8) }; };
 function stepMapFly(dt) {
   const k = Math.min(1, dt * 3.5), d0 = camera.position.length(), dir = camera.position.clone().divideScalar(d0);
   if (dir.dot(mapFlyTo.dir) < -.98) dir.x += .2; // přesně protilehlý bod: je potřeba vybrat stranu
@@ -129,7 +131,7 @@ function setMapMode(mode) {
   vec.land.visible = !nature;
   const style = (line, color, opacity) => { line.material.color.set(color); line.material.opacity = opacity; };
   style(vec.border, nature ? 0xffffff : 0x16233f, nature ? .8 : 1); style(vec.coast, nature ? 0xffffff : 0x0e1a33, nature ? .3 : 1);
-  style(vec.river, nature ? 0x8fd0ff : 0x2f6fb5, 1); style(vec.bigRiver, nature ? 0x8fd0ff : 0x2f6fb5, 1); style(vec.adm1, nature ? 0xffffff : 0x4d5d80, nature ? .4 : .85);
+  style(vec.river, nature ? 0x7cc8ff : 0x1c74d9, 1); style(vec.bigRiver, nature ? 0x7cc8ff : 0x1c74d9, 1); style(vec.adm1, nature ? 0xfff1c9 : 0x3d3f52, nature ? .55 : .8); // řeky modré a plné, hranice krajů čárkované a neutrální
   mapMat.color.set(nature ? 0xffffff : OCEAN); mapMat.map = nature ? (photo8k && photo8k.image ? photo8k : dayT) : null; mapMat.needsUpdate = true;
   // podrobnější fotka pro přírodní mapu se stahuje až na vyžádání a jen na větší obrazovce, na telefonu by zabrala moc paměti
   if (nature && !photo8k && W >= 900 && renderer.capabilities.maxTextureSize >= 8192)

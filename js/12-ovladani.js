@@ -71,10 +71,8 @@ addEventListener('wheel', e => {
 const front = (obj, ball) => { obj.getWorldPosition(wp); ball.getWorldPosition(v); return t1.copy(wp).sub(v).dot(v.copy(camera.position).sub(wp)) > 0; };
 const inS = () => L.id === 'soustava' && !game;
 const tip = key => () => showInfo(INFO[key]);
-label('Tady bydlíme', home, .03, () => L.group === gE && front(home, earth), tip('Doma'), 'home');
 label('Vesmírná stanice', iss, .05, () => L.id === 'zeme' && lay.iss && front(iss, earth), tip('ISS'));
 label('Měsíc', moon, .27, () => L.group === gE, tip('Mesic'));
-label('Tady bydlíme', yHome, .08, () => L.id === 'rok' && front(yHome, yEarth), tip('Doma'), 'home');
 SEASONS.forEach((s, i) => label(s[0].toUpperCase() + s.slice(1), seasonMarks[i], 0, () => L.id === 'rok'));
 label('Slunce', sunMesh, 3, () => inS() && !sizes, () => setFocus(SUN));
 planets.forEach(p => {
@@ -85,7 +83,7 @@ label('Kometa', comet.holder, .5, () => inS() && !sizes && focus !== comet, () =
 label('Pás asteroidů', beltMark, .3, () => inS() && !sizes && lay.pas, tip('Pas'));
 label('Tady je naše Slunce', ourSun, 1, () => L.id === 'galaxie', tip('NaseSlunce'), 'home');
 label('Naše galaxie', ourGalaxy, 6, () => L.id === 'vesmir', tip('NaseGalaxie'), 'home');
-layerMarks.forEach(([name, o, key]) => label(name, o, 0, () => L.id === 'rez', tip(key)));
+layerMarks.forEach(([name, o, key, side]) => { label(name, o, 0, () => L.id === 'rez' && o.parent.visible, tip(key), 'cut'); labels[labels.length - 1].align = () => cutAlign(side); });
 compass.forEach(([name, o]) => label(name, o, 0, () => L.id === 'obloha', null, 'home'));
 // souhvězdí a hvězdy mají jmenovky jen na obloze, a to ty nad obzorem
 const FAMOUS = { UMa: 'Velký vůz', Ori: 'Orion', Cas: 'Kasiopeja' }, up = o => o.getWorldPosition(v).y > 60;
@@ -128,6 +126,7 @@ function drawLabels() {
     const vis = on && l.show() && !hidden(l.obj) && project(l.obj) && wp.x > -50 && wp.x < W + 50 && wp.y > 0 && wp.y < H + 50;
     l.el.hidden = !vis;
     if (!vis) continue;
+    if (l.align) { const [ax, ay] = l.align(); l.el.style.transform = `translate(${wp.x}px,${wp.y}px) translate(${ax}%,${ay}%)`; continue; } // jmenovka s pevným umístěním, rozmístění hlídá sám pohled
     if (!l.w) l.w = l.el.offsetWidth; // text se nemění, stačí změřit jednou
     const x = wp.x; let y = wp.y - l.r * l.obj.scale.x * pxPerUnit / wp.z - 8;
     // jmenovky se nesmí překrývat: ta, která koliduje s už umístěnou, uhne o řádek výš
@@ -161,6 +160,8 @@ renderer.domElement.addEventListener('pointerup', e => {
     if (quiz) { if (quiz.mode === 'najdi' && i >= 0) quizAnswer(i); } // v kvízu je ťuknutí odpověď
     else if (q) showQuake(q);
     else if (i >= 0) showCountry(i);
+  } else if (L.id === 'rez') { // ťuknutí na vrstvu ve výseči
+    const hit = ray.intersectObjects(cutPicks).find(h => h.object.parent.visible); if (hit) showInfo(INFO[hit.object.userData.key]);
   } else if (L.id === 'soustava') {
     const hit = ray.intersectObjects(picks)[0]; if (hit) game ? answer(hit.object.userData.p) : setFocus(hit.object.userData.p);
     else if (focus) goBack(); // ťuknutí do prázdna pustí planetu

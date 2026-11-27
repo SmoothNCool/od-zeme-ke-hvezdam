@@ -37,7 +37,6 @@ button:focus-visible,input:focus-visible{outline:3px solid var(--sun);outline-of
 #card.min>:not(#head){display:none}
 #card.min.show #txt,#card.min.show #note{display:block}
 #card.min.show #acts{display:flex}
-#whenL{display:flex;flex-wrap:wrap;gap:6px;align-items:center;font-size:13px;color:var(--muted)}
 #when{font:inherit;color:var(--ink);background:var(--chip);border:1px solid var(--line);border-radius:10px;padding:5px 8px}
 #pic{margin:0}
 #pic img{display:block;width:100%;max-height:190px;object-fit:cover;border-radius:12px}
@@ -92,9 +91,20 @@ body.bare #top,body.bare #dock{display:none}
 #full,#center,#snd{width:46px;height:46px;border-radius:50%;border:1px solid var(--line);background:var(--chip);font-size:20px}
 #ctl label{display:flex;align-items:center;gap:8px;font-weight:700}
 #speed{width:150px;accent-color:var(--sun)}
-#lays{position:fixed;right:calc(max(16px,env(safe-area-inset-right,0px)) + 56px);top:50%;transform:translateY(-50%);z-index:4;background:var(--panel);border:1px solid var(--line);border-radius:16px;
+#lays,#sets{position:fixed;right:calc(max(16px,env(safe-area-inset-right,0px)) + 56px);top:50%;transform:translateY(-50%);z-index:4;background:var(--panel);border:1px solid var(--line);border-radius:16px;
   padding:12px 14px;display:flex;flex-direction:column;gap:8px;backdrop-filter:blur(8px);max-height:70vh;overflow-y:auto}
-#lays strong{font-family:var(--display);font-size:16px}
+#lays strong,#sets strong{font-family:var(--display);font-size:16px}
+#sets{width:min(270px,70vw)}
+#sets #whenL,#homeBox{display:flex;flex-direction:column;align-items:stretch;gap:6px;font-size:13.5px;color:var(--ink)}
+#homeBox small{color:var(--muted);font-size:12px}
+#homeQ{font:inherit;color:var(--ink);background:var(--chip);border:1px solid var(--line);border-radius:10px;padding:7px 9px}
+#homeHits{display:flex;flex-direction:column}
+#homeHits button{display:flex;justify-content:space-between;gap:10px;text-align:left;background:none;border:0;border-radius:8px;padding:7px 6px;font-weight:700}
+#homeHits button:hover,#homeHits button:focus-visible{background:var(--chip)}
+#homeHits small{font-weight:500}
+#homeOff{min-height:36px;font-size:14px}
+body.bare #sets{display:none}
+#zoom svg{display:block;margin:auto}
 #laysB{display:flex;flex-direction:column;gap:8px}
 #lays label{display:flex;align-items:center;gap:8px;font-weight:700;font-size:15px;white-space:nowrap}
 #lays input{width:22px;height:22px;accent-color:var(--sun);flex:none}
@@ -103,6 +113,8 @@ body.bare #lays{display:none}
 .lbl{position:fixed;left:0;top:0;font-family:var(--display);font-size:16px;line-height:1;padding:5px 10px;border-radius:999px;
   background:rgba(13,19,38,.7);border:1px solid var(--line);white-space:nowrap;pointer-events:none;will-change:transform}
 button.lbl{pointer-events:auto;padding:9px 13px}
+.lbl.cut{white-space:pre-line;text-align:center;line-height:1.2;font-size:14.5px}
+.lbl.cut::first-line{font-size:16px}
 .lbl.home{background:var(--home);border-color:var(--home);color:#fff}
 .lbl.dwarf{border-style:dashed;color:var(--muted)}
 .lbl.sky,.lbl.star,.lbl.geo,.lbl.sea,.lbl.mnt,.lbl.ctry,.lbl.cap,.lbl.reg{background:none;border:0;padding:4px 6px;text-shadow:0 0 6px #000,0 0 3px #000,0 0 2px #000}
@@ -119,6 +131,8 @@ button.lbl{pointer-events:auto;padding:9px 13px}
 body.bare #zoom{display:none}
 #sunHint{position:fixed;left:0;top:0;width:54px;height:54px;border-radius:50%;pointer-events:none;display:grid;place-items:center;
   background:radial-gradient(circle,#fff6c9 0 30%,var(--sun) 55%,rgba(255,201,77,0) 72%);color:var(--sun-ink);font:700 11px var(--body)}
+#tileCredit{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(2px + env(safe-area-inset-bottom,0px));font-size:10.5px;color:#dfe6ff;background:rgba(5,7,15,.6);padding:1px 8px;border-radius:6px;max-width:92vw;text-align:center;pointer-events:auto}
+#tileCredit a{color:inherit}
 #fade{position:fixed;inset:0;background:#000;opacity:0;pointer-events:none;display:grid;place-items:center;font-size:84px}
 #fail{position:fixed;inset:0;display:grid;place-items:center;padding:24px;text-align:center;font-family:var(--display);font-size:22px}
 /* mobil na výšku i na šířku: scéna má přednost, povídání je sbalené pod tlačítkem i */

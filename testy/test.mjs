@@ -92,6 +92,7 @@ try {
   check('roční období nemají vlastní záložku', await ev("!document.querySelector('#sub-rok')"));
   await ev("document.querySelector('#layB').click()");
   check('panel vrstev nabízí vrstvy Země', (await ev("[...document.querySelectorAll('#lays label')].map(l => l.textContent.trim())")).join('|') === 'Popisky|Oblačnost|Vesmírná stanice|Roční období');
+  check('bez nastavení není u červené tečky jmenovka', !(await shown('.lbl.home')).length);
   await ev("document.querySelector('#lays [data-lay=rok]').click()"); await sleep(700);
   check('vrstva Roční období: karta, rovnoběžky, roční doba a čas po týdnech', await title() === 'Roční období' && (await shown('.lbl.sky')).includes('Rovník') && /, (jaro|léto|podzim|zima)$/.test(await ev("document.querySelector('#dn').textContent")) && await ev("document.querySelector('#speed').value") === '6', (await shown('.lbl.sky')).join(', ')); await shot('21-rocni-obdobi');
   await ev("document.querySelector('#lays [data-lay=rok]').click()"); await sleep(300);
@@ -100,13 +101,20 @@ try {
   check('vypnutá vesmírná stanice nemá jmenovku', !(await shown('.lbl')).includes('Vesmírná stanice')); await ev("__t.setLay('iss', 1)");
   await go('rez'); await sleep(600);
   const airNames = await shown('.lbl');
-  check('průřez ukazuje vrstvy atmosféry', ['Troposféra', 'Stratosféra', 'Mezosféra', 'Termosféra', 'Exosféra'].every(n => airNames.some(t => t.startsWith(n + ','))), airNames.join(', ')); await shot('22-atmosfera');
-  await tapLabel('Stratosféra, do 50 km'); check('karta vrstvy atmosféry', await title() === 'Stratosféra' && await ev("document.querySelectorAll('#facts > div').length") === 3);
+  check('průřez ukazuje vrstvy atmosféry', ['Troposféra', 'Stratosféra', 'Mezosféra', 'Termosféra', 'Exosféra'].every(n => airNames.some(t => t.startsWith(n + '\n'))), airNames.join(', ')); await shot('22-atmosfera');
+  await tapLabel('Stratosféra\n12 až 50 km'); check('karta vrstvy atmosféry', await title() === 'Stratosféra' && await ev("document.querySelectorAll('#facts > div').length") === 3);
   await ev("__t.setLay('atmo', 0)"); await sleep(300); check('atmosféra jde vypnout', !(await shown('.lbl')).some(t => t.startsWith('Troposféra'))); await ev("__t.setLay('atmo', 1)");
   await go('obloha'); await sleep(500);
   check('na obloze jsou čáry souhvězdí a jdou vypnout', await ev('__t.linesOn') && (await ev("__t.setLay('souhvezdi', 0), __t.setLay('jmenaS', 0), new Promise(r => setTimeout(() => r(__t.linesOn), 300))")) === false && (await shown('.lbl.sky')).length === 0);
   await ev("__t.setLay('souhvezdi', 1), __t.setLay('jmenaS', 1)");
-  await ev("document.querySelector('#layB').click()");
+  await ev("document.querySelector('#setB').click()");
+  check('nastavení otevře svůj panel a zavře vrstvy', await ev("!document.querySelector('#sets').hidden && document.querySelector('#lays').hidden && !!document.querySelector('#sets #when')"));
+  await go('zeme'); await ev("(() => { const q = document.querySelector('#homeQ'); q.value = 'brno'; q.dispatchEvent(new Event('input')); })()");
+  check('výchozí místo jde najít mezi městy', await until("document.querySelectorAll('#homeHits button').length > 0", 30000));
+  await ev("document.querySelector('#homeHits button').click()"); await sleep(400);
+  check('vybrané místo se zapíše a dostane jmenovku', await ev("document.querySelector('#homeNow').textContent") === 'Teď: Brno' && (await ev("[...document.querySelectorAll('.lbl.home')].map(e => e.textContent)")).includes('Brno'));
+  await ev("document.querySelector('#homeOff').click()"); check('návrat na střed Česka', await ev("document.querySelector('#homeNow').textContent") === 'Teď: střed Česka');
+  await ev("document.querySelector('#setB').click()");
 
   section('Sluneční soustava');
   await go('soustava'); await shot('03-soustava');
@@ -149,6 +157,10 @@ try {
   check('vypnutí měst a regionů ubere jmenovky', (await ev('__t.mapShown')).length < before, before + ' → ' + (await ev('__t.mapShown')).length);
   await ev("__t.setMapMode('priroda')"); await sleep(1500);
   check('režim Příroda', await ev("document.querySelector('#acts [aria-pressed=true]').textContent") === 'Příroda'); await shot('08-priroda');
+  await ev('__t.mapFly(46.5, 9.9, 1.004)'); const gotT = await until('__t.tiles > 20', 20000); await until('__t.tileZ >= 11', 20000); await sleep(3000); // Alpy zblízka, dlaždice se stahují z internetu
+  console.log('  info  satelitní dlaždice ' + (gotT ? 'se načetly: ' + (await ev('__t.tiles')) + ', nejjemnější úroveň ' + (await ev('__t.tileZ')) + ', výška kamery ' + ((await ev('__t.camD')) - 1).toFixed(4) : 'se nenačetly (bez připojení je to v pořádku), chyb: ' + (await ev('__t.tilesFailed'))));
+  if (gotT) { check('u dlaždic je vidět jejich zdroj', await ev("!document.querySelector('#tileCredit').hidden")); await shot('08b-alpy'); }
+  await ev('__t.mapFly(47, 15, 3.1)'); await sleep(1500);
   await ev("__t.setMapMode('staty')");
 
   section('Encyklopedie států');
@@ -230,7 +242,7 @@ try {
 
   section('Konzole');
   check('žádné chyby ani varování v konzoli', errors.length === 0, errors.slice(0, 5).join(' | '));
-} catch (e) { failed++; console.log('\n  CHYBA testu: ' + e.message); }
+} catch (e) { failed++; console.log('\n  CHYBA testu: ' + e.message + (errors.length ? '\n  konzole: ' + errors.slice(0, 5).join(' | ') : '')); }
 
 console.log(failed ? '\nSelhalo kontrol: ' + failed : '\nVšechno prošlo.');
 ws.close(); chrome.kill(); server.close();

@@ -1,4 +1,4 @@
 /*
-  Content-Security-Policy: default-src 'self'; script-src 'self' https://cdnjs.cloudflare.com https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data: blob: https://*.wikimedia.org; connect-src 'self' https://cs.wikipedia.org https://earthquake.usgs.gov; object-src 'none'; base-uri 'self'; frame-ancestors 'self'
+  Content-Security-Policy: default-src 'self'; script-src 'self' https://cdnjs.cloudflare.com https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data: blob: https://*.wikimedia.org https://tiles.maps.eox.at https://s3.amazonaws.com; connect-src 'self' https://cs.wikipedia.org https://earthquake.usgs.gov; object-src 'none'; base-uri 'self'; frame-ancestors 'self'
   X-Content-Type-Options: nosniff
   Referrer-Policy: strict-origin-when-cross-origin

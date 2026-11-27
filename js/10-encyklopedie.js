@@ -147,7 +147,7 @@ function findList() {
     findFixed.push({ text: p.name, kind: p === SUN ? 'hvězda' : p === comet ? 'kometa' : p.dwarf ? 'trpasličí planeta' : 'planeta', run: () => goThen(lv('soustava'), () => { quitModes(); setFocus(p); }) });
     for (const m of p.moons || []) findFixed.push({ text: m.name, kind: 'měsíc', sub: p.name, run: () => goThen(lv('soustava'), () => { quitModes(); setFocus(m); }) });
   }
-  for (const [text, key, id] of [['Vesmírná stanice ISS', 'ISS', 'zeme'], ['Pás asteroidů', 'Pas', 'soustava'], ['Zemská kůra', 'Kura', 'rez'], ['Zemský plášť', 'Plast', 'rez'], ['Zemské jádro', 'Jadro1', 'rez']])
+  for (const [text, key, id] of [['Atmosféra: troposféra', 'Troposfera', 'rez'], ['Atmosféra: stratosféra', 'Stratosfera', 'rez'], ['Vesmírná stanice ISS', 'ISS', 'zeme'], ['Pás asteroidů', 'Pas', 'soustava'], ['Zemská kůra', 'Kura', 'rez'], ['Zemský plášť', 'Plast', 'rez'], ['Zemské jádro', 'Jadro1', 'rez']])
     findFixed.push({ text, kind: 'heslo', run: () => goThen(lv(id), () => showInfo(INFO[key])) });
   for (const c of constMarks) findFixed.push({ text: c.cz, kind: 'souhvězdí', run: () => goThen(lv('obloha'), () => {
     showInfo(constInfo(c)); const dir = c.mark.getWorldPosition(V()).normalize();

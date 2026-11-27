@@ -10,16 +10,18 @@
 <div id="labels"></div>
 <div id="top"><nav id="levels" aria-label="Zastávky"></nav><nav id="sub" aria-label="Pohledy na Zemi a Měsíc"></nav></div>
 <div id="sunHint" hidden>Slunce</div>
-<div id="zoom"><button id="findB" aria-label="Hledat" title="Hledat (klávesa /)">🔍</button><button id="layB" aria-label="Vrstvy" title="Vrstvy: co je vidět" aria-expanded="false">☰</button><button id="zin" aria-label="Přiblížit">+</button><button id="zout" aria-label="Oddálit">−</button></div>
+<div id="zoom"><button id="findB" aria-label="Hledat" title="Hledat (klávesa /)">🔍</button><button id="layB" aria-label="Vrstvy" title="Vrstvy: co je vidět" aria-expanded="false"><svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><rect x="8" y="8" width="13" height="13" rx="2.5" fill="none" stroke="currentColor" stroke-width="2"/><rect x="3" y="3" width="13" height="13" rx="2.5" fill="#1c2748" stroke="currentColor" stroke-width="2"/></svg></button><button id="setB" aria-label="Nastavení" title="Nastavení: datum, čas a výchozí místo" aria-expanded="false">⚙</button><button id="zin" aria-label="Přiblížit">+</button><button id="zout" aria-label="Oddálit">−</button></div>
 <div id="find" hidden><input id="q" type="search" placeholder="Hledat stát, město, horu, planetu…" autocomplete="off" aria-label="Hledat"><p id="findNote"></p><div id="hits"></div></div>
 <div id="lays" hidden><strong>Co je vidět</strong><label id="namesL"><input id="names" type="checkbox" checked> Popisky</label><div id="laysB"></div></div>
+<div id="sets" hidden><strong>Nastavení</strong><label id="whenL" hidden>Datum a čas <input id="when" type="datetime-local"></label>
+  <div id="homeBox"><span>Výchozí místo, pro které se počítá den a noc a obloha</span><small id="homeNow"></small><input id="homeQ" type="search" placeholder="Najdi své město…" autocomplete="off" aria-label="Najdi své město"><div id="homeHits"></div><button id="homeOff" class="pill" hidden>Zpět na střed Česka</button><small>Volba zůstává jen v tomhle prohlížeči. Hodiny ukazují český čas.</small></div></div>
+<div id="tileCredit" hidden>Snímky: <a href="https://cloudless.eox.at" target="_blank" rel="noopener">EOxCloudless</a>, EOX IT Services GmbH (obsahuje upravená data Copernicus Sentinel 2024), CC BY-NC-SA 4.0 · Výšky: <a href="https://github.com/tilezen/joerd/blob/master/docs/attribution.md" target="_blank" rel="noopener">Mapzen Terrain Tiles</a></div>
 <div id="fade" aria-hidden="true">🚀</div>
 <div id="dock">
   <section id="card">
     <div id="head"><span id="flag" hidden></span><h1 id="ttl"></h1><button id="more" aria-label="Ukázat nebo schovat povídání" aria-expanded="true">i</button><button id="read" aria-label="Přečíst nahlas">🔊</button><button id="hideUi" aria-label="Schovat ovládání" title="Schovat ovládání (klávesa H)">✕</button></div>
     <span id="dn" hidden></span>
     <span id="clock"></span>
-    <label id="whenL" hidden>Nastavit datum a čas <input id="when" type="datetime-local"></label>
     <p id="txt"></p>
     <figure id="pic" hidden><img id="picI" alt=""></figure>
     <p id="wiki" hidden><span id="wikiT"></span> <a id="wikiA" target="_blank" rel="noopener">Celý článek na Wikipedii</a></p>
@@ -56,6 +58,7 @@
 <script src="js/04-soustava.js"></script>
 <script src="js/05-galaxie.js"></script>
 <script src="js/06-mapa.js"></script>
+<script src="js/06-dlazdice.js"></script>
 <script src="js/07-rez-obloha.js"></script>
 <script src="js/08-aplikace.js"></script>
 <script src="js/09-rezimy.js"></script>

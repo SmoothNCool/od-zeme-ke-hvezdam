@@ -24,7 +24,6 @@ function layPanel() { // zaškrtávátka pro právě otevřený pohled; Popisky 
     c.onchange = () => setLay(key, c.checked); l.append(c, ' ' + name); return l;
   }));
 }
-$('#layB').onclick = () => { $('#lays').hidden = !$('#lays').hidden; $('#layB').setAttribute('aria-expanded', !$('#lays').hidden); };
 function pickMode(mode) { // přepnutí podkladu mapy nastaví vrstvy, které k němu patří; pak si je každý doladí sám
   lay.staty = lay.mesta = lay.regiony = mode === 'staty' ? 1 : 0; lay.hory = mode === 'priroda' ? 1 : 0;
   setMapMode(mode); layPanel();
@@ -55,23 +54,8 @@ function stepSeasons() { // jmenovky rovnoběžek se drží na boku přivrácen�
   const c = seasonG.worldToLocal(t1.copy(camera.position)); seasonTurn.rotation.y = Math.atan2(c.x, c.z) + rad(50);
 }
 
-/* ---------- atmosféra v průřezu Zemí: pět vrstev na řezných plochách a oblačnost; tloušťky jsou zvětšené, jinak by nebyly vidět ---------- */
-// [klíč karty, jméno, vnější poloměr v modelu, barva, průhlednost, výška do jmenovky]
-const AIR = [['Troposfera', 'Troposféra', 1.03, '#a9d8ff', .9, 'do 12 km'], ['Stratosfera', 'Stratosféra', 1.07, '#73b3f2', .8, 'do 50 km'], ['Mezosfera', 'Mezosféra', 1.11, '#4c88da', .7, 'do 85 km'], ['Termosfera', 'Termosféra', 1.22, '#3659b3', .55, 'do 600 km'], ['Exosfera', 'Exosféra', 1.4, '#27356e', .32, 'nad 600 km']];
-const airG = new THREE.Group(); gC.add(airG);
-AIR.forEach(([key, name, r1, color, opacity, height], k) => {
-  const r0 = k ? AIR[k - 1][2] : 1;
-  [0, -Math.PI / 2].forEach(ry => { // stejné dvě řezné plochy jako u vrstev Země
-    const f = new THREE.Mesh(new THREE.RingGeometry(r0, r1, 64, 1, Math.PI / 2, Math.PI), new THREE.MeshBasicMaterial({ color, transparent: true, opacity, side: THREE.DoubleSide, depthWrite: false }));
-    f.rotation.y = ry; airG.add(f);
-  });
-  const o = new THREE.Object3D(), ang = rad(172 + k * 19); o.position.set(Math.cos(ang) * 1.62, Math.sin(ang) * 1.62, 0); airG.add(o); // vrstvy jsou u sebe moc natěsno, jmenovky proto stojí vedle modelu v pořadí od země nahoru
-  label(name + ', ' + height, o, 0, () => L.id === 'rez' && lay.atmo, tip(key));
-});
-const airCloudT = cloudT.clone(); airCloudT.repeat.x = .75; airCloudT.needsUpdate = true; // tři čtvrtiny koule nesou tři čtvrtiny oblačnosti
-const airClouds = new THREE.Mesh(new THREE.SphereGeometry(1.012, 64, 48, 0, TAU * .75), new THREE.MeshBasicMaterial({ color: 0xffffff, alphaMap: airCloudT, transparent: true, depthWrite: false }));
-gC.add(airClouds);
-const AIR_NOTE = 'V modelu je vrstva nakreslená mnohem tlustší než doopravdy. Celá atmosféra po hranici vesmíru by byla tenčí než čára, kterou je Země obtažená.';
+/* ---------- karty vrstev atmosféry (výseč je v 07-rez-obloha.js) ---------- */
+const AIR_NOTE = 'Výseč není v měřítku. Ve skutečném poměru by celá atmosféra po hranici vesmíru byla tenčí než čára, kterou je Země na obrázku obtažená.';
 Object.assign(INFO, {
   Troposfera: { name: 'Troposféra', txt: 'Nejnižší vrstva atmosféry, ve které žijeme. Je v ní většina vzduchu a skoro všechna vodní pára, proto se tu odehrává počasí: mraky, déšť, vítr i bouřky. S výškou v ní teplota klesá.', note: AIR_NOTE, facts: [['Sahá do výšky', '8 km u pólů, až 18 km nad rovníkem'], ['Teplota nahoře', 'kolem −55 °C'], ['Létají tu', 'dopravní letadla, v 10 až 12 km']], wiki: { t: 'Troposféra' } },
   Stratosfera: { name: 'Stratosféra', txt: 'Klidná vrstva bez počasí. Leží v ní ozonová vrstva, která pohlcuje většinu ultrafialového záření ze Slunce. Proto tu teplota s výškou stoupá.', note: AIR_NOTE, facts: [['Sahá do výšky', 'asi 50 km'], ['Ozonová vrstva', 'hlavně 15 až 35 km'], ['Létají tu', 'meteorologické balony']], wiki: { t: 'Stratosféra' } },
@@ -79,4 +63,35 @@ Object.assign(INFO, {
   Termosfera: { name: 'Termosféra', txt: 'Vzduch je tu tak řídký, že by se tu už nedalo dýchat ani létat letadlem. Vzniká tu polární záře a obíhá tudy Mezinárodní vesmírná stanice. Ve výšce 100 km leží dohodnutá hranice vesmíru.', note: AIR_NOTE, facts: [['Sahá do výšky', 'asi 600 km'], ['Hranice vesmíru', '100 km (Kármánova hranice)'], ['Vesmírná stanice', 'asi 400 km']], wiki: { t: 'Termosféra' } },
   Exosfera: { name: 'Exosféra', txt: 'Vnější okraj atmosféry. Jednotlivé atomy a molekuly tu létají tak daleko od sebe, že se skoro nesrážejí, a některé unikají do vesmíru. Ostrou horní hranici nemá.', note: AIR_NOTE, facts: [['Začíná ve výšce', 'asi 600 km'], ['Přechází do vesmíru', 'kolem 10 000 km']], wiki: { t: 'Exosféra' } },
 });
+
+/* ---------- nastavení: datum a čas, výchozí místo ---------- */
+// Výchozí místo je bod, pro který se počítá den a noc a obloha. Bez nastavení je to střed Česka. Volba zůstává jen v prohlížeči (localStorage), nikam se neposílá.
+const HOME0 = HOME.slice(); let homeName = '';
+function setHome(lat, lon, name, keep) {
+  HOME[0] = lat; HOME[1] = lon; homeName = name || '';
+  homes.forEach(m => m.position.copy(latLon(lat, lon)).multiplyScalar(m.userData.r));
+  homeLabels.forEach(l => { l.el.textContent = homeName; l.w = 0; });
+  $('#homeNow').textContent = homeName ? 'Teď: ' + homeName : 'Teď: střed Česka';
+  $('#homeOff').hidden = !homeName; $('#homeQ').value = ''; $('#homeHits').replaceChildren();
+  if (keep !== false) try { homeName ? localStorage.setItem('domov', JSON.stringify([lat, lon, homeName])) : localStorage.removeItem('domov'); } catch (e) { /* bez úložiště platí volba jen do zavření stránky */ }
+}
+// jmenovka u červené tečky je vidět jen s vlastním místem a nese jeho jméno
+const homeLabels = [[home, .03, () => L.group === gE && !!homeName && front(home, earth)], [yHome, .08, () => L.id === 'rok' && !!homeName && front(yHome, yEarth)]].map(([o, r, show]) => { label(' ', o, r, show, tip('Doma'), 'home'); return labels[labels.length - 1]; });
+$('#homeQ').oninput = () => {
+  const n = norm($('#homeQ').value.trim()); if (n.length < 2) return $('#homeHits').replaceChildren();
+  loadGeo().then(() => { // města se hledají ve jménech mapy
+    if (norm($('#homeQ').value.trim()) !== n) return;
+    const hits = mapPool.filter(m => (m.kind === 'město' || m.kind === 'hlavní město') && (m.n || (m.n = norm(m.text))).startsWith(n)).slice(0, 6);
+    $('#homeHits').replaceChildren(...hits.map(m => { const b = document.createElement('button'), s = document.createElement('small'); b.textContent = m.text; s.textContent = m.sub; b.append(s); b.onclick = () => setHome(m.lat, m.lon, m.text); return b; }));
+  }).catch(() => {});
+};
+$('#homeQ').onkeydown = e => e.stopPropagation(); // psaní nesmí spouštět klávesové zkratky
+$('#homeOff').onclick = () => setHome(HOME0[0], HOME0[1], '');
+const panels = { layB: '#lays', setB: '#sets' }; // vpravo je vždy otevřený nejvýš jeden panel
+for (const id in panels) $('#' + id).onclick = () => { for (const k in panels) { const open = k === id && $(panels[k]).hidden; $(panels[k]).hidden = !open; $('#' + k).setAttribute('aria-expanded', open); } };
+try { const h = JSON.parse(localStorage.getItem('domov')); if (Array.isArray(h) && Number.isFinite(h[0]) && Number.isFinite(h[1])) setHome(h[0], h[1], String(h[2] || '').slice(0, 60), false); else setHome(HOME0[0], HOME0[1], '', false); } catch (e) { setHome(HOME0[0], HOME0[1], '', false); }
+INFO.Kura.facts.push(['Nejhlubší vrt', '12 km, Kolský poloostrov']);
+INFO.Troposfera.facts.push(['Nejvyšší hora', 'Mount Everest, 8,8 km']);
+INFO.Mezosfera.facts.push(['Meteory shoří', 'v 75 až 100 km']);
+INFO.Termosfera.facts.push(['Polární záře', '100 až 300 km']);
 applyLay();

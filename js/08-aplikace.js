@@ -2,7 +2,7 @@
 /* ---------- zastávky; anchor = místo ve scéně, odkud jsme přiletěli z menšího světa ---------- */
 const LV = [
   { id: 'zeme', ico: '🌍', name: 'Den a noc', group: gE, cam: [1.3, 1.1, 4.4], min: 1.6, max: 14, def: 2, anchor: gE,
-    txt: 'Země se otočí kolem své osy jednou za 24 hodin. Na straně přivrácené ke Slunci je den, na odvrácené noc. Hranice světla a stínu přejde přes Česko dvakrát denně, při východu a při západu Slunce. Červená tečka ukazuje Česko.',
+    txt: 'Země se otočí kolem své osy jednou za 24 hodin. Na straně přivrácené ke Slunci je den, na odvrácené noc. Hranice světla a stínu přejde přes Česko dvakrát denně, při východu a při západu Slunce. Červená tečka ukazuje místo, pro které se den a noc počítá. Bez nastavení je to střed Česka.',
     note: 'Bílá čára je zemská osa. Je nakloněná o 23,4°, proto se během roku mění délka dne. Kolem Země obíhá Mezinárodní vesmírná stanice, jeden oblet jí trvá asi 92 minut.' },
   { id: 'mesic', ico: '🌙', name: 'Země a Měsíc', tab: 'Měsíc', group: gE, cam: [0, 7, 15], min: 1.6, max: 30, def: 2, anchor: gE,
     txt: 'Měsíc oběhne Zemi jednou za 27 dní. Sám nesvítí, jen odráží sluneční světlo. Podle toho, z jakého úhlu se díváme na jeho osvětlenou polovinu, vidíme nov, srpek, čtvrť nebo úplněk.',
@@ -10,12 +10,12 @@ const LV = [
   { id: 'rok', ico: '🍂', name: 'Roční období', hidden: true, group: gY, cam: [0, 20, 42], min: 6, max: 90, def: 6, anchor: yHolder,
     txt: 'Země oběhne Slunce za jeden rok. Její osa je nakloněná a míří pořád stejným směrem. Když je severní polokoule přikloněná ke Slunci, dopadá na ni světlo strměji a déle a máme léto. O půl roku později je odkloněná a je zima.',
     note: 'Roční období nezpůsobuje vzdálenost od Slunce. Země je mu nejblíž začátkem ledna, kdy je u nás zima. Při rychlém čase model otáčení Země přibrzdí, jinak by z ní byla jen šmouha.' },
-  { id: 'rez', ico: '🌍', name: 'Uvnitř Země', group: gC, cam: [-3, 1.8, -4.1], min: .5, max: 12, def: 0, anchor: gC,
-    txt: 'Země má vrstvy. Na povrchu je tenká pevná kůra, pod ní horký plášť, který se velmi pomalu přelévá, a uprostřed jádro ze železa a niklu. Vnější jádro je tekuté, vnitřní pevné. Šipky ukazují proudění v plášti, které hýbe kontinenty. Nad povrchem je pět vrstev atmosféry. Ťukni na vrstvu a dozvíš se víc.',
-    note: 'Tak hluboko se nikdo nedostal. Nejhlubší vrt měří 12 km, to je jen škrábnutí do kůry. O nitru Země víme hlavně z toho, jak jím procházejí vlny zemětřesení. Kůra a vrstvy atmosféry jsou v modelu nakreslené tlustší, jinak by nebyly vidět. Kolečkem se dá přiblížit až k řezu.' },
+  { id: 'rez', ico: '🌍', name: 'Vrstvy Země', group: gC, cam: [0, 0, 14], min: 1.5, max: 40, def: 0, anchor: gC,
+    txt: 'Řez Zemí od středu až na okraj atmosféry. Uprostřed je jádro ze železa a niklu, vnitřní pevné a vnější tekuté. Nad ním je horký plášť, který se pomalu přelévá a hýbe kontinenty, a tenká kůra, po které chodíme. Nad povrchem je pět vrstev atmosféry. Ťukni na vrstvu a dozvíš se víc.',
+    note: 'Výseč není v měřítku. Kůra a atmosféra by ve skutečném poměru nebyly vidět, proto jsou roztažené. Skutečné hloubky a výšky jsou na jmenovkách. Tažením se posouváš, kolečkem přibližuješ. Tak hluboko se nikdo nedostal, nejhlubší vrt měří 12 km. O nitru víme hlavně z toho, jak jím procházejí vlny zemětřesení.' },
   { id: 'mapa', ico: '🌍', name: 'Mapa světa', group: gM, cam: latLon(47, 15).multiplyScalar(3.1).toArray(), min: 1.02, max: 9, def: 0, anchor: gM,
     txt: 'Podrobná mapa světa na zeměkouli. Ťukni na stát, město, horu nebo moře a otevře se karta s údaji a článkem z Wikipedie. Státy jdou obarvit podle počtu obyvatel, naděje dožití a dalších údajů. Zeměpis si vyzkoušíš v kvízu.',
-    note: 'Čím víc se přiblížíš, tím víc jmen se objeví. Velké bílé tečky jsou hlavní města, tenké čáry uvnitř států hranice krajů a regionů. Lupa vpravo hledá ve 30 000 jménech. Fotka pod přírodní mapou se při velkém přiblížení rozmaže.' },
+    note: 'Čím víc se přiblížíš, tím víc jmen se objeví. Velké bílé tečky jsou hlavní města, čárkované čáry uvnitř států hranice krajů a regionů, modré čáry řeky. Lupa vpravo hledá ve 30 000 jménech. Přírodní mapa jde přiblížit až na desítky metrů, satelitní snímky a stínovaný reliéf se stahují po kouscích.' },
   { id: 'obloha', ico: '🌍', name: 'Obloha', group: gO, cam: [0, -.031, -.095], min: .1, max: .1, def: 2, anchor: gO, noChain: true,
     txt: 'Obloha nad Českem v čase, který si nastavíš. Hvězdy jsou na ní i ve dne, jen je přesvítí Slunce. Během noci se obloha otáčí kolem Polárky, protože se otáčí Země. A během roku se mění, protože noční strana Země míří při oběhu kolem Slunce pokaždé jinam.',
     note: 'Tažením se rozhlížíš, kolečkem přibližuješ. Zkus čas 1 s = 1 den a sleduj, jak se noční obloha za rok promění. Ťukni na souhvězdí a dozvíš se, kdy je vidět.' },
@@ -32,7 +32,7 @@ const LV = [
 // fakta do informačního panelu; „autem“ = nepřetržitě stovkou, k planetám v době, kdy jsou Zemi nejblíž; „sondou“ = jak dlouho letěla skutečná sonda
 const FACTS = {
   mapa: [['Států na světě', 'skoro 200'], ['Světadílů', '7'], ['Oceánů', '5'], ['Největší stát', 'Rusko'], ['Nejvíc lidí', 'Indie a Čína'], ['Nejdelší řeky', 'Nil a Amazonka, kolem 6 500 km'], ['Nejvyšší hora', 'Mount Everest, 8 849 m'], ['Největší horká poušť', 'Sahara']],
-  rez: [['Poloměr Země', '6 371 km'], ['Kůra', '5 až 70 km, pevný kámen'], ['Plášť', '2 900 km, horký kámen'], ['Vnější jádro', '2 200 km, tekuté železo'], ['Vnitřní jádro', 'koule 1 220 km, pevné železo'], ['Nejhlubší vrt', '12 km']],
+  rez: [['Poloměr Země', '6 371 km'], ['Hranice vesmíru', '100 km nad zemí'], ['Kůra', '5 až 70 km, pevný kámen'], ['Plášť', '2 900 km, horký kámen'], ['Vnější jádro', '2 200 km, tekuté železo'], ['Vnitřní jádro', 'koule 1 220 km, pevné železo'], ['Nejhlubší vrt', '12 km']],
   obloha: [['Souhvězdí na celé obloze', '88'], ['Hvězd vidět očima', 'asi 3 000 najednou'], ['Nejjasnější hvězda noci', 'Sirius'], ['Nejbližší hvězda po Slunci', 'Proxima Centauri, 4,2 světelného roku'], ['Polárka', 'ukazuje sever'], ['Planety poznáš', 'neblikají']],
   zeme: [['Průměr Země', '12 742 km'], ['Jedno otočení', '24 hodin'], ['Rychlost na rovníku', '1 670 km/h'], ['Průměrná teplota', '15 °C'], ['Vesmírná stanice letí', '400 km nad zemí, 28 000 km/h'], ['Osa míří', 'k hvězdě Polárce']],
   mesic: [['Průměr Měsíce', '3 474 km'], ['Daleko od Země', '384 400 km'], ['Jeden oběh', '27 dní'], ['Od úplňku k úplňku', '29 a půl dne'], ['Teplota', '−170 až 120 °C'], ['Autem', '160 dní'], ['Raketou (Apollo)', '3 dny'], ['Lidí, kteří tam chodili', '12']],
@@ -64,8 +64,7 @@ const INFO = {
   ISS: { name: 'Vesmírná stanice ISS', txt: 'Laboratoř na oběžné dráze a největší stavba, jakou lidé ve vesmíru postavili. Posádka v ní žije ve stavu beztíže, spí ve spacácích přivázaných ke stěně a jídlo se jí vznáší.', note: 'V modelu letí dál od Země, než doopravdy je, jinak by nebyla vidět.',
     facts: [['Výška nad zemí', '400 km'], ['Rychlost', '28 000 km/h'], ['Jeden oblet Země', '92 minut'], ['Délka', '109 m, jako fotbalové hřiště'], ['Posádka', 'obvykle 7 lidí'], ['Lidé tam žijí', 'bez přestávky od roku 2000']] },
   Mesic: { name: 'Měsíc', txt: 'Náš nejbližší soused ve vesmíru. Je to velká kamenná koule plná kráterů. Vzduch tam není a voda jen jako led ukrytý v kráterech u pólů.', note: 'K Zemi je otočený pořád stejnou stranou.', facts: FACTS.mesic },
-  Doma: { name: 'Tady bydlíme', txt: 'Červená tečka je Česko. Když je na osvětlené straně Země, máme den. Když se Země otočí a tečka zajede do stínu, máme noc.', note: '',
-    facts: [['Stát', 'Česko'], ['Světadíl', 'Evropa'], ['Od rovníku', '50° na sever']] },
+  Doma: { name: 'Výchozí místo', txt: 'Červená tečka je místo, pro které se počítá den a noc i obloha. Když je na osvětlené straně Země, je tam den. Když se Země otočí a tečka zajede do stínu, je tam noc.', note: 'Místo si vybereš v nastavení (ozubené kolečko vpravo). Bez nastavení je to střed Česka.', facts: [] },
   Pas: { name: 'Pás asteroidů', txt: 'Spousta kamenů a balvanů, které obíhají kolem Slunce mezi Marsem a Jupiterem. Jsou to zbytky ze stavby planet.', note: 'V modelu jsou kameny hodně zvětšené. Ve skutečnosti jsou od sebe tak daleko, že mezi nimi sondy proletí bez úhony.',
     facts: [['Kde je', 'mezi Marsem a Jupiterem'], ['Těles větších než 1 km', 'přes milion'], ['Největší', 'Ceres, 940 km'], ['Všechny dohromady', 'váží míň než Měsíc']] },
   Phobos: { name: 'Phobos', txt: 'Větší z dvou měsíců Marsu. Vypadá jako hrbolatá brambora.', note: '', facts: [['Průměr', '22 km'], ['Jeden oběh', 'necelých 8 hodin'], ['Zvláštnost', 'obíhá rychleji, než se Mars otáčí']] },
@@ -126,6 +125,7 @@ function setLevel(i, keepCam) {
   [gE, gY, gC, gM, gO, gS, gG, gU].forEach(g => g.visible = g === L.group);
   if (L.id === 'mapa') setMapMode(mapMode);
   sky.visible = L.id !== 'vesmir'; stars.visible = L.id !== 'obloha'; skyBodies.visible = L.id === 'obloha';
+  const flat = L.id === 'rez'; controls.enableRotate = !flat; controls.mouseButtons.LEFT = flat ? THREE.MOUSE.PAN : THREE.MOUSE.ROTATE; controls.touches.ONE = flat ? THREE.TOUCH.PAN : THREE.TOUCH.ROTATE; // plochý řez se neotáčí, tažením se posouvá
   camera.fov = L.id === 'obloha' ? 65 : 45; camera.near = .05; controls.zoomSpeed = 1; controls.rotateSpeed = L.id === 'obloha' ? -.3 : 1; controls.enablePan = L.id !== 'obloha' && L.id !== 'mapa'; resize(); // mapa se točí kolem středu Země, posun by ji rozhodil
   if (!keepCam) { camera.position.copy(preset()); controls.target.set(0, 0, 0); }
   controls.minDistance = L.min; controls.maxDistance = L.max;
