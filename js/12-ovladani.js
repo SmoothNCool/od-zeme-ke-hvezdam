@@ -128,11 +128,12 @@ function hidden(obj) {
   return false;
 }
 // obdélníky ovládání; jmenovka, která by pod nimi ležela, se schová, aby se netrefila jiná věc a nebylo vidět useknuté jméno
-let uiRects = [];
+let uiRects = [], uiRectsAt = 0;
 const underUi = (x0, y0, x1, y1) => uiRects.some(r => x1 > r.left && x0 < r.right && y1 > r.top && y0 < r.bottom);
 const dockObs = new ResizeObserver(() => { document.documentElement.style.setProperty('--dockH', $('#dock').offsetHeight + 'px'); resize(); }); dockObs.observe($('#dock')); // na telefonu stojí tlačítka nad kartou
 function drawLabels() {
-  uiRects = [...document.querySelectorAll('#levels button,#sub button,#zoom button,#dock>*,#lays,#sets,#find,#tileCredit')].map(e => e.getBoundingClientRect()).filter(r => r.width);
+  // měření polohy ovládání nutí prohlížeč přepočítat rozvržení stránky, proto jen párkrát za sekundu
+  if (performance.now() - uiRectsAt > 300) { uiRectsAt = performance.now(); uiRects = [...document.querySelectorAll('#levels button,#sub button,#zoom button,#dock>*,#lays,#sets,#games,#find,#tileCredit')].map(e => e.getBoundingClientRect()).filter(r => r.width); }
   const on = $('#names').checked && !tr, pxPerUnit = H / 2 / Math.tan(rad(camera.fov / 2));
   const placed = [];
   for (const l of labels) {
@@ -191,7 +192,9 @@ renderer.domElement.addEventListener('dblclick', e => {
   if (hit) flyTo = { pos: camera.position.clone().add(hit.point.clone().sub(controls.target)), target: hit.point.clone() };
 });
 
-function resize() { W = innerWidth; H = innerHeight; renderer.setSize(W, H, false); camera.aspect = W / H;
+function resize() { W = innerWidth; H = innerHeight; uiRectsAt = 0;
+  renderer.setPixelRatio(Math.min(devicePixelRatio, L.id === 'mapa' ? 1.5 : 2)); // mapa má přes milion trojúhelníků, plné rozlišení by zbytečně dusilo grafiku
+  renderer.setSize(W, H, false); camera.aspect = W / H;
   // scéna výš, ať ji dole nezakrývá karta; na širokém displeji i doprava od rozbalené karty
   const side = W > 900 && !$('#card').classList.contains('min') && !document.body.classList.contains('bare') ? $('#card').getBoundingClientRect().right / 2 : 0;
   camera.setViewOffset(W, H, -side, H * .1, W, H); fatMats.forEach(mt => mt.resolution.set(W, H)); }

@@ -216,3 +216,5 @@ function drawMapLabels(placed, on) {
   for (const m of mapShown) if (m.stamp !== stamp) m.el.hidden = true;
   mapShown = next;
 }
+// po odchodu z mapy se její popisky ze stránky odstraní; tisíce skrytých prvků by zpomalovaly každý snímek i v jiných pohledech
+function dropMapLabels() { for (const m of mapPool) if (m.el) { m.el.remove(); m.el = null; m.w = 0; } mapShown = []; }

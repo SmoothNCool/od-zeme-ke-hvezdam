@@ -1,5 +1,5 @@
 // Hlavní smyčka a start. Soubory v js/ sdílejí jeden prostor jmen a načítají se v pořadí podle čísla.
-let last = performance.now();
+let last = performance.now(), lastDraw = 0, lastSig = [];
 function frame(now) {
   requestAnimationFrame(frame);
   const dt = Math.min(.1, (now - last) / 1000); last = now;
@@ -117,8 +117,10 @@ function frame(now) {
   const open = !!(info || focus), nested = !!(focus && (info || focus.parent));
   if ($('#close').hidden === open) $('#close').hidden = !open;
   $('#back').classList.toggle('solo', !nested);
-  renderer.render(scene, camera);
-  drawLabels();
+  // mapa je těžká, v klidu se nepřekresluje: jen když se pohne kamera, nebo jednou za chvíli kvůli času, dlaždicím a výběru
+  const c = camera, sig = [c.position.x, c.position.y, c.position.z, c.quaternion.x, c.quaternion.y, c.quaternion.z, c.fov, W, H];
+  const still = L.id === 'mapa' && !tr && !mapFlyTo && sig.every((x, k) => x === lastSig[k]) && now - lastDraw < (lay.proudy || quakesOn ? 50 : 160);
+  if (!still) { renderer.render(scene, camera); drawLabels(); lastDraw = now; lastSig = sig; }
 
   if (L.group === gE) { const d = home.getWorldPosition(v).dot(SUN_DIR) > 0; chip((d ? 'U nás je den' : 'U nás je noc') + (lay.rok ? ', ' + seasonNow() : ''), d ? 'day' : ''); }
   else if (L.id === 'rok') {

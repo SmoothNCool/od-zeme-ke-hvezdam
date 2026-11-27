@@ -93,6 +93,7 @@ function applyTilt(dt) {
   const need = (top * LIFT + 1500) / 6371000, maxT = h > need ? Math.acos(need / h) : 0;
   const want = tiltOn && L.id === 'mapa' && mapMode === 'priroda' && h < .1 ? Math.min(rad(74), maxT) : 0;
   tilt3d += (want - tilt3d) * Math.min(1, dt * 2.5); head3d += (headTo - head3d) * Math.min(1, dt * 3);
+  if (Math.abs(want - tilt3d) < 2e-4) tilt3d = want; if (Math.abs(headTo - head3d) < 2e-4) head3d = headTo; // dorovnat, jinak by se kamera pořád nepatrně hýbala a mapa by se zbytečně překreslovala
   // hory třikrát vyšší, jinak by z výšky působily ploše
   lift.value = tiltOn && mapMode === 'priroda' ? THREE.MathUtils.clamp(tilt3d / rad(40), 0, 1) * LIFT : 0;
   if (tilt3d < .01) { tilt3d = 0; return; }

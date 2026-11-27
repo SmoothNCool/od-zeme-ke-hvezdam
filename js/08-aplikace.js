@@ -126,7 +126,7 @@ function endModes() {
 function setLevel(i, keepCam) {
   endModes(); L = LV[i];
   [gE, gY, gC, gM, gO, gS, gG, gU].forEach(g => g.visible = g === L.group);
-  if (L.id === 'mapa') setMapMode(mapMode);
+  if (L.id === 'mapa') setMapMode(mapMode); else dropMapLabels();
   sky.visible = L.id !== 'vesmir'; stars.visible = L.id !== 'obloha'; skyBodies.visible = L.id === 'obloha';
   const flat = L.id === 'rez'; controls.enableRotate = !flat && !(L.id === 'mapa' && tiltOn); controls.mouseButtons.LEFT = flat ? THREE.MOUSE.PAN : THREE.MOUSE.ROTATE; controls.touches.ONE = flat ? THREE.TOUCH.PAN : THREE.TOUCH.ROTATE; // plochý řez se neotáčí, tažením se posouvá
   camera.fov = L.id === 'obloha' ? 65 : 45; camera.near = .05; controls.zoomSpeed = 1; controls.rotateSpeed = L.id === 'obloha' ? -.3 : 1; controls.enablePan = L.id !== 'obloha' && L.id !== 'mapa'; resize(); // mapa se točí kolem středu Země, posun by ji rozhodil
