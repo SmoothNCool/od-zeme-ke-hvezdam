@@ -126,7 +126,13 @@ button.lbl{pointer-events:auto;padding:9px 13px}
 .lbl.sky,.lbl.star,.lbl.geo,.lbl.sea,.lbl.mnt,.lbl.ctry,.lbl.cap,.lbl.reg{background:none;border:0;padding:4px 6px;text-shadow:0 0 6px #000,0 0 3px #000,0 0 2px #000}
 .lbl.mnt{color:#ffe3b0;font-size:14px}
 .lbl.vol{background:none;border:0;padding:4px 6px;color:#ffb4a6;font-size:13px;text-shadow:0 0 6px #000,0 0 3px #000}
-.lbl.tz{background:rgba(40,20,70,.75);border-color:#7d5fb8;color:#eadfff;font-size:13px;font-family:var(--body);font-weight:700;padding:3px 8px}
+.lbl.tz{background:rgba(40,20,70,.8);border-color:#7d5fb8;color:#eadfff;font-size:12.5px;font-family:var(--body);font-weight:700;padding:3px 8px}
+.lbl.curW,.lbl.curC{background:none;border:0;padding:3px 6px;font-size:13px;font-style:italic;text-shadow:0 0 6px #000,0 0 3px #000}
+.lbl.curW{color:#ffb39f}
+.lbl.curC{color:#a9e3ff}
+.seg{display:flex;gap:6px}
+.seg .pill{flex:1;min-height:38px;font-size:15px;padding:0 10px}
+#lays select.pill{min-height:38px;font-size:14px}
 #factsMore{display:none;align-self:flex-start;min-height:36px;font-size:14px}
 #quizIn{font:inherit;color:var(--ink);background:var(--chip);border:1px solid var(--line);border-radius:999px;padding:9px 14px;flex:1 1 100%}
 .lbl.ctry{color:#fff;font-size:15px}

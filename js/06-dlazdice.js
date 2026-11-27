@@ -57,7 +57,8 @@ function updateTiles() { // volá se každý snímek z hlavní smyčky
   // úroveň: na šířku záběru se má vejít asi pět dlaždic
   const z = THREE.MathUtils.clamp(Math.round(Math.log2(TAU * 5 / Math.max(h * 1.3, 1e-4) * Math.cos(rad(Math.min(Math.abs(lat), 80))))), 2, TILE_MAX), n = 2 ** z;
   const latC = THREE.MathUtils.clamp(lat, -85, 85), cx = Math.floor((lon + 180) / 360 * n), cy = Math.floor((1 - Math.log(Math.tan(rad(latC)) + 1 / Math.cos(rad(latC))) / Math.PI) / 2 * n);
-  const R = z <= 3 ? n : 3; // kolem středu záběru 7 × 7 dlaždic
+  // kolem středu záběru 7 × 7 dlaždic, při pohledu k obzoru 9 × 9
+  const R = z <= 3 ? n : tilted || tiltOn ? 4 : 3;
   for (let dy = -R; dy <= R; dy++) for (let dx = -R; dx <= R; dx++) {
     const y = cy + dy; if (y < 0 || y >= n) continue;
     const x = ((cx + dx) % n + n) % n, key = z + '/' + x + '/' + y;
@@ -75,14 +76,25 @@ function updateTiles() { // volá se každý snímek z hlavní smyčky
 
 /* ---------- 3D pohled: kamera se nakloní k obzoru a terén se zvedne ---------- */
 // OrbitControls umí obíhat jen kolem středu Země, proto se náklon přidává až po jejich výpočtu a na začátku dalšího snímku se vrací (camOrbit)
-let tiltOn = false, tilt3d = 0, tilted = false; const camOrbit = V();
+let tiltOn = false, tilt3d = 0, tilted = false, head3d = 0, headTo = 0; const camOrbit = V();
 function untilt() { if (tilted) { camera.position.copy(camOrbit); camera.up.set(0, 1, 0); tilted = false; } }
 function applyTilt(dt) {
-  const h = camera.position.length() - 1, want = tiltOn && L.id === 'mapa' && mapMode === 'priroda' && h < .08 ? rad(62) : 0;
-  tilt3d += (want - tilt3d) * Math.min(1, dt * 2.5); lift.value = THREE.MathUtils.clamp(tilt3d / rad(62), 0, 1) * 1.6; // hory o 60 % vyšší, jinak by z výšky působily ploše
+  const h = camera.position.length() - 1, want = tiltOn && L.id === 'mapa' && mapMode === 'priroda' && h < .1 ? rad(70) : 0;
+  tilt3d += (want - tilt3d) * Math.min(1, dt * 2.5); head3d += (headTo - head3d) * Math.min(1, dt * 3);
+  // hory dvaapůlkrát vyšší, jinak by z výšky působily ploše
+  lift.value = THREE.MathUtils.clamp(tilt3d / rad(70), 0, 1) * 2.5;
   if (tilt3d < .01) { tilt3d = 0; return; }
-  camOrbit.copy(camera.position); const dir = camOrbit.clone().normalize(), north = V(0, 1, 0).addScaledVector(dir, -dir.y).normalize();
-  camera.position.copy(dir).addScaledVector(dir, h * Math.cos(tilt3d)).addScaledVector(north, -h * Math.sin(tilt3d)); // kamera jižně od bodu pod sebou, dívá se k severu
+  camOrbit.copy(camera.position); const dir = camOrbit.clone().normalize(), north = V(0, 1, 0).addScaledVector(dir, -dir.y).normalize(), east = north.clone().cross(dir);
+  // kamera stojí za bodem pod sebou a dívá se přes něj; head3d otáčí, odkud se díváme (0 = od jihu k severu)
+  const back = north.multiplyScalar(Math.cos(head3d)).addScaledVector(east, Math.sin(head3d));
+  camera.position.copy(dir).addScaledVector(dir, h * Math.cos(tilt3d)).addScaledVector(back, -h * Math.sin(tilt3d));
   camera.up.copy(dir); camera.lookAt(dir); tilted = true;
 }
 const camLatLon = () => { const d = (tilted ? camOrbit : camera.position).clone().normalize(); return [Math.asin(d.y) * 180 / Math.PI, Math.atan2(-d.z, d.x) * 180 / Math.PI]; };
+function set3d(on) { // zapne 3D terén; z velké výšky nejdřív sletí blíž k zemi, jinak by hory nebyly vidět
+  tiltOn = on; if (on && mapMode !== 'priroda') pickMode('priroda');
+  if (on && camera.position.length() > 1.05) mapFly(...camLatLon(), 1.02);
+  if (!on) headTo = 0;
+  layPanel();
+}
+const turn3d = k => { headTo += k * Math.PI / 4; };

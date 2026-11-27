@@ -63,16 +63,16 @@ await send('Page.navigate', { url: URL0 });
 try {
   section('Start');
   check('aplikace naběhla', await until("typeof __t === 'object'", 15000));
-  check('začíná pohledem Den a noc', await ev('__t.level') === 'zeme');
+  check('začíná pohledem Země a Měsíc', await ev('__t.level') === 'zeme');
   check('data mapy se při startu nestahují', await ev('!window.GEO'));
   check('karta má text a fakta', await ev("document.querySelector('#txt').textContent.length > 20 && document.querySelectorAll('#facts > div').length > 3"));
   await shot('01-start');
 
   section('Přepínání všech pohledů');
-  for (const id of ['mesic', 'rok', 'rez', 'obloha', 'soustava', 'galaxie', 'vesmir', 'zeme']) check('pohled ' + id, await go(id) === id);
+  for (const id of ['rez', 'mapa', 'obloha', 'soustava', 'galaxie', 'vesmir', 'zeme']) check('pohled ' + id, await go(id) === id);
 
   section('Země a Měsíc');
-  await go('mesic');
+  await go('zeme');
   check('okénko s fází Měsíce', await ev("document.querySelector('#phaseName').textContent.length > 2"), await ev("document.querySelector('#phaseName').textContent"));
   await ev("__t.eclipse('sun')"); check('zatmění Slunce', await title() === 'Zatmění Slunce'); await sleep(1500); await shot('02-zatmeni');
   await ev("__t.eclipse('moon')"); check('zatmění Měsíce', await title() === 'Zatmění Měsíce');
@@ -90,14 +90,14 @@ try {
   await go('zeme'); await sleep(400);
   const shown = sel => ev(`[...document.querySelectorAll(${JSON.stringify(sel)})].filter(e => !e.hidden).map(e => e.textContent)`);
   check('mimo oblohu nejsou čáry ani jména souhvězdí', !(await ev('__t.linesOn')) && (await shown('.lbl.sky')).length === 0 && (await shown('.lbl.star')).length === 0);
-  check('roční období nemají vlastní záložku', await ev("!document.querySelector('#sub-rok')"));
+  check('roční období a Měsíc nemají vlastní záložku', await ev("!document.querySelector('#sub-rok') && !document.querySelector('#sub-mesic')"));
   await ev("document.querySelector('#layB').click()");
   check('panel vrstev nabízí vrstvy Země', (await ev("[...document.querySelectorAll('#lays label')].map(l => l.textContent.trim())")).join('|') === 'Popisky|Oblačnost|Vesmírná stanice|Roční období');
   check('bez nastavení není u červené tečky jmenovka', !(await shown('.lbl.home')).length);
   await ev("document.querySelector('#lays [data-lay=rok]').click()"); await sleep(700);
   check('vrstva Roční období: karta, rovnoběžky, roční doba a čas po týdnech', await title() === 'Roční období' && (await shown('.lbl.sky')).includes('Rovník') && /, (jaro|léto|podzim|zima)$/.test(await ev("document.querySelector('#dn').textContent")) && await ev("document.querySelector('#speed').value") === '6', (await shown('.lbl.sky')).join(', ')); await shot('21-rocni-obdobi');
   await ev("document.querySelector('#lays [data-lay=rok]').click()"); await sleep(300);
-  check('vypnutí vrstvy vrátí kartu i rychlost', await title() === 'Den a noc' && (await shown('.lbl.sky')).length === 0 && await ev("document.querySelector('#speed').value") === '2');
+  check('vypnutí vrstvy vrátí kartu i rychlost', await title() === 'Země a Měsíc' && (await shown('.lbl.sky')).length === 0 && await ev("document.querySelector('#speed').value") === '2');
   await ev("document.querySelector('#lays [data-lay=iss]').click()"); await sleep(300);
   check('vypnutá vesmírná stanice nemá jmenovku', !(await shown('.lbl')).includes('Vesmírná stanice')); await ev("__t.setLay('iss', 1)");
   await go('rez'); await sleep(600);
@@ -158,7 +158,7 @@ try {
   const before = (await ev('__t.mapShown')).length; await ev("__t.setLay('mesta', 0), __t.setLay('regiony', 0)"); await sleep(400);
   check('vypnutí měst a regionů ubere jmenovky', (await ev('__t.mapShown')).length < before, before + ' → ' + (await ev('__t.mapShown')).length);
   await ev("__t.setMapMode('priroda')"); await sleep(1500);
-  check('režim Příroda', await ev("document.querySelector('#acts [aria-pressed=true]').textContent") === 'Příroda'); await shot('08-priroda');
+  check('režim Příroda', await ev('__t.mapMode') === 'priroda'); await shot('08-priroda');
   await ev('__t.mapFly(46.5, 9.9, 1.004)'); const gotT = await until('__t.tiles > 20', 20000); await until('__t.tileZ >= 11', 20000); await sleep(3000); // Alpy zblízka, dlaždice se stahují z internetu
   console.log('  info  satelitní dlaždice ' + (gotT ? 'se načetly: ' + (await ev('__t.tiles')) + ', nejjemnější úroveň ' + (await ev('__t.tileZ')) + ', výška kamery ' + ((await ev('__t.camD')) - 1).toFixed(4) : 'se nenačetly (bez připojení je to v pořádku), chyb: ' + (await ev('__t.tilesFailed'))));
   if (gotT) { check('u dlaždic je vidět jejich zdroj', await ev("!document.querySelector('#tileCredit').hidden")); await shot('08b-alpy'); }
@@ -259,7 +259,7 @@ try {
   await ev("__t.setMapMode('staty')"); await ev('__t.mapFly(47, 15, 3.1)'); await sleep(1500);
 
   section('Vesmír navíc');
-  await go('soustava'); await sleep(800);
+  await go('soustava'); await sleep(800); await wheel(10, 1); await sleep(800);
   check('vzdálené sondy mají jmenovky', ['Voyager 1', 'Voyager 2', 'New Horizons'].every(async n => true) && (await lbls()).includes('Voyager 1'), (await lbls()).filter(t => /Voyager|Horizons/.test(t)).join(', '));
   await ev('__t.showHistory()'); check('časová osa dobývání vesmíru', await title() === 'Dobývání vesmíru' && await ev("document.querySelectorAll('#chipsB button').length") === 18);
   await ev("[...document.querySelectorAll('#chipsB button')].find(b => b.textContent.includes('Artemis II')).click()"); check('událost na časové ose', await title() === 'Artemis II');
@@ -268,6 +268,16 @@ try {
   await ev("[...document.querySelectorAll('#chipsB button')].find(b => b.textContent === 'Proxima Centauri b').click()");
   check('karta exoplanety', (await ev("document.querySelector('#facts').textContent")).includes('4,2 světelných let'), await ev("document.querySelector('#facts').textContent")); await shot('30-exoplaneta');
   check('hledání najde sondu a exoplanetu', await ev("__t.findHits('voyager')[0].kind === 'sonda' && __t.findHits('trappist')[0].kind === 'exoplaneta'"));
+
+  section('Kuiperův pás, komety, meteory, podmenu');
+  await go('soustava'); await sleep(600);
+  check('podmenu soustavy', (await ev("[...document.querySelectorAll('#sub .dyn')].map(b => b.textContent)")).join('|') === 'Planety|Kuiperův pás|Dobývání vesmíru');
+  await ev("[...document.querySelectorAll('#sub .dyn')].find(b => b.textContent === 'Dobývání vesmíru').click()"); check('dobývání vesmíru z podmenu', await title() === 'Dobývání vesmíru');
+  await ev("[...document.querySelectorAll('#sub .dyn')].find(b => b.textContent === 'Kuiperův pás').click()"); check('Kuiperův pás z podmenu', await title() === 'Kuiperův pás');
+  await ev('__t.newComet()');
+  check('kometa přiletí', await until("[...document.querySelectorAll('.lbl')].some(e => !e.hidden && e.textContent === 'Kometa')", 15000)); await shot('31-kometa');
+  await go('galaxie'); await ev("[...document.querySelectorAll('#sub .dyn')].find(b => b.textContent === 'Exoplanety').click()"); check('exoplanety z podmenu', await title() === 'Exoplanety');
+  await go('zeme'); check('Země má zase pohledy na Zemi v podmenu', await ev("!document.querySelector('#sub').hidden && !document.querySelector('#sub-zeme').hidden"));
 
   section('Ovládání');
   await go('zeme'); await sleep(500);

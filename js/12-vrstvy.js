@@ -14,12 +14,20 @@ function setLay(key, on) {
   applyLay(); layPanel();
 }
 function applyLay() { // promítne stav vrstev do scény; mapa a jmenovky si lay čtou samy každý snímek
-  cloudOn.value = lay.mraky; issTilt.visible = !!lay.iss; seasonG.visible = subSun.visible = !!lay.rok;
+  cloudOn.value = lay.mraky; issTilt.visible = false; seasonG.visible = subSun.visible = !!lay.rok;
   airG.visible = !!lay.atmo; airClouds.visible = !!(lay.atmo && lay.mraky);
   gPath.visible = !!lay.drahy; belt.visible = !!lay.pas;
 }
 function layPanel() { // zaškrtávátka pro právě otevřený pohled; Popisky jsou ve všech
-  $('#laysB').replaceChildren(...(LAY_VIEWS[L.id] || []).map(([key, name]) => {
+  const top = [];
+  if (L.id === 'mapa' && !quiz) { // podklad mapy jako přepínač nahoře, pod ním barvy států nebo 3D terén
+    const seg2 = document.createElement('div'); seg2.className = 'seg';
+    seg2.append(pill('Státy', () => pickMode('staty'), mapMode === 'staty'), pill('Příroda', () => pickMode('priroda'), mapMode === 'priroda'));
+    top.push(seg2);
+    if (mapMode === 'staty') top.push(themeSelect());
+    else { const l = document.createElement('label'), c = document.createElement('input'); c.type = 'checkbox'; c.checked = tiltOn; c.id = 'tilt3d'; c.onchange = () => set3d(c.checked); l.append(c, ' 3D terén'); top.push(l); if (tiltOn) { const r = document.createElement('div'); r.className = 'seg'; r.append(pill('↺ Otočit', () => turn3d(-1)), pill('Otočit ↻', () => turn3d(1))); top.push(r); } }
+  }
+  $('#laysB').replaceChildren(...top, ...(LAY_VIEWS[L.id] || []).map(([key, name]) => {
     const l = document.createElement('label'), c = document.createElement('input'); c.type = 'checkbox'; c.checked = !!lay[key]; c.dataset.lay = key;
     c.onchange = () => setLay(key, c.checked); l.append(c, ' ' + name); return l;
   }));

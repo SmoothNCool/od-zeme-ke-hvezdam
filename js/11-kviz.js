@@ -62,9 +62,7 @@ function quizStop() { quiz = null; mapSelect(null); card(L); acts(); paint(); }
 function mapActs(a) {
   a.classList.toggle('quiz', !!quiz && !quiz.menu && !quiz.done); // odpovědi se zalomí, na telefonu by jinak utekly do strany
   if (!quiz) {
-    a.append(pill('Státy', () => pickMode('staty'), mapMode === 'staty'), pill('Příroda', () => pickMode('priroda'), mapMode === 'priroda'));
-    if (mapMode === 'staty') a.append(themeSelect());
-    else a.append(pill('3D pohled', () => { tiltOn = !tiltOn; if (tiltOn && camera.position.length() > 1.07) mapFly(...camLatLon(), 1.03); acts(); }, tiltOn));
+    a.append(pill('Vrstvy a podklad mapy', () => { $('#lays').hidden = false; $('#sets').hidden = true; $('#layB').setAttribute('aria-expanded', true); }));
     a.append(pill('Kvíz', quizMenu), pill('Rekordy', showRecords), pill('Zemětřesení', toggleQuakes, quakesOn));
   } else if (quiz.menu) {
     const s = document.createElement('select'); s.className = 'pill'; s.id = 'quizArea'; s.setAttribute('aria-label', 'Oblast kvízu');

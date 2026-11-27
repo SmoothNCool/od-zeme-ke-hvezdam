@@ -4,16 +4,16 @@ Interaktivní 3D atlas Země a vesmíru. Začal jako model pro pětiletého kluk
 
 ## Co umí
 
-- **Země a Měsíc**: den a noc podle skutečného času, fáze Měsíce, zatmění Slunce a Měsíce, vesmírná stanice. Roční období jsou vrstva přímo na Zemi: rovník, obratníky, polární kruhy a místo, kde je Slunce v nadhlavníku.
+- **Země a Měsíc**: den a noc podle skutečného času, Měsíc s fázemi, zatmění Slunce a Měsíce, vesmírná stanice ve skutečné poloze. Roční období jsou vrstva přímo na Zemi: rovník, obratníky, polární kruhy a místo, kde je Slunce v nadhlavníku.
 - **Vrstvy**: tlačítko ☰ zapíná a vypíná, co je vidět. Na mapě jména států, města, regiony, řeky, hory a moře, na Zemi oblačnost a roční období, na obloze čáry a jména souhvězdí, v soustavě dráhy.
 - **Mapa světa**: zeměkoule s politickou a přírodní mapou (přírodní zblízka ze satelitních snímků Sentinel-2 se stínovaným reliéfem, přiblížení až na desítky metrů), 255 území z dat 1:10 milionů, hranice tisíců krajů a regionů, přes 25 000 měst, řeky, jezera, moře, zálivy, ostrovy, pohoří a vrcholy s výškou. Jmenovek je přes 30 000 a přibývají s přiblížením.
 - **Encyklopedie**: karta státu s vlajkou, hlavním městem, počtem obyvatel a rozlohou včetně pořadí na světě, hustotou zalidnění, měnou, jazyky, nejvyšší horou, nadějí dožití, sousedy a srovnáním s Českem. Ke státům, městům, horám, řekám, planetám i souhvězdím se načítá úvod článku a obrázek z české Wikipedie.
 - **Hledání**: lupa nebo klávesa `/` hledá ve 30 000 jménech (státy, města, hory, řeky, planety, měsíce, souhvězdí) a doletí na místo.
 - **Tematické mapy**: státy obarvené podle počtu obyvatel, hustoty zalidnění, naděje dožití, indexu lidského rozvoje, strany, po které se jezdí, přístupu k moři a členství v EU a NATO.
 - **Zeměpisný kvíz**: najdi stát na mapě, poznej stát podle tvaru, poznej vlajku, hlavní města. Celý svět nebo jeden světadíl, deset otázek na kolo.
-- **Vrstvy mapy**: den a noc s rozsvícenými městy a místem, kde je Slunce v nadhlavníku, časová pásma s aktuálním časem, podnebné pásy, kde žijí lidé, mořské proudy, 1 209 sopek se Smithsonian GVP a poloha vesmírné stanice právě teď.
-- **Hory ve 3D**: na přírodní mapě zblízka tlačítko 3D pohled zvedne terén z výškového modelu a nakloní kameru k obzoru.
-- **Vesmír navíc**: sondy Voyager 1, Voyager 2 a New Horizons na cestě ze soustavy, časová osa dobývání vesmíru od Sputniku po Artemis II, exoplanety s údaji z archivu NASA.
+- **Vrstvy mapy**: den a noc s rozsvícenými městy a místem, kde je Slunce v nadhlavníku, skutečná časová pásma s aktuálním časem, podnebné pásy, kde žijí lidé, mořské proudy, 1 209 sopek se Smithsonian GVP a poloha vesmírné stanice právě teď.
+- **Hory ve 3D**: v panelu vrstev přepínač 3D terén zvedne terén z výškového modelu, nakloní kameru k obzoru a jde otáčet (klávesy Q a E).
+- **Vesmír navíc**: Kuiperův pás, komety, které občas proletí kolem Slunce, padající hvězdy na noční obloze, sondy Voyager 1, Voyager 2 a New Horizons na cestě ze soustavy, časová osa dobývání vesmíru od Sputniku po Artemis II, exoplanety s údaji z archivu NASA.
 - **Živá Země**: zemětřesení za posledních 30 dní z USGS a hranice tektonických desek. Rekordy Země, od Mount Everestu po Marianský příkop.
 - **Vrstvy Země**: řez od jádra přes plášť a kůru po pět vrstev atmosféry, s hloubkami a výškami a kartou ke každé vrstvě.
 - **Obloha**: hvězdná obloha nad Českem ve zvoleném čase, všech 88 souhvězdí s českými jmény, Slunce, Měsíc a planety.
@@ -48,7 +48,7 @@ a pak otevřít `http://localhost:8000`.
 - `data/desky.json`: hranice tektonických desek, stahují se se zemětřesením.
 - `tex/`: textury a vlajky.
 - `testy/test.mjs`: automatický test.
-- `nastroje/`: skripty, kterými vznikla data mapy, států (`staty_encyklopedie.py`), desek (`desky.py`) a sopek (`sopky.py`).
+- `nastroje/`: skripty, kterými vznikla data mapy, států (`staty_encyklopedie.py`), desek (`desky.py`) sopek (`sopky.py`) a časových pásem (`pasma.py`).
 
 ## Testy
 
@@ -79,6 +79,7 @@ Spustí aplikaci v headless Chromu, projde všechny pohledy a režimy na počít
 - Měny, jazyky, předvolby a domény států: [mledoze/countries](https://github.com/mledoze/countries), ODbL. Naděje dožití, index lidského rozvoje, nejvyšší hory a české názvy: Wikidata.
 - Úvody článků a obrázky: [česká Wikipedie](https://cs.wikipedia.org/), CC BY-SA, načítají se za běhu a odkazují na celý článek.
 - Satelitní snímky: [EOxCloudless](https://cloudless.eox.at) od EOX IT Services GmbH (obsahuje upravená data Copernicus Sentinel 2024), CC BY-NC-SA 4.0. Výškový model pro stínování: [Mapzen Terrain Tiles](https://github.com/tilezen/joerd/blob/master/docs/attribution.md) z AWS Open Data. Obojí se stahuje za běhu.
+- Časová pásma: Natural Earth `ne_10m_time_zones`, volné dílo.
 - Sopky: [Smithsonian Institution, Global Volcanism Program](https://volcano.si.edu/), Volcanoes of the World. Poloha ISS: [wheretheiss.at](https://wheretheiss.at/), načítá se za běhu. Exoplanety: [NASA Exoplanet Archive](https://exoplanetarchive.ipac.caltech.edu/), stav 27. 11. 2026.
 - Zemětřesení: [USGS](https://earthquake.usgs.gov/), volné dílo, načítají se za běhu. Hranice desek: Peter Bird (2003), převod [Hugo Ahlenius](https://github.com/fraxen/tectonicplates), ODC-BY.
 - 3D knihovna: [three.js](https://threejs.org/) r128, licence MIT.

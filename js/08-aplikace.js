@@ -1,10 +1,10 @@
 // Zastávky, texty a fakta, karta, přelety mezi světy. Soubory v js/ sdílejí jeden prostor jmen a načítají se v pořadí podle čísla.
 /* ---------- zastávky; anchor = místo ve scéně, odkud jsme přiletěli z menšího světa ---------- */
 const LV = [
-  { id: 'zeme', ico: '🌍', name: 'Den a noc', group: gE, cam: [1.3, 1.1, 4.4], min: 1.6, max: 14, def: 2, anchor: gE,
-    txt: 'Země se otočí kolem své osy jednou za 24 hodin. Na straně přivrácené ke Slunci je den, na odvrácené noc. Hranice světla a stínu přejde přes Česko dvakrát denně, při východu a při západu Slunce. Červená tečka ukazuje místo, pro které se den a noc počítá. Bez nastavení je to střed Česka.',
-    note: 'Bílá čára je zemská osa. Je nakloněná o 23,4°, proto se během roku mění délka dne. Kolem Země obíhá Mezinárodní vesmírná stanice, jeden oblet jí trvá asi 92 minut.' },
-  { id: 'mesic', ico: '🌙', name: 'Země a Měsíc', tab: 'Měsíc', group: gE, cam: [0, 7, 15], min: 1.6, max: 30, def: 2, anchor: gE,
+  { id: 'zeme', ico: '🌍', name: 'Země a Měsíc', tab: 'Země a Měsíc', group: gE, cam: [1.3, 1.1, 4.4], min: 1.6, max: 30, def: 2, anchor: gE,
+    txt: 'Země se otočí kolem své osy jednou za 24 hodin. Na straně přivrácené ke Slunci je den, na odvrácené noc. Kolem Země obíhá Měsíc, jedno kolo mu trvá 27 dní. Sám nesvítí, jen odráží sluneční světlo, a podle toho, jak se díváme na jeho osvětlenou polovinu, vidíme nov, srpek, čtvrť nebo úplněk.',
+    note: 'Oddal se a uvidíš celou dráhu Měsíce. Bílá čára je zemská osa, je nakloněná o 23,4°. Vesmírná stanice je ve své skutečné poloze. Ve skutečnosti je Měsíc dál, mezi něj a Zemi by se vešlo třicet Zemí.' },
+  { id: 'mesic', ico: '🌙', name: 'Země a Měsíc', tab: 'Měsíc', hidden: true, group: gE, cam: [0, 7, 15], min: 1.6, max: 30, def: 2, anchor: gE,
     txt: 'Měsíc oběhne Zemi jednou za 27 dní. Sám nesvítí, jen odráží sluneční světlo. Podle toho, z jakého úhlu se díváme na jeho osvětlenou polovinu, vidíme nov, srpek, čtvrť nebo úplněk.',
     note: 'Pomůcka: vypadá jako D, dorůstá. Vypadá jako C, couvá. V modelu je Měsíc blíž, než odpovídá měřítku. Ve skutečnosti by se mezi něj a Zemi vešlo třicet Zemí vedle sebe.' },
   { id: 'rok', ico: '🍂', name: 'Roční období', hidden: true, group: gY, cam: [0, 20, 42], min: 6, max: 90, def: 6, anchor: yHolder,
@@ -19,7 +19,7 @@ const LV = [
   { id: 'obloha', ico: '🌍', name: 'Obloha', group: gO, cam: [0, -.031, -.095], min: .1, max: .1, def: 2, anchor: gO, noChain: true,
     txt: 'Obloha nad Českem v čase, který si nastavíš. Hvězdy jsou na ní i ve dne, jen je přesvítí Slunce. Během noci se obloha otáčí kolem Polárky, protože se otáčí Země. A během roku se mění, protože noční strana Země míří při oběhu kolem Slunce pokaždé jinam.',
     note: 'Tažením se rozhlížíš, kolečkem přibližuješ. Zkus čas 1 s = 1 den a sleduj, jak se noční obloha za rok promění. Ťukni na souhvězdí a dozvíš se, kdy je vidět.' },
-  { id: 'soustava', ico: '☀️', name: 'Sluneční soustava', group: gS, cam: [0, 40, 66], min: 3, max: 240, def: 4, anchor: planets[2].holder,
+  { id: 'soustava', ico: '☀️', name: 'Sluneční soustava', group: gS, cam: [0, 46, 80], min: 3, max: 240, def: 4, anchor: planets[2].holder,
     txt: 'Kolem Slunce obíhá osm planet, trpasličí planety, komety a pás asteroidů. Pluto se od roku 2006 řadí mezi trpasličí planety, proto má čárkovanou dráhu. Ťukni na planetu nebo měsíc a přiletíme k nim.',
     note: 'Vzdálenosti a velikosti nejsou v měřítku, jinak by planety nebyly vidět. Polohy planet odpovídají nastavenému datu, dráhy mají skutečný sklon a tvar. Při rychlém čase model otáčení planet přibrzdí, aby nebyly rozmazané.' },
   { id: 'galaxie', ico: '🌌', name: 'Mléčná dráha', group: gG, cam: [0, 48, 78], min: 15, max: 200, def: 0, anchor: ourSun,
@@ -34,7 +34,7 @@ const FACTS = {
   mapa: [['Států na světě', 'skoro 200'], ['Světadílů', '7'], ['Oceánů', '5'], ['Největší stát', 'Rusko'], ['Nejvíc lidí', 'Indie a Čína'], ['Nejdelší řeky', 'Nil a Amazonka, kolem 6 500 km'], ['Nejvyšší hora', 'Mount Everest, 8 849 m'], ['Největší horká poušť', 'Sahara']],
   rez: [['Poloměr Země', '6 371 km'], ['Hranice vesmíru', '100 km nad zemí'], ['Kůra', '5 až 70 km, pevný kámen'], ['Plášť', '2 900 km, horký kámen'], ['Vnější jádro', '2 200 km, tekuté železo'], ['Vnitřní jádro', 'koule 1 220 km, pevné železo'], ['Nejhlubší vrt', '12 km']],
   obloha: [['Souhvězdí na celé obloze', '88'], ['Hvězd vidět očima', 'asi 3 000 najednou'], ['Nejjasnější hvězda noci', 'Sirius'], ['Nejbližší hvězda po Slunci', 'Proxima Centauri, 4,2 světelného roku'], ['Polárka', 'ukazuje sever'], ['Planety poznáš', 'neblikají']],
-  zeme: [['Průměr Země', '12 742 km'], ['Jedno otočení', '24 hodin'], ['Rychlost na rovníku', '1 670 km/h'], ['Průměrná teplota', '15 °C'], ['Vesmírná stanice letí', '400 km nad zemí, 28 000 km/h'], ['Osa míří', 'k hvězdě Polárce']],
+  zeme: [['Průměr Země', '12 742 km'], ['Jedno otočení', '24 hodin'], ['Daleko k Měsíci', '384 400 km'], ['Oběh Měsíce', '27 dní, od úplňku k úplňku 29 a půl'], ['Rychlost na rovníku', '1 670 km/h'], ['Průměrná teplota', '15 °C'], ['Vesmírná stanice letí', '400 km nad zemí, 28 000 km/h'], ['Osa míří', 'k hvězdě Polárce']],
   mesic: [['Průměr Měsíce', '3 474 km'], ['Daleko od Země', '384 400 km'], ['Jeden oběh', '27 dní'], ['Od úplňku k úplňku', '29 a půl dne'], ['Teplota', '−170 až 120 °C'], ['Autem', '160 dní'], ['Raketou (Apollo)', '3 dny'], ['Lidí, kteří tam chodili', '12']],
   rok: [['Jeden oběh', '365 dní a 6 hodin'], ['Rychlost Země', '107 000 km/h'], ['Délka dráhy', '940 milionů km'], ['Sklon osy', '23,4°'], ['Daleko od Slunce', '150 milionů km'], ['Na jižní polokouli', 'roční období obráceně']],
   soustava: [['Stáří', '4,6 miliardy let'], ['Planet', '8'], ['Trpasličích planet', '5 uznaných, Pluto je jedna z nich'], ['Největší planeta', 'Jupiter'], ['Nejmenší planeta', 'Merkur'], ['Nejteplejší planeta', 'Venuše']],
@@ -111,11 +111,11 @@ function card(o) { $('#ttl').textContent = o.name; $('#txt').textContent = o.txt
   cardExtras(o); }
 function pill(text, on, pressed) { const b = document.createElement('button'); b.className = 'pill'; b.textContent = text; b.onclick = on; if (pressed != null) b.setAttribute('aria-pressed', pressed); return b; }
 function acts() {
+  if (L.id === 'mapa') layPanel(); // podklad mapy a 3D jsou v panelu vrstev, musí odpovídat stavu
   const a = $('#acts'); a.replaceChildren(); a.classList.remove('quiz');
   if (L.id === 'mapa' && (!info || quiz)) mapActs(a); else $('#legend').hidden = true; // karta místa ukazuje jen obsah, ovládání mapy se vrátí po Zpět
-  if (L.id === 'mesic') a.append(pill('Zatmění Slunce', () => eclipse('sun'), ecl === 'sun'), pill('Zatmění Měsíce', () => eclipse('moon'), ecl === 'moon'));
-  if (L.id === 'soustava') a.append(pill('Skutečné velikosti', toggleSizes, sizes), pill('Světlo ze Slunce', startLight, !!light), pill(game ? 'Konec hry' : 'Hra: najdi planetu', toggleGame, !!game), pill('Dobývání vesmíru', showHistory));
-  if (L.id === 'galaxie') a.append(pill('Exoplanety', showExo));
+  if (L.id === 'zeme' || L.id === 'mesic') a.append(pill('Zatmění Slunce', () => eclipse('sun'), ecl === 'sun'), pill('Zatmění Měsíce', () => eclipse('moon'), ecl === 'moon'));
+  if (L.id === 'soustava') a.append(pill('Skutečné velikosti', toggleSizes, sizes), pill('Světlo ze Slunce', startLight, !!light), pill(game ? 'Konec hry' : 'Hra: najdi planetu', toggleGame, !!game));
 }
 function endModes() {
   ecl = null; earth.material.uniforms.ecl.value = 0; moon.material.color.set(0xffffff);
@@ -132,8 +132,8 @@ function setLevel(i, keepCam) {
   if (!keepCam) { camera.position.copy(preset()); controls.target.set(0, 0, 0); }
   controls.minDistance = L.min; controls.maxDistance = L.max;
   document.querySelectorAll('#levels button').forEach((b, j) => b.setAttribute('aria-pressed', inMain(MAIN[j], i)));
-  $('#sub').hidden = i >= NS; document.querySelectorAll('#sub button').forEach(b => b.setAttribute('aria-pressed', b.id === 'sub-' + L.id));
-  $('#back').hidden = true; $('#moonView').hidden = L.id !== 'mesic';
+  subMenu(); document.querySelectorAll('#sub button').forEach(b => b.setAttribute('aria-pressed', b.id === 'sub-' + L.id));
+  $('#back').hidden = true; $('#moonView').hidden = L.group !== gE;
   $('#speed').value = lay.rok && L.group === gE ? 6 : L.def || 3; $('#speedL').hidden = $('#now').hidden = $('#whenL').hidden = !L.def; // galaxie a vesmír se za lidský čas nepohnou
   card(L); acts(); layPanel(); if (synth) synth.cancel();
 }

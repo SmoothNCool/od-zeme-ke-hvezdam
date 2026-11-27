@@ -153,7 +153,7 @@ function countryAt(lon, lat) { // který stát leží pod bodem: paprskový test
 const fmtPop = n => n >= 1e9 ? (n / 1e9).toFixed(1).replace('.', ',') + ' miliardy' : n >= 1e6 ? (n / 1e6).toFixed(1).replace('.', ',') + ' milionu' : Math.round(n / 1e3) + ' tisíc';
 // Jmenovky mapy. Je jich přes 15 000, proto nejsou ve společném seznamu jmenovek: mají vlastní zásobník, prvek stránky vzniká až při prvním zobrazení
 // a každý snímek se bere jen to, co je dost blízko a v záběru. maxD = do jaké vzdálenosti kamery od středu Země je jmenovka vidět.
-const mapPool = [];
+const mapPool = [], POINT_KINDS = new Set(['město', 'hlavní město', 'hora', 'sopka']);
 const mapLabel = (text, lat, lon, maxD, cls, mode, click, kind, sub) => mapPool.push({ text, lat, lon, dir: latLon(lat, lon), maxD, cls, mode, click, kind, sub, el: null, w: 0, stamp: -1 });
 const byRank = (rank, steps) => { for (const [r, d] of steps) if (rank <= r) return d; return steps[steps.length - 1][1]; };
 // místo na mapě (město, hora, moře…): karta s fakty, článek z Wikipedie se hledá podle jména a ověřuje polohou (km = jak daleko smí článek ležet)
@@ -196,16 +196,18 @@ function drawMapLabels(placed, on) {
     for (const m of mapPool) {
       if (m.maxD <= cd || next.length >= 140) break; // seřazeno od nejdřív viditelných, dál už není nic
       if (m.mode && !lay[m.mode] || m.dir.dot(camDir) < minDot) continue; // mode = vrstva, ke které jmenovka patří
-      wp.copy(m.dir).multiplyScalar(1.004).project(camera);
-      const x = (wp.x + 1) / 2 * W, y = (1 - wp.y) / 2 * H - 6;
+      wp.copy(m.dir).multiplyScalar(1.0008).project(camera);
+      const x = (wp.x + 1) / 2 * W, y = (1 - wp.y) / 2 * H;
       if (x < -40 || x > W + 40 || y < 0 || y > H + 30) continue;
       if (!m.el) { // prvek vzniká až teď
         m.el = document.createElement(m.click ? 'button' : 'span'); m.el.className = 'lbl ' + m.cls; m.el.textContent = m.text; if (m.click) m.el.onclick = m.click;
         $('#labels').append(m.el); m.w = m.el.offsetWidth; m.el.hidden = true;
       }
-      if (placed.some(q => Math.abs(q[0] - x) < (q[2] + m.w) / 2 + 4 && Math.abs(q[1] - y) < 20) || underUi(x - m.w / 2, y - 22, x + m.w / 2, y)) continue; // jmenovka na mapě nesmí uhnout jinam, radši počká na větší přiblížení
-      placed.push([x, y, m.w]); m.stamp = stamp; next.push(m);
-      m.el.hidden = false; m.el.style.transform = `translate(${x}px,${y}px) translate(-50%,-100%)`;
+      // místo (město, hora, sopka) má jméno vpravo od své tečky, oblast (stát, moře) má jméno na středu; obojí přesně na povrchu, aby při otáčení neplavalo
+      const pt = POINT_KINDS.has(m.kind), cx = pt ? x + 8 + m.w / 2 : x, by = y + 10;
+      if (placed.some(q => Math.abs(q[0] - cx) < (q[2] + m.w) / 2 + 4 && Math.abs(q[1] - by) < 20) || underUi(cx - m.w / 2, y - 11, cx + m.w / 2, y + 11)) continue; // jmenovka na mapě nesmí uhnout jinam, radši počká na větší přiblížení
+      placed.push([cx, by, m.w]); m.stamp = stamp; next.push(m);
+      m.el.hidden = false; m.el.style.transform = pt ? `translate(${x + 7}px,${y}px) translate(0,-50%)` : `translate(${x}px,${y}px) translate(-50%,-50%)`;
     }
   }
   for (const m of mapShown) if (m.stamp !== stamp) m.el.hidden = true;

@@ -4,17 +4,18 @@ LAY_VIEWS.mapa.push(['noc', 'Den a noc'], ['pasma', 'Časová pásma'], ['podneb
 Object.assign(lay, { noc: 0, pasma: 0, podnebi: 0, lide: 0, proudy: 0, sopky: 0, issNow: 0 });
 
 /* ---------- průsvitná koule nad pevninou: noc, podnebné pásy, hustota lidí ---------- */
-const ovU = { sunDir: { value: V(1, 0, 0) }, night: { value: 0 }, climate: { value: 0 }, dens: { value: 0 }, densT: { value: null }, nightT: { value: nightT } };
+const ovU = { sunDir: { value: V(1, 0, 0) }, night: { value: 0 }, climate: { value: 0 }, dens: { value: 0 }, densT: { value: null }, nightT: { value: nightT }, tz: { value: 0 }, tzT: { value: null } };
 const overlay = new THREE.Mesh(new THREE.SphereGeometry(1.00085, 160, 100), new THREE.ShaderMaterial({
   // bez hloubkového testu: pevnina je poskládaná z rovných trojúhelníků a koule by se s ní ve stejné výšce přetahovala; kreslí se jen přivrácená polokoule
   uniforms: ovU, transparent: true, depthWrite: false, depthTest: false,
   vertexShader: 'varying vec2 vUv;varying vec3 vN;void main(){vUv=uv;vN=normalize(position);gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.0);}',
   // podnebné pásy zjednodušeně podle zeměpisné šířky; noc ztmaví povrch a rozsvítí města z noční fotky
-  fragmentShader: 'uniform vec3 sunDir;uniform float night,climate,dens;uniform sampler2D densT,nightT;varying vec2 vUv;varying vec3 vN;' +
+  fragmentShader: 'uniform vec3 sunDir;uniform float night,climate,dens,tz;uniform sampler2D densT,nightT,tzT;varying vec2 vUv;varying vec3 vN;' +
     'vec3 band(float a){return a<23.44?vec3(.91,.36,.25):a<40.0?vec3(.95,.66,.25):a<60.0?vec3(.42,.75,.42):a<66.56?vec3(.35,.66,.84):vec3(.9,.94,.98);}' +
     'void main(){vec3 c=vec3(0.0);float ca=0.0;float lat=degrees(asin(clamp(vN.y,-1.0,1.0)));' +
     'if(climate>0.5){c=band(abs(lat));ca=0.5;}' +
     'if(dens>0.5){vec4 d=texture2D(densT,vUv);c=mix(c,d.rgb,d.a);ca=max(ca,d.a);}' +
+    'if(tz>0.5){vec4 d=texture2D(tzT,vUv);c=mix(c,d.rgb,d.a);ca=max(ca,d.a);}' +
     'float k=0.0;if(night>0.5)k=1.0-smoothstep(-0.1,0.08,dot(vN,sunDir));float an=k*0.55;vec3 lights=texture2D(nightT,vUv).rgb*k*1.3;' +
     'float a=ca+an*(1.0-ca);if(a<0.002)discard;gl_FragColor=vec4((c*ca*(1.0-an)+vec3(0.02,0.04,0.13)*an+lights)/a,a);}',
 }));
@@ -51,46 +52,82 @@ function densTex() {
   const t = new THREE.CanvasTexture(cv); t.anisotropy = renderer.capabilities.getMaxAnisotropy(); return t;
 }
 
-/* ---------- časová pásma: pravidelná po 15° délky; skutečné hranice se řídí státy ---------- */
+/* ---------- časová pásma tak, jak opravdu jsou (Natural Earth): barevné oblasti, hranice a jmenovky s časem ---------- */
 const tzG = new THREE.Group(); tzG.visible = false; gM.add(tzG);
-const tzMarks = [];
-for (let k = -11; k <= 12; k++) {
-  const o = new THREE.Object3D(); tzG.add(o); tzMarks.push([k, o]);
-  label(' ', o, 0, () => L.id === 'mapa' && !!lay.pasma && front0(o), null, 'tz');
-  labels[labels.length - 1].tz = k;
+let tzData = null, tzWait = null, tzMinute = -1;
+const tzName = z => 'UTC' + (z ? (z > 0 ? '+' : '−') + Math.floor(Math.abs(z)) + (Math.abs(z) % 1 ? ':' + String(Math.round(Math.abs(z) % 1 * 60)).padStart(2, '0') : '') : '');
+console.assert(tzName(5.75) === 'UTC+5:45' && tzName(-3.5) === 'UTC−3:30' && tzName(0) === 'UTC', 'tzName');
+const tzTime = z => new Date(simMs + z * 36e5).toISOString().slice(11, 16);
+const TZ_COLORS = ['#8dd3c7', '#ffffb3', '#bebada', '#fb8072', '#80b1d3', '#fdb462', '#b3de69', '#fccde5'];
+function loadZones() {
+  if (tzWait) return tzWait;
+  return tzWait = getJson('data/pasma.json').then(list => {
+    tzData = list;
+    const W2 = 4096, H2 = 2048, cv = document.createElement('canvas'); cv.width = W2; cv.height = H2; const g = cv.getContext('2d'); g.globalAlpha = .38;
+    const lines = [];
+    for (const [z, col, marks, rings] of list) {
+      g.fillStyle = TZ_COLORS[(col - 1) % 8]; g.beginPath();
+      for (const r of rings) { const flat = dec(r); for (let k = 0; k < flat.length; k += 2) g[k ? 'lineTo' : 'moveTo']((flat[k] + 180) / 360 * W2, (90 - flat[k + 1]) / 180 * H2); g.closePath(); seg(lines, flat, 1.0012); }
+      g.fill('evenodd');
+      for (const [la, lo] of marks) mapLabel(tzName(z) + ' · ' + tzTime(z), la, lo, 99, 'tz', 'pasma', () => showInfo({ name: 'Časové pásmo ' + tzName(z), txt: 'V tomhle pásmu je teď ' + tzTime(z) + '.', note: 'Čas se počítá podle hodin dole, bez letního času.', facts: [['Posun proti světovému času', tzName(z)], ['Proti Česku', z === 1 ? 'stejný čas' : (z > 1 ? '+' : '−') + dec1(Math.abs(z - 1)) + ' h']], wiki: { t: 'Časové pásmo', noImg: true } }), 'časové pásmo'); mapPool[mapPool.length - 1].tz = z;
+    }
+    ovU.tzT.value = new THREE.CanvasTexture(cv);
+    const f = fat(lines, 1.3); f.material.color.set(0x5b3f8f); f.material.opacity = .9; tzG.add(f);
+    mapPool.sort((a, b) => b.maxD - a.maxD); tzMinute = -1;
+  }).catch(err => { tzWait = null; throw err; });
 }
-let tzLines = null, tzMinute = -1;
-function stepZones() {
-  if (!tzLines) { const out = []; for (let k = 0; k < 24; k++) seg(out, [7.5 + 15 * k - 180, -78, 7.5 + 15 * k - 180, 78], 1.0012); tzLines = fat(out, 1.4, .006); tzLines.material.color.set(0xc9a8ff); tzLines.material.opacity = .8; tzG.add(tzLines); }
-  const c = camera.position.clone().normalize(), lat = THREE.MathUtils.clamp(Math.asin(c.y) * 180 / Math.PI + 4, -60, 60);
-  for (const [k, o] of tzMarks) o.position.copy(latLon(lat, k * 15)).multiplyScalar(1.004);
-  const minute = Math.floor(simMs / 6e4); if (minute === tzMinute) return; tzMinute = minute;
-  for (const l of labels) if (l.tz !== undefined) { l.el.textContent = 'UTC' + (l.tz > 0 ? '+' + l.tz : l.tz < 0 ? '−' + -l.tz : '') + ' · ' + new Date(simMs + l.tz * 36e5).toISOString().slice(11, 16); l.w = 0; }
+function stepZones() { // jmenovky ukazují čas v pásmu, obnovují se jednou za minutu modelu
+  const minute = Math.floor(simMs / 6e4); if (minute === tzMinute || !tzData) return; tzMinute = minute;
+  for (const m of mapPool) if (m.tz !== undefined) { m.text = tzName(m.tz) + ' · ' + tzTime(m.tz); if (m.el) { m.el.textContent = m.text; m.w = m.el.offsetWidth || m.w; } }
 }
 
-/* ---------- mořské proudy: schéma hlavních proudů, teplé červeně, studené modře ---------- */
+/* ---------- mořské proudy: hladké křivky, po kterých plynou čárky ve směru proudu ---------- */
+// [jméno, teplý 1 / studený 0, [délka, šířka, …]]; schéma hlavních proudů podle učebnicových map
 const CURRENTS = [
-  ['Golfský proud', 1, [-80, 25, -79, 30, -75, 35, -65, 39, -50, 42]], ['Severoatlantský proud', 1, [-50, 42, -35, 48, -20, 53, -10, 58, 5, 64, 15, 70]],
-  ['Severní rovníkový proud', 1, [-20, 15, -40, 14, -60, 15, -75, 18]], ['Jižní rovníkový proud', 1, [8, -2, -15, -3, -30, -5, -36, -9]],
-  ['Brazilský proud', 1, [-36, -12, -40, -20, -46, -28, -52, -36]], ['Agulhaský proud', 1, [42, -15, 38, -25, 32, -31, 25, -36, 20, -38]],
-  ['Kurošio', 1, [123, 23, 128, 28, 135, 33, 142, 36, 155, 38]], ['Východoaustralský proud', 1, [154, -15, 155, -25, 154, -32, 152, -38]],
-  ['Severní rovníkový proud', 1, [-110, 12, -140, 13, -170, 13, 160, 13, 130, 14]], ['Jižní rovníkový proud', 1, [-85, -3, -110, -5, -140, -8, -170, -12]],
-  ['Jižní rovníkový proud', 1, [100, -12, 80, -13, 60, -13, 48, -14]],
-  ['Labradorský proud', 0, [-60, 65, -55, 58, -52, 50, -55, 44]], ['Kanárský proud', 0, [-12, 40, -15, 30, -18, 22, -20, 15]],
-  ['Benguelský proud', 0, [15, -35, 12, -25, 10, -15, 8, -5]], ['Humboldtův proud', 0, [-75, -45, -75, -35, -74, -25, -79, -12, -82, -4]],
-  ['Kalifornský proud', 0, [-127, 47, -125, 38, -120, 30, -115, 22]], ['Ojašio', 0, [160, 55, 150, 47, 145, 42]], ['Západoaustralský proud', 0, [110, -35, 112, -28, 110, -20]],
-  ['Antarktický cirkumpolární proud', 0, [-180, -58, -150, -60, -120, -59, -90, -58, -60, -57, -30, -55, 0, -52, 30, -50, 60, -50, 90, -51, 120, -53, 150, -56, 180, -58]],
+  ['Golfský proud', 1, [-81, 25, -79.8, 28.5, -78.5, 32, -75.5, 35.5, -71, 38.3, -64, 40, -55, 41.5, -48, 43]],
+  ['Severoatlantský proud', 1, [-48, 43, -40, 47, -30, 51, -20, 54.5, -11, 58, -2, 62, 7, 66.5, 16, 71]],
+  ['Kanárský proud', 0, [-11, 42, -14, 36, -17, 29, -19, 23, -21, 17]],
+  ['Severní rovníkový proud', 1, [-22, 15, -35, 14.5, -48, 14.5, -60, 15.5, -72, 18]],
+  ['Labradorský proud', 0, [-62, 66, -58, 61, -54, 55, -51.5, 50, -52, 45]],
+  ['Jižní rovníkový proud', 1, [9, -1, -2, -2, -14, -3.5, -26, -5, -34, -7]],
+  ['Brazilský proud', 1, [-35, -10, -38, -16, -41, -22, -45, -27, -50, -33, -54, -38]],
+  ['Benguelský proud', 0, [17, -35, 14, -29, 12, -22, 10, -15, 8, -8]],
+  ['Agulhaský proud', 1, [41, -14, 38, -21, 35, -27, 30, -32, 24, -36, 19, -38]],
+  ['Jižní rovníkový proud', 1, [105, -12, 93, -13, 80, -13.5, 66, -13.5, 52, -14]],
+  ['Západoaustralský proud', 0, [113, -36, 113.5, -30, 113, -24, 111, -18]],
+  ['Kurošio', 1, [122, 22, 125, 26, 129, 29.5, 134, 32.5, 140, 35, 148, 36.5, 158, 38]],
+  ['Ojašio', 0, [163, 56, 158, 52, 152, 47, 146, 42.5]],
+  ['Severní rovníkový proud', 1, [-110, 13, -125, 13, -140, 13, -155, 13.5, -170, 13.5, 175, 14, 160, 14.5, 140, 15]],
+  ['Kalifornský proud', 0, [-128, 48, -126, 42, -123, 36, -119, 30, -115, 24]],
+  ['Jižní rovníkový proud', 1, [-84, -4, -95, -5, -110, -6, -125, -7.5, -140, -9.5, -155, -12]],
+  ['Humboldtův proud', 0, [-76, -46, -75, -39, -73, -31, -73, -23, -76, -15, -81, -6]],
+  ['Východoaustralský proud', 1, [154, -14, 155, -20, 155, -26, 154, -31, 152, -36]],
+  ['Antarktický cirkumpolární proud', 0, [-180, -58, -160, -60, -140, -60, -120, -59, -100, -58, -80, -58, -60, -57, -40, -54, -20, -52, 0, -51, 20, -50, 40, -50, 60, -50, 80, -51, 100, -52, 120, -53, 140, -55, 160, -57, 180, -58]],
 ];
 const curG = new THREE.Group(); curG.visible = false; gM.add(curG);
-function buildCurrents() {
-  const lines = [[], []];
-  for (const [name, warm, pts] of CURRENTS) {
-    seg(lines[warm], pts, 1.0013);
-    const n = pts.length, x1 = pts[n - 2], y1 = pts[n - 1], dx = x1 - pts[n - 4], dy = y1 - pts[n - 3], L0 = Math.hypot(dx, dy), ux = dx / L0 * 2.2, uy = dy / L0 * 2.2; // šipka na konci
-    seg(lines[warm], [x1 - ux - uy * .7, y1 - uy + ux * .7, x1, y1, x1 - ux + uy * .7, y1 - uy - ux * .7], 1.0013);
-    const m = pts.length >> 2 << 1; mapLabel(name, pts[m + 1], pts[m], 3.4, 'sea', 'proudy', () => showInfo({ name, txt: name + (warm ? ', teplý' : ', studený') + ' mořský proud.', note: 'Na mapě je zjednodušené schéma, skutečný proud se vlní a mění se během roku.', facts: [['Druh', warm ? 'teplý proud' : 'studený proud']], wiki: { s: name, name, word: 'proud', km: Infinity } }), 'mořský proud');
+const curMats = [];
+function smooth(flat) { // Catmull-Rom: z lomené čáry hladká křivka
+  const pts = []; for (let i = 0; i < flat.length; i += 2) pts.push(new THREE.Vector2(flat[i], flat[i + 1]));
+  const out = [];
+  for (let i = 0; i < pts.length - 1; i++) {
+    const p0 = pts[Math.max(0, i - 1)], p1 = pts[i], p2 = pts[i + 1], p3 = pts[Math.min(pts.length - 1, i + 2)];
+    for (let k = 0; k < 8; k++) { const t = k / 8, t2 = t * t, t3 = t2 * t;
+      out.push(.5 * (2 * p1.x + (-p0.x + p2.x) * t + (2 * p0.x - 5 * p1.x + 4 * p2.x - p3.x) * t2 + (-p0.x + 3 * p1.x - 3 * p2.x + p3.x) * t3),
+        .5 * (2 * p1.y + (-p0.y + p2.y) * t + (2 * p0.y - 5 * p1.y + 4 * p2.y - p3.y) * t2 + (-p0.y + 3 * p1.y - 3 * p2.y + p3.y) * t3)); }
   }
-  lines.forEach((l, warm) => { const f = fat(l, 2.6); f.material.color.set(warm ? 0xff6f4f : 0x4fc3ff); curG.add(f); });
+  out.push(pts[pts.length - 1].x, pts[pts.length - 1].y); return out;
+}
+function buildCurrents() {
+  const named = new Set();
+  for (const [name, warm, pts] of CURRENTS) {
+    const line = smooth(unwrap(pts)), out = [], col = warm ? 0xff7d5c : 0x5cc8ff; seg(out, line, 1.0013);
+    // široký průsvitný pruh ukazuje, kudy proud teče, čárky po něm plynou ve směru proudu
+    const band = fat(out, 9); band.material.color.set(col); band.material.opacity = .22; curG.add(band);
+    const f = fat(out, 3.4, .035); f.material.gapSize = .02; f.material.color.set(col); f.material.opacity = .95; f.renderOrder = 1; curG.add(f); curMats.push(f.material);
+    if (named.has(name)) continue; named.add(name);
+    const m = (line.length >> 2) << 1;
+    mapLabel(name, line[m + 1], ((line[m] + 540) % 360) - 180, 3.4, warm ? 'curW' : 'curC', 'proudy', () => showInfo({ name, txt: name + (warm ? ', teplý' : ', studený') + ' mořský proud.', note: 'Na mapě je zjednodušené schéma, skutečný proud se vlní a mění se během roku.', facts: [['Druh', warm ? 'teplý proud' : 'studený proud']], wiki: { s: name, name, word: 'proud', km: Infinity } }), 'mořský proud');
+  }
   mapPool.sort((a, b) => b.maxD - a.maxD);
 }
 
@@ -133,7 +170,8 @@ function pollIss(now) {
   if (issBusy || now - issTimer < 5000) return; issBusy = true; issTimer = now;
   getJson('https://api.wheretheiss.at/v1/satellites/25544').then(d => {
     if (!Number.isFinite(d.latitude) || !Number.isFinite(d.longitude)) return;
-    issNow = d; issDot.position.copy(mapP(d.longitude, d.latitude, 1.0016 + (d.altitude || 0) / 6371 * 0)); issDot.visible = true;
+    issNow = d; issDot.position.copy(mapP(d.longitude, d.latitude, 1.0016)); issDot.visible = true;
+    iss.position.copy(latLon(d.latitude, d.longitude)).multiplyScalar(1.07); // v pohledu na Zemi sedí stanice nad skutečným místem, výška je zvětšená
     if (info && info.name === 'Vesmírná stanice teď') card(issCard(false));
   }).catch(() => {}).finally(() => { issBusy = false; });
 }
@@ -141,7 +179,7 @@ function pollIss(now) {
 /* ---------- karty k vrstvám a jejich zapínání ---------- */
 const MAP_LAY_CARDS = {
   noc: () => ({ name: 'Den a noc na mapě', txt: 'Tmavá část Země je právě v noci, rozsvícená místa jsou města. Žlutá tečka je místo, kde je Slunce právě přímo nad hlavou. Hranice dne a noci se posouvá na západ o 15° za hodinu.', note: 'Čas a jeho rychlost nastavíš dole, datum v ozubeném kolečku. Hranici světla model kreslí bez soumraku a lomu světla v atmosféře.', facts: [['Jedno otočení Země', '24 hodin'], ['Rychlost hranice na rovníku', 'asi 1 670 km/h']], wiki: { t: 'Den', noImg: true } }),
-  pasma: () => ({ name: 'Časová pásma', txt: 'Země se otočí o 15° za hodinu, proto je svět rozdělený na 24 pásem po 15°. Ve stejném pásmu ukazují hodiny stejný čas. Jmenovky ukazují, kolik je v pásmu hodin.', note: 'Na mapě jsou pásma pravidelná. Skutečné hranice se drží hranic států a krajů a některé státy mají posun o půl hodiny.', facts: [['Česko', 'UTC+1, v létě UTC+2'], ['Nejvíc pásem', 'Francie se zámořím, 12']], wiki: { t: 'Časové pásmo' } }),
+  pasma: () => ({ name: 'Časová pásma', txt: 'Země se otočí o 15° za hodinu, proto se svět dělí na časová pásma. Ve stejném pásmu ukazují hodiny stejný čas. Hranice pásem se drží hranic států, proto jsou klikaté, a některé státy mají posun o půl hodiny. Jmenovky ukazují, kolik je v pásmu právě hodin.', note: 'Hranice pásem: Natural Earth. Čas je bez letního času a řídí se hodinami dole.', facts: [['Česko', 'UTC+1, v létě UTC+2'], ['Nejvíc pásem', 'Francie se zámořím, 12']], wiki: { t: 'Časové pásmo' } }),
   podnebi: () => ({ name: 'Podnebné pásy', txt: 'Čím dál od rovníku, tím šikměji dopadá sluneční světlo a tím je chladněji. Proto se Země dělí na podnebné pásy: tropický, subtropický, mírný, subpolární a polární.', note: 'Na mapě jsou pásy zjednodušeně podle zeměpisné šířky. Skutečné hranice posouvají moře, proudy a hory.', facts: [['Tropický', 'mezi obratníky'], ['Subtropický', 'do 40°'], ['Mírný', 'do 60°, tady žijeme'], ['Subpolární', 'do polárních kruhů'], ['Polární', 'za polárními kruhy']], wiki: { t: 'Klasifikace podnebí' }, legend: [['#e85c40', 'tropický'], ['#f2a840', 'subtropický'], ['#6bbf6b', 'mírný'], ['#59a8d6', 'subpolární'], ['#e6eff9', 'polární']] }),
   lide: () => ({ name: 'Kde žijí lidé', txt: 'Na Zemi žije přes 8 miliard lidí, ale rozložení je velmi nerovné. Nejvíc jich žije ve východní a jižní Asii, v Evropě a podél řek a pobřeží. Pouště, hory a polární oblasti jsou skoro prázdné.', note: 'Mapa je spočítaná z 25 000 měst nad 15 000 obyvatel (GeoNames), lidé na venkově v ní chybí.', facts: [['Lidí na Zemi', 'přes 8 miliard'], ['Ve městech', 'víc než polovina']], wiki: { t: 'Hustota zalidnění' }, legend: [['#fff3b0', 'málo'], ['#ff9a3c', ''], ['#d7301f', ''], ['#780028', 'nejvíc']] }),
   proudy: () => ({ name: 'Mořské proudy', txt: 'Mořská voda neustále proudí jako obří řeky v oceánu. Teplé proudy (červeně) nesou teplo od rovníku k pólům, studené (modře) vracejí chladnou vodu. Díky Golfskému proudu je v Evropě tepleji než v Kanadě ve stejné zeměpisné šířce.', note: 'Na mapě je zjednodušené schéma hlavních proudů.', facts: [['Teplé proudy', 'červeně'], ['Studené proudy', 'modře'], ['Největší', 'Antarktický cirkumpolární proud']], wiki: { t: 'Mořský proud' }, legend: [['#ff6f4f', 'teplý proud'], ['#4fc3ff', 'studený proud']] }),
@@ -164,16 +202,33 @@ setLay = (key, on) => { // stávající přepínání vrstev doplněné o vrstvy
   if (!(key in MAP_LAY_CARDS) || L.id !== 'mapa') return;
   if (key === 'lide' && on && !ovU.densT.value) ovU.densT.value = densTex();
   if (key === 'proudy' && on && !curG.children.length) buildCurrents();
+  if (key === 'pasma' && on) loadZones().catch(() => { $('#note').textContent = 'Časová pásma se nepodařilo stáhnout.'; });
   if (key === 'sopky' && on) loadVolcanoes().then(() => { volc.obj.forEach(o => o.visible = !!lay.sopky); if (lay.sopky && info && info.layer === 'sopky') mapLayCard('sopky'); }).catch(() => { $('#note').textContent = 'Sopky se nepodařilo stáhnout.'; });
   if (key === 'sopky' && volc && volc.obj) volc.obj.forEach(o => o.visible = !!on);
   if (key === 'issNow') issTimer = 0;
   if (on) mapLayCard(key); else if (info && info.layer === key) goBack();
 };
+let mapLayLast = 0;
 function stepMapLayers(now) { // volá hlavní smyčka v pohledu na mapu
-  ovU.night.value = lay.noc; ovU.climate.value = lay.podnebi; ovU.dens.value = lay.lide && ovU.densT.value ? 1 : 0;
-  overlay.visible = !!(lay.noc || lay.podnebi || lay.lide);
+  const dt = Math.min(.1, (now - mapLayLast) / 1000); mapLayLast = now;
+  ovU.night.value = lay.noc; ovU.climate.value = lay.podnebi; ovU.dens.value = lay.lide && ovU.densT.value ? 1 : 0; ovU.tz.value = lay.pasma && ovU.tzT.value ? 1 : 0;
+  overlay.visible = !!(lay.noc || lay.podnebi || lay.lide || lay.pasma);
+  for (const m of curMats) m.dashOffset -= dt * .02;
   const [la, lo] = subSolar(simMs); ovU.sunDir.value.copy(latLon(la, lo)); sunDot.position.copy(ovU.sunDir.value).multiplyScalar(1.002); sunDot.visible = !!lay.noc;
   tzG.visible = !!lay.pasma; if (lay.pasma) stepZones();
   curG.visible = !!lay.proudy;
   issDot.visible = !!lay.issNow && !!issNow; if (lay.issNow) pollIss(now);
 }
+
+// ISS v pohledu na Zemi: místo věčného kroužení skutečná poloha nad tím místem, kde právě je
+earth.add(iss); iss.scale.setScalar(1.6);
+Object.assign(INFO.ISS, { note: 'Stanice je ve skutečné poloze, která se obnovuje každých pět vteřin. Výška nad Zemí je v modelu zvětšená, jinak by nebyla vidět.' });
+function stepEarthIss(now) { iss.visible = !!lay.iss && !!issNow; if (lay.iss) pollIss(now); }
+
+// popisek k bílému kruhu kolem severního pólu na přírodní mapě
+const initMapData1 = initMapData;
+initMapData = () => {
+  initMapData1();
+  mapLabel('Arktický mořský led', 86, 30, 3.6, 'sea', 'hory', () => showInfo({ name: 'Arktický mořský led', txt: 'Bílá čepice kolem severního pólu je zamrzlá hladina Severního ledového oceánu. Pod ní není pevnina, jen moře. V zimě led narůstá, v létě taje a jeho plocha se v posledních desetiletích zmenšuje.', note: 'Na satelitní mapě je led tak, jak byl na snímcích, ze kterých fotka vznikla.', facts: [['Tloušťka', 'většinou 1 až 4 m'], ['Nejmenší plocha', 'v září'], ['Největší plocha', 'v březnu']], wiki: { t: 'Mořský led' } }), 'moře');
+  mapPool.sort((a, b) => b.maxD - a.maxD);
+};

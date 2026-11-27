@@ -25,6 +25,7 @@ addEventListener('keydown', e => {
   if (e.key.toLowerCase() === 'h') setBare(!document.body.classList.contains('bare'));
   const zoom = { '+': -100, '=': -100, '-': 100 }[e.key]; // záložní zoom z klávesnice
   if (zoom) zoomStep(zoom);
+  if (L.id === 'mapa' && tiltOn && (e.key === 'q' || e.key === 'e')) turn3d(e.key === 'q' ? -1 : 1);
   const mv = { a: [-1, 0], d: [1, 0], w: [0, 1], s: [0, -1] }[e.key.toLowerCase()]; // WASD posouvá stejně jako šipky
   if (mv && !focus && !tr && L.id !== 'obloha' && L.id !== 'mapa') { // mapa se točí kolem středu Země, posun by ji rozhodil
     const stp = camera.position.distanceTo(controls.target) * .06;
@@ -61,6 +62,11 @@ addEventListener('wheel', e => {
   }
   if (e.target !== renderer.domElement) { e.preventDefault(); renderer.domElement.dispatchEvent(new WheelEvent('wheel', e)); return; }
   // zoom míří tam, kde je kurzor: bod pod ním zůstane na místě (stejnolehlost se středem v tom bodě)
+  if (L.id === 'mapa' && !tr && e.deltaY) { // na mapě kolečko mění výšku nad zemí poměrně, takže jde zoomovat stejně dobře z vesmíru i z hor
+    e.preventDefault(); e.stopPropagation();
+    const base = tilted ? camOrbit : camera.position, h = base.length() - 1, nh = THREE.MathUtils.clamp(h * (e.deltaY < 0 ? .86 : 1 / .86), controls.minDistance - 1, controls.maxDistance - 1);
+    base.setLength(1 + nh); mapFlyTo = null; return;
+  }
   if (focus || tr || !e.deltaY || L.id === 'mapa') return;
   const k = e.deltaY < 0 ? .95 : 1 / .95, dist = camera.position.distanceTo(controls.target);
   if (dist * k < controls.minDistance || dist * k > controls.maxDistance) return;
@@ -73,7 +79,7 @@ addEventListener('wheel', e => {
 const front = (obj, ball) => { obj.getWorldPosition(wp); ball.getWorldPosition(v); return t1.copy(wp).sub(v).dot(v.copy(camera.position).sub(wp)) > 0; };
 const inS = () => L.id === 'soustava' && !game;
 const tip = key => () => showInfo(INFO[key]);
-label('Vesmírná stanice', iss, .05, () => L.id === 'zeme' && lay.iss && front(iss, earth), tip('ISS'));
+label('Vesmírná stanice teď', iss, .05, () => L.group === gE && lay.iss && !!issNow && front(iss, earth), () => showInfo(Object.assign(issCard(false), { note: INFO.ISS.note })));
 label('Měsíc', moon, .27, () => L.group === gE, tip('Mesic'));
 SEASONS.forEach((s, i) => label(s[0].toUpperCase() + s.slice(1), seasonMarks[i], 0, () => L.id === 'rok'));
 label('Slunce', sunMesh, 3, () => inS() && !sizes, () => setFocus(SUN));
@@ -81,7 +87,7 @@ planets.forEach(p => {
   label(p.dwarf ? p.name + ', trpasličí planeta' : p.name, p.holder, p.r, () => inS() && focus !== p, () => setFocus(p), p.dwarf && 'dwarf');
   p.moons.forEach(m => label(m.name, m.mesh, m.r, () => inS() && focus !== m && (focus === p || (focus && focus.parent === p)), () => setFocus(m)));
 });
-label('Kometa', comet.holder, .5, () => inS() && !sizes && focus !== comet, () => setFocus(comet));
+label('Kometa', comet.holder, .5, () => inS() && !sizes && focus !== comet && comet.holder.visible, () => setFocus(comet));
 label('Pás asteroidů', beltMark, .3, () => inS() && !sizes && lay.pas, tip('Pas'));
 label('Tady je naše Slunce', ourSun, 1, () => L.id === 'galaxie', tip('NaseSlunce'), 'home');
 label('Naše galaxie', ourGalaxy, 6, () => L.id === 'vesmir', tip('NaseGalaxie'), 'home');
@@ -149,7 +155,8 @@ function drawLabels() {
     farSun.getWorldPosition(v).project(camera);
     const behind = v.z > 1; if (behind) { v.x = -v.x; v.y = -v.y; }
     show = behind || Math.abs(v.x) > .95 || Math.abs(v.y) > .95;
-    if (show) { const s = .86 / Math.max(Math.abs(v.x), Math.abs(v.y), 1e-6); hint.style.transform = `translate(${(v.x * s + 1) / 2 * W - 27}px,${(1 - v.y * s) / 2 * H - 27}px)`; }
+    // bublina nesmí sednout na sloupec tlačítek vpravo
+    if (show) { const s = .86 / Math.max(Math.abs(v.x), Math.abs(v.y), 1e-6); hint.style.transform = `translate(${Math.min((v.x * s + 1) / 2 * W - 27, W - 150)}px,${(1 - v.y * s) / 2 * H - 27}px)`; }
   }
   hint.hidden = !show;
 }
