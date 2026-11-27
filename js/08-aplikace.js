@@ -115,6 +115,7 @@ function acts() {
   const a = $('#acts'); a.replaceChildren(); a.classList.remove('quiz');
   if (L.id === 'mapa' && (!info || quiz)) mapActs(a); else $('#legend').hidden = true; // karta místa ukazuje jen obsah, ovládání mapy se vrátí po Zpět
   if (L.id === 'zeme' || L.id === 'mesic') a.append(pill('Zatmění Slunce', () => eclipse('sun'), ecl === 'sun'), pill('Zatmění Měsíce', () => eclipse('moon'), ecl === 'moon'));
+  if (L.id === 'obloha') skyActs(a);
   if (L.id === 'soustava') a.append(pill('Skutečné velikosti', toggleSizes, sizes), pill('Světlo ze Slunce', startLight, !!light), pill(game ? 'Konec hry' : 'Hra: najdi planetu', toggleGame, !!game));
 }
 function endModes() {

@@ -16,9 +16,9 @@ Interaktivní 3D atlas Země a vesmíru. Začal jako model pro pětiletého kluk
 - **Vesmír navíc**: Kuiperův pás, komety, které občas proletí kolem Slunce, padající hvězdy na noční obloze, sondy Voyager 1, Voyager 2 a New Horizons na cestě ze soustavy, časová osa dobývání vesmíru od Sputniku po Artemis II, exoplanety s údaji z archivu NASA.
 - **Živá Země**: zemětřesení za posledních 30 dní z USGS a hranice tektonických desek. Rekordy Země, od Mount Everestu po Marianský příkop.
 - **Vrstvy Země**: řez od jádra přes plášť a kůru po pět vrstev atmosféry, s hloubkami a výškami a kartou ke každé vrstvě.
-- **Obloha**: hvězdná obloha nad Českem ve zvoleném čase, všech 88 souhvězdí s českými jmény, Slunce, Měsíc a planety.
+- **Obloha**: hvězdná obloha nad Českem ve zvoleném čase, všech 88 souhvězdí s českými jmény, Slunce, Měsíc a planety. Přepínač Noc a Den, úkazy na vyžádání (Perseidy, Geminidy, Leonidy z radiantu, jasná kometa, polární záře, družice a vlaky Starlinku) a padající hvězdy.
+- **Mléčná dráha a vesmír**: střed galaxie, mlhoviny a hvězdokupy na skutečných místech, kroužek známých exoplanet, Místní skupina galaxií zhruba v měřítku, dějiny vesmíru od Velkého třesku.
 - **Sluneční soustava**: planety na skutečných místech, jejich měsíce, kometa, pás asteroidů, skutečné velikosti vedle sebe, rychlost světla, hra „Najdi planetu“.
-- **Mléčná dráha a vesmír**: kde v galaxii je Slunce a kolik galaxií je kolem.
 - U každého tělesa je krátké povídání a panel s fakty, povídání umí přečíst nahlas.
 - Čas běží od skutečného času po „1 s = 1 rok“, datum a hodiny jsou pro Česko.
 

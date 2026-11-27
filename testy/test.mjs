@@ -143,6 +143,17 @@ try {
   check('kolečko zužuje zorné pole a nepřepíná pohled', await ev('__t.fov') < fov0 && await ev('__t.level') === 'obloha', fov0 + ' → ' + (await ev('__t.fov')).toFixed(1));
   check('hlásí den, soumrak nebo noc', /^U nás je (den|soumrak|noc)$/.test(await ev("document.querySelector('#dn').textContent")));
 
+  section('Úkazy na obloze');
+  await go('obloha'); await ev('__t.goNight()'); await sleep(800);
+  check('Noc přepne na tmu', await ev('__t.sunAlt') < -0.1, (await ev('__t.sunAlt')).toFixed(2));
+  await ev('__t.goDay()'); await sleep(600); check('Den přepne na poledne', await ev('__t.sunAlt') > 0.2, (await ev('__t.sunAlt')).toFixed(2));
+  await ev("__t.startFx('perseidy')"); await sleep(4000);
+  check('Perseidy: karta, srpen a padající meteory', await title() === 'Perseidy' && /srpna/.test(await ev("document.querySelector('#clock').textContent")) && await ev('__t.meteorsN') > 0, await ev("document.querySelector('#clock').textContent")); await shot('34-perseidy');
+  await ev("__t.startFx('polarni')"); await sleep(1500); check('polární záře', await title() === 'Polární záře' && await ev('__t.auroraOn')); await shot('35-polarni-zare');
+  await ev("__t.startFx('kometa')"); await sleep(1500); check('kometa na obloze', await ev('__t.cometOn')); await shot('36-kometa-obloha');
+  await ev("__t.startFx('druzice')"); check('družice přeletí', await until('__t.satsN > 0', 8000));
+  await ev("document.querySelector('#close').click()");
+
   section('Mapa světa');
   await go('mapa');
   check('data mapy se stáhla a mapa se postavila', await until('__t.mapPool > 30000 && __t.buildMs > 0', 30000), (await ev('__t.mapPool')) + ' jmenovek, stavba ' + (await ev('__t.buildMs')) + ' ms');
